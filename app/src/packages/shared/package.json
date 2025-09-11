@@ -1,0 +1,21 @@
+{
+  "name": "@project/shared",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "teaful": "*",
+    "react": "*",
+    "react-native": "*",
+    "@supabase/supabase-js": "*",
+    "expo-image": "*"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./theme": "./theme/index.ts",
+    "./theme/colors": "./theme/colors.ts",
+    "./theme/spacing": "./theme/spacing.ts",
+    "./theme/typography": "./theme/typography.ts",
+    "./theme/borderRadius": "./theme/borderRadius.ts",
+    "./store": "./store/index.ts"
+  }
+}

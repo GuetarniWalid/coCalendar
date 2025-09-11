@@ -1,0 +1,35 @@
+---
+alwaysApply: true
+---
+
+# coCalendar Project Structure
+
+This is a React Native + Expo project with a modular package architecture using workspaces.
+
+## Main Structure
+- **Root**: Contains [app/](mdc:app), [supabase/](mdc:supabase), [.gitignore](mdc:.gitignore), [README.md](mdc:README.md), [setup.ps1](mdc:setup.ps1)
+- **App**: [app/](mdc:app) contains the React Native Expo application
+- **Database**: [supabase/](mdc:supabase) contains database migrations and edge functions
+
+## Package Architecture
+The app uses a modular package structure in [app/src/packages/](mdc:app/src/packages):
+
+- `auth-view/` - Authentication screens and logic
+- `calendar-view/` - Calendar interface components  
+- `day-view/` - Day timeline view with slots
+- `home-view/` - Home screen components
+- `shared/` - Shared utilities, state management, and theming
+  - `store/` - Teaful global state management
+  - `theme/` - Design tokens and styling
+  - `utils/` - Common utility functions
+- `icons/` - App-specific icons
+- `i18n/` - Internationalization setup
+- `slot-form-view/` - Slot creation and editing forms
+
+## Key Files
+- [app/App.tsx](mdc:app/App.tsx) - Main app entry point
+- [app/package.json](mdc:app/package.json) - Dependencies and workspace configuration
+- [app/app.config.js](mdc:app/app.config.js) - Expo configuration
+
+## Workspace Setup
+The project uses npm workspaces with packages defined in [app/package.json](mdc:app/package.json). Each package has its own package.json and follows the `@project/package-name` naming convention.

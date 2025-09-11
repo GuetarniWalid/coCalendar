@@ -1,0 +1,10 @@
+{
+  "name": "@project/i18n",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./locale": "./locale/index.ts",
+    "./formatters": "./formatters/index.ts"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@project/day-view",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./ui": "./ui/index.tsx",
+    "./data": "./data/fetch-slots.ts",
+    "./shared": "./shared/types.ts"
+  },
+  "dependencies": {
+    "@project/shared": "*",
+    "expo-image": "*"
+  }
+}

@@ -1,0 +1,34 @@
+---
+alwaysApply: true
+---
+
+# coCalendar Coding Standards
+
+## Code Quality Principles
+- Follow DRY (Don't Repeat Yourself), KISS (Keep It Simple, Stupid), and YAGNI (You Aren't Gonna Need It) principles
+- Use accurate, clear variable names to prevent confusion
+- Code should be easily understandable for newcomers
+- Keep proposed code fixes concise
+
+## React/TypeScript Standards
+- **NO direct React imports** - Use destructured imports throughout the project
+- **Component Responsibility** - Each React component should have a single responsibility
+- **Component Naming** - Use well-named, descriptive component names
+- **Split Components** - Separate components for clarity and maintainability (e.g., separate date display and progress indicator components)
+
+## State Management
+- **Use Teaful exclusively** - Avoid React useState, use Teaful's store functions instead
+- **Teaful Listeners** - Always use Teaful's setter functions for listening to changes, NOT React's useEffect
+- **Centralized State** - Manage shared data via centralized state rather than prop drilling
+- **Store Organization** - State management files are in [app/src/packages/shared/store/](mdc:app/src/packages/shared/store)
+
+## Comments and Documentation
+- **All code comments must be in English**
+- Document complex business logic
+- Use clear, descriptive function and variable names to reduce need for comments
+
+## File Organization
+- **Feature-based organization** - Organize by features rather than technical layers
+- **Clear naming conventions** - Use consistent naming within layers (UI, shared, data, etc.)
+- **Separation of concerns** - Enforce modular components and extract business logic into custom hooks
+- **Centralized types** - TypeScript types should be centralized for reuse

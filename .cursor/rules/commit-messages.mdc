@@ -1,0 +1,84 @@
+---
+alwaysApply: true
+---
+
+# Commit Message Guidelines
+
+All commit messages must follow the Conventional Commits specification with this exact format:
+
+```
+<type>(<scope>): <title>
+
+<description or todo list>
+```
+
+## Commit Types
+
+**Primary Types:**
+- `feat`: A new feature for the user
+- `fix`: A bug fix for the user
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `perf`: Performance improvements
+- `style`: Changes that do not affect code meaning (formatting, missing semicolons, etc.)
+- `test`: Adding or updating tests
+- `docs`: Documentation changes
+
+**Secondary Types:**
+- `build`: Changes to build system or dependencies (webpack, npm, etc.)
+- `ci`: Changes to CI/CD configuration (GitHub Actions, etc.)
+- `chore`: Maintenance tasks (updating dependencies, etc.)
+- `revert`: Reverts a previous commit
+
+## Scope Guidelines
+
+Use package names or feature areas as scope:
+- `day-view`: Changes to day view package
+- `auth-view`: Changes to authentication
+- `shared`: Changes to shared utilities
+- `calendar-view`: Changes to calendar interface
+- `slot-form-view`: Changes to slot forms
+- `i18n`: Internationalization changes
+- `icons`: Icon-related changes
+- `supabase`: Database or backend changes
+
+## Format Examples
+
+```
+feat(day-view): add slot drag and drop functionality
+
+- Implement drag and drop for time slots
+- Add visual feedback during drag operations
+- Update slot positioning logic
+```
+
+```
+fix(auth-view): resolve login redirect issue
+
+Fixed redirect URI not working in production environment
+```
+
+```
+refactor(shared): optimize theme performance
+
+- Memoize theme calculations
+- Reduce re-renders in theme provider
+- Clean up unused theme variables
+```
+
+## Breaking Changes
+
+For breaking changes, add `!` after the type/scope:
+
+```
+feat(shared)!: update Teaful store structure
+
+BREAKING CHANGE: Store structure has changed, requires migration
+```
+
+## Rules
+
+1. **Title**: Keep under 50 characters, use imperative mood ("add" not "added")
+2. **Description**: Use bullet points for multiple items, wrap at 72 characters
+3. **Scope**: Always use lowercase, match package names when possible
+4. **Type**: Must be one of the approved types listed above
+5. **Format**: Always include scope in parentheses, even if it's general like `(app)`

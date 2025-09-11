@@ -1,0 +1,35 @@
+---
+alwaysApply: true
+---
+
+# Development Workflow Guidelines
+
+## Problem-Solving Approach
+- **Think deeply** - Re-verify solutions before declaring them finished
+- **Ask clarifying questions** if explanations are unclear
+- **Avoid rebuilding loops** - Take time to understand the problem fully first
+- **Read documentation thoroughly** - Verify changes against library documentation before declaring fixes complete
+
+## Command Execution
+- **Automatic terminal commands** - Run commands via terminal automatically rather than instructing manual UI actions
+- **No manual steps** - Automate wherever possible
+
+## Git and Version Control
+- **Clean commits** - Keep git history clean and meaningful
+- **Proper .gitignore** - Ensure all unnecessary files are ignored
+- **Node modules** - Always ignore node_modules at all levels (`node_modules/` and `**/node_modules/`)
+
+## File Management
+- **Edit existing files** - Always prefer editing existing files over creating new ones
+- **No unnecessary files** - Don't create files unless absolutely necessary
+- **No proactive documentation** - Only create documentation files (*.md) when explicitly requested
+
+## Package Management
+- **Workspace structure** - Use npm workspaces as defined in [app/package.json](mdc:app/package.json)
+- **Package naming** - Use `@project/package-name` convention
+- **Dependencies** - Keep dependencies in appropriate package.json files
+
+## Testing and Quality
+- **Fix linter errors** - Address linting issues when they're introduced
+- **Don't loop excessively** - Stop after 3 attempts to fix linter errors and ask for guidance
+- **Type safety** - Maintain TypeScript strict mode compliance

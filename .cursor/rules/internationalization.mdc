@@ -1,0 +1,31 @@
+---
+globs: *.tsx,*.ts,*.js,*.jsx
+---
+
+# Internationalization (i18n) Guidelines
+
+## i18n System Location
+All internationalization functionality is in [app/src/packages/i18n/](mdc:app/src/packages/i18n):
+- [app/src/packages/i18n/translations/](mdc:app/src/packages/i18n/translations) - Translation files
+- [app/src/packages/i18n/locale/](mdc:app/src/packages/i18n/locale) - Locale configuration
+- [app/src/packages/i18n/formatters/](mdc:app/src/packages/i18n/formatters) - Date/number formatters
+- [app/src/packages/i18n/hooks.ts](mdc:app/src/packages/i18n/hooks.ts) - i18n hooks
+
+## String Localization Rules
+- **NO hardcoded UI strings** - All UI strings must be included in the i18n system
+- **Every future implementation** must use localized strings
+- **No exceptions** - Even simple text like "Cancel", "Save", etc. must be localized
+
+## Implementation Requirements
+- Use i18n hooks from [app/src/packages/i18n/hooks.ts](mdc:app/src/packages/i18n/hooks.ts)
+- Add new strings to translation files in [app/src/packages/i18n/translations/](mdc:app/src/packages/i18n/translations)
+- Follow existing key naming conventions
+- Ensure all user-facing text supports multiple languages
+
+## Examples of What Must Be Localized
+- Button labels ("Save", "Cancel", "Delete")
+- Form labels and placeholders
+- Error messages
+- Status messages
+- Navigation labels
+- Any text visible to users

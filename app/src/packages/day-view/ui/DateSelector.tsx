@@ -1,0 +1,204 @@
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import dayjs from 'dayjs';
+import { DayItem } from '@project/shared';
+import { colors, spacing, fontSize, fontWeight, useCalendarStore } from '@project/shared';
+
+export const DateSelector: FC = () => {
+  const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
+  // Build current week's days from selectedDate
+  const startOfWeek = useMemo(() => {
+    const d = dayjs(selectedDate);
+    const dayOfWeek = d.day();
+    const daysFromMonday = (dayOfWeek + 6) % 7;
+    return d.subtract(daysFromMonday, 'day').format('YYYY-MM-DD');
+  }, [selectedDate]);
+  const daysList = useMemo(() => {
+    const start = dayjs(startOfWeek);
+    return Array.from({ length: 7 }).map((_, i) => {
+      const date = start.add(i, 'day');
+      const id = date.format('YYYY-MM-DD');
+      return {
+        date: id,
+        day: date.format('ddd'),
+        isSelected: id === selectedDate,
+        isToday: id === dayjs().format('YYYY-MM-DD'),
+      } as DayItem;
+    });
+  }, [startOfWeek, selectedDate]);
+  const flatListRef = useRef<FlatList>(null);
+  const isTransitioningRef = useRef<boolean>(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const visibleWeekStartRef = useRef<string>(
+    daysList[0]?.date ?? dayjs().startOf('week').format('YYYY-MM-DD')
+  );
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const screenWidth = Dimensions.get('window').width;
+
+  const currentWeekStart = useMemo(() => {
+    return daysList[0]?.date ?? dayjs().startOf('week').format('YYYY-MM-DD');
+  }, [daysList]);
+
+  const [overrideCenterWeek, setOverrideCenterWeek] = useState<DayItem[] | null>(null);
+
+  const buildWeek = (startDate: string, base?: DayItem[]): DayItem[] => {
+    const start = dayjs(startDate);
+    return Array.from({ length: 7 }).map((_, i) => {
+      const date = start.add(i, 'day');
+      const id = date.format('YYYY-MM-DD');
+      const original = base?.find((d) => d.date === id) ?? daysList.find((d) => d.date === id);
+      return (
+        original ?? {
+          date: id,
+          day: date.format('ddd'),
+          isSelected: false,
+          isToday: id === dayjs().format('YYYY-MM-DD'),
+        }
+      );
+    });
+  };
+
+  const effectiveCenterWeek: DayItem[] = overrideCenterWeek ?? daysList;
+
+  const pages = useMemo(() => {
+    if (isTransitioning) {
+      return [effectiveCenterWeek, effectiveCenterWeek, effectiveCenterWeek];
+    }
+    const centerStart = effectiveCenterWeek[0]?.date ?? currentWeekStart;
+    const prevStart = dayjs(centerStart).subtract(7, 'day').format('YYYY-MM-DD');
+    const nextStart = dayjs(centerStart).add(7, 'day').format('YYYY-MM-DD');
+    return [buildWeek(prevStart, effectiveCenterWeek), effectiveCenterWeek, buildWeek(nextStart, effectiveCenterWeek)];
+  }, [effectiveCenterWeek, currentWeekStart, isTransitioning]);
+
+  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const x = e.nativeEvent.contentOffset.x;
+    const pageIndex = Math.round(x / screenWidth);
+    if (pageIndex === 0 && !isTransitioningRef.current) {
+      isTransitioningRef.current = true;
+      setIsTransitioning(true);
+      setScrollEnabled(false);
+      const selectedIndexBase = effectiveCenterWeek.findIndex((d) => d.isSelected);
+      const selectedIndex = selectedIndexBase >= 0 ? selectedIndexBase : 0;
+      const prevStart = dayjs(visibleWeekStartRef.current).subtract(7, 'day').format('YYYY-MM-DD');
+      const prevWeek = buildWeek(prevStart, effectiveCenterWeek).map((d, i) => ({
+        ...d,
+        isSelected: i === selectedIndex,
+      }));
+      const targetSelectedDate = dayjs(prevStart).add(selectedIndex, 'day').format('YYYY-MM-DD');
+      setOverrideCenterWeek(prevWeek);
+      visibleWeekStartRef.current = prevStart;
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+        setTimeout(() => setSelectedDate(targetSelectedDate), 0);
+      });
+    } else if (pageIndex === 2 && !isTransitioningRef.current) {
+      isTransitioningRef.current = true;
+      setIsTransitioning(true);
+      setScrollEnabled(false);
+      const selectedIndexBase = effectiveCenterWeek.findIndex((d) => d.isSelected);
+      const selectedIndex = selectedIndexBase >= 0 ? selectedIndexBase : 0;
+      const nextStart = dayjs(visibleWeekStartRef.current).add(7, 'day').format('YYYY-MM-DD');
+      const nextWeek = buildWeek(nextStart, effectiveCenterWeek).map((d, i) => ({
+        ...d,
+        isSelected: i === selectedIndex,
+      }));
+      const targetSelectedDate = dayjs(nextStart).add(selectedIndex, 'day').format('YYYY-MM-DD');
+      setOverrideCenterWeek(nextWeek);
+      visibleWeekStartRef.current = nextStart;
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+        setTimeout(() => setSelectedDate(targetSelectedDate), 0);
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (daysList[0]?.date) {
+      visibleWeekStartRef.current = daysList[0].date;
+    }
+    if (overrideCenterWeek && overrideCenterWeek[0]?.date === daysList[0]?.date) {
+      setOverrideCenterWeek(null);
+    }
+    isTransitioningRef.current = false;
+    setIsTransitioning(false);
+    setScrollEnabled(true);
+  }, [daysList, overrideCenterWeek]);
+
+  return (
+    <View style={styles.container} collapsable={false}>
+      <FlatList
+        ref={flatListRef}
+        data={pages}
+        keyExtractor={(_, i) => `week-page-${i}`}
+        horizontal
+        pagingEnabled
+        scrollEnabled={scrollEnabled}
+        showsHorizontalScrollIndicator={false}
+        initialScrollIndex={1}
+        initialNumToRender={3}
+        windowSize={3}
+        maxToRenderPerBatch={3}
+        updateCellsBatchingPeriod={0}
+        removeClippedSubviews={false}
+        decelerationRate="fast"
+        getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+        onMomentumScrollEnd={handleMomentumEnd}
+        renderItem={({ item }: { item: DayItem[] }) => (
+          <View style={[styles.weekRow, { width: screenWidth }]}>
+            {item.map((d: DayItem) => (
+              <TouchableOpacity key={d.date} style={styles.dayCell} onPress={() => setSelectedDate(d.date)}>
+                <Text style={[styles.dateName, d.isSelected && styles.highlightDateName]}>
+                  {d.day}
+                </Text>
+                <Text style={[styles.dateNumber, d.isSelected && styles.highlightDateNumber]}>
+                  {dayjs(d.date).format('D')}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    paddingVertical: spacing.sm,
+    position: 'relative',
+    zIndex: 10,
+    backgroundColor: colors.background.primary,
+    height: 100,
+  },
+  weekRow: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.sm,
+  },
+  dayCell: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateName: {
+    fontSize: fontSize.xs,
+    color: colors.typography.secondary,
+    marginBottom: 2,
+  },
+  dateNumber: {
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.black,
+    color: colors.typography.secondary,
+  },
+  highlightDateName: {
+    color: colors.action.typography.primary,
+  },
+  highlightDateNumber: {
+    color: colors.action.typography.primary,
+  },
+});
+
+

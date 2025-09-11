@@ -1,0 +1,10 @@
+{
+  "name": "@project/bottom-navigation",
+  "version": "1.0.0",
+  "description": "Reusable bottom navigation component for the app",
+  "main": "index.ts",
+  "dependencies": {
+    "@project/shared": "*",
+    "@project/icons": "*"
+  }
+}

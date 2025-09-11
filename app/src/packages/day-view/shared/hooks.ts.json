@@ -1,0 +1,151 @@
+[
+	{
+		"import { useState": "import { useAuthStore } from '@project/shared';"
+	},
+	{
+		"import { useState": "import { SlotItem } from './types';"
+	},
+	{
+		"import { useState": "import { generateDaysList } from './utils';"
+	},
+	{
+		"import { useState": "import { fetchSlotsForDate } from '../data/fetch-slots';"
+	},
+	{
+		"import { useState": ""
+	},
+	{
+		"import { useState": "export const useDayView = (initialDate: string) => {"
+	},
+	{
+		"import { useState": "  const [{ supabase",
+		" useEffect } from 'react';": " user }] = useAuthStore();"
+	},
+	{
+		"import { useState": "  const [selectedDate",
+		" useEffect } from 'react';": " setSelectedDate] = useState(initialDate);"
+	},
+	{
+		"import { useState": "  const [slots",
+		" useEffect } from 'react';": " setSlots] = useState<SlotItem[]>([]);"
+	},
+	{
+		"import { useState": "  const [loading",
+		" useEffect } from 'react';": " setLoading] = useState(true);"
+	},
+	{
+		"import { useState": "  const [daysList",
+		" useEffect } from 'react';": " setDaysList] = useState(generateDaysList(initialDate));"
+	},
+	{
+		"import { useState": ""
+	},
+	{
+		"import { useState": "  useEffect(() => {"
+	},
+	{
+		"import { useState": "    fetchSlots();"
+	},
+	{
+		"import { useState": "  }",
+		" useEffect } from 'react';": " [selectedDate"
+	},
+	{
+		"import { useState": ""
+	},
+	{
+		"import { useState": "  const fetchSlots = async () => {"
+	},
+	{
+		"import { useState": "    if (!user) return;"
+	},
+	{
+		"import { useState": "    "
+	},
+	{
+		"import { useState": "    setLoading(true);"
+	},
+	{
+		"import { useState": "    try {"
+	},
+	{
+		"import { useState": "      const formattedSlots = await fetchSlotsForDate(supabase",
+		" useEffect } from 'react';": " user.id"
+	},
+	{
+		"import { useState": "      setSlots(formattedSlots);"
+	},
+	{
+		"import { useState": "    } catch (error) {"
+	},
+	{
+		"import { useState": "      console.error('Error fetching slots:'",
+		" useEffect } from 'react';": " error);"
+	},
+	{
+		"import { useState": "    } finally {"
+	},
+	{
+		"import { useState": "      setLoading(false);"
+	},
+	{
+		"import { useState": "    }"
+	},
+	{
+		"import { useState": "  };"
+	},
+	{
+		"import { useState": ""
+	},
+	{
+		"import { useState": "  const onDayPress = (date: string) => {"
+	},
+	{
+		"import { useState": "    setSelectedDate(date);"
+	},
+	{
+		"import { useState": "    setDaysList(generateDaysList(date));"
+	},
+	{
+		"import { useState": "  };"
+	},
+	{
+		"import { useState": ""
+	},
+	{
+		"import { useState": "  return {"
+	},
+	{
+		"import { useState": "    selectedDate",
+		" useEffect } from 'react';": ""
+	},
+	{
+		"import { useState": "    slots",
+		" useEffect } from 'react';": ""
+	},
+	{
+		"import { useState": "    loading",
+		" useEffect } from 'react';": ""
+	},
+	{
+		"import { useState": "    daysList",
+		" useEffect } from 'react';": ""
+	},
+	{
+		"import { useState": "    onDayPress",
+		" useEffect } from 'react';": ""
+	},
+	{
+		"import { useState": "    refetch: fetchSlots",
+		" useEffect } from 'react';": ""
+	},
+	{
+		"import { useState": "  };"
+	},
+	{
+		"import { useState": "};"
+	},
+	{
+		"import { useState": ""
+	}
+]

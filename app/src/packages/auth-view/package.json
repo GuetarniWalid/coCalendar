@@ -1,0 +1,12 @@
+{
+  "name": "@project/auth-view",
+  "version": "1.0.0",
+  "main": "./ui/index.tsx",
+  "types": "./ui/index.tsx",
+  "dependencies": {
+    "@project/shared": "*"
+  },
+  "exports": {
+    ".": "./ui/index.tsx"
+  }
+}

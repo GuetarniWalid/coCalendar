@@ -1,0 +1,37 @@
+---
+globs: *.tsx,*.ts,*.js,*.jsx
+---
+
+# React Native + Expo Guidelines
+
+## Technology Stack
+- **React Native** with **Expo** (no native code, pure Expo workflow)
+- **Navigation**: React Navigation v7
+- **Calendar**: Flash Calendar (prefer Flash Calendar for any calendar functionality)
+- **State**: Teaful for global state management
+- **Styling**: Custom theme system in [app/src/packages/shared/theme/](mdc:app/src/packages/shared/theme)
+
+## Expo-Specific Rules
+- **No native Android/iOS folders** - Use Expo managed workflow exclusively
+- **No direct native code** - All functionality should be achievable through Expo APIs
+- **Configuration** in [app/app.config.js](mdc:app/app.config.js)
+
+## Component Architecture
+- **UI Components** - Place reusable UI components in their own packages
+- **Cross-screen components** - Components used across multiple screens (like bottom navigation) should be in separate packages
+- **Package structure** - Each package should have `ui/`, `shared/`, and optionally `data/` directories
+
+## Styling Guidelines
+- **Default Font**: Nunito (defined in theme)
+- **Font Family**: Only set fontFamily when it differs from default to prevent errors
+- **Theme System**: Use centralized theme from [app/src/packages/shared/theme/](mdc:app/src/packages/shared/theme)
+- **No extra CSS files** - Modify existing styles rather than creating new CSS files
+
+## Calendar Implementation
+- **Flash Calendar Only** - Any calendar-related functionality should use Flash Calendar exclusively
+- **No react-native-calendars** - Migrate away from react-native-calendars to Flash Calendar
+
+## Icons and Assets
+- **Icon Organization** - Each icon in its own file, named correctly
+- **Icon Location** - App icons in [app/src/packages/icons/app/](mdc:app/src/packages/icons/app)
+- **Asset Separation** - Keep app icons separate from user asset icons

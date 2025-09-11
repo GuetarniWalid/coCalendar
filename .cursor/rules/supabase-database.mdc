@@ -1,0 +1,36 @@
+---
+globs: *.sql,supabase/**/*
+---
+
+# Supabase Database Guidelines
+
+## Environment Configuration
+- **Environment Variables**: 
+  - `EXPO_PUBLIC_SUPABASE_URL` - Supabase endpoint URL
+  - `EXPO_PUBLIC_SUPABASE_KEY` - Public key (replaces deprecated anon key)
+- **No hardcoded URLs** - Use dynamic solutions for redirect URIs, not hardcoded addresses
+- **Cloud Database** - Use cloud Supabase database directly, not local Docker instance
+
+## Database Structure
+Located in [supabase/](mdc:supabase) with:
+- [supabase/config.toml](mdc:supabase/config.toml) - Project configuration
+- [supabase/migrations/](mdc:supabase/migrations) - Database schema migrations
+- [supabase/functions/](mdc:supabase/functions) - Edge functions
+
+## TypeScript Integration
+- **Module Resolution** - Set TypeScript's moduleResolution to "node" for automatic SupabaseClient typing
+- **Avoid manual type definitions** - Let TypeScript infer types automatically from Supabase
+
+## Data Model
+Key tables include:
+- `profiles(id, role, display_name, created_at)`
+- `clients(id, pro_id, display_name, email, user_id, created_at)`  
+- `slots(id, pro_id, client_id, title, start_at, end_at, visibility, created_at)`
+- `slot_shared_content(slot_id PK, shared_note, shared_checklist)`
+- `slot_private_content(slot_id PK, private_note, private_checklist)`
+
+## Row Level Security (RLS)
+- **Pro access**: Full access where `pro_id = auth.uid()`
+- **Client access**: Can select only slots where `visibility = 'public'` and `client_id` belongs to them
+- **Private content**: Pro-only access
+- **Shared content**: Pro + linked client access

@@ -1,9 +1,11 @@
 import { FC } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { CalendarDay, Profile, Breath, Timer } from '@project/icons';
 import { BottomNavigationProps } from '../shared/types';
+import { Plus } from '@project/icons/app/plus';
 
 export const BottomNavigation: FC<BottomNavigationProps> = ({ activeTab = 'today' }) => {
   const navigation = useNavigation<any>();
@@ -53,11 +55,7 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({ activeTab = 'today
   ];
 
   return (
-    <>
-      <View style={styles.invertedBorderRadiusContainer}>
-        <View style={styles.invertedBorderRadius} />
-      </View>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
         {tabs.map(tab => {
           const IconComponent = tab.icon;
           return (
@@ -76,27 +74,19 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({ activeTab = 'today
             </TouchableOpacity>
           );
         })}
-      </View>
-    </>
+        <View style={styles.plusButton}>
+          <Plus size={22} color={colors.typography.mobileNav} />
+        </View>
+      </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  invertedBorderRadiusContainer: {
-    backgroundColor: colors.background.mobileNav,
-    height: 50,
-  },
-  invertedBorderRadius: {
-    backgroundColor: colors.background.primary,
-    height: '100%',
-    borderBottomEndRadius: 9999,
-    borderBottomStartRadius: 9999,
-  },
   container: {
     flexDirection: 'row',
     backgroundColor: colors.background.mobileNav,
-    paddingBottom: spacing.xxxl,
-    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    paddingTop: spacing.xxl,
     paddingHorizontal: spacing.xl,
     justifyContent: 'space-around',
     alignItems: 'center',
@@ -112,5 +102,19 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.medium,
     marginTop: spacing.xs,
     textAlign: 'center',
+  },
+  plusButton: {
+    position: 'absolute',
+    top: "-60%",
+    left: "50%",
+    transform: [{ translateX: '-25%' }],
+    backgroundColor: colors.background.mobileNav,
+    borderRadius: 999,
+    width: 76,
+    height: 76,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 6,
+    borderColor: colors.background.primary,
   },
 });

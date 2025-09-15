@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SlotItem } from '../slot-item';
 import { EmptyDayCard } from '../empty-day-card';
-import { SlotItem as SlotItemType, useCalendarStore } from '@project/shared';
+import { colors, SlotItem as SlotItemType, useCalendarStore } from '@project/shared';
 import { spacing } from '@project/shared';
 import dayjs from 'dayjs';
 
@@ -42,7 +42,7 @@ export const SlotList: FC<SlotListProps> = ({
     if (!daySlots || daySlots.length === 0) {
       return (
         <ScrollView
-          style={styles.container}
+          style={styles.scrollView}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
@@ -68,7 +68,7 @@ export const SlotList: FC<SlotListProps> = ({
     }
     return (
       <ScrollView
-        style={styles.container}
+        style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -116,7 +116,7 @@ export const SlotList: FC<SlotListProps> = ({
   }, [selectedDate, centerDate]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <FlatList
         ref={flatListRef}
         data={pageIndices.current}
@@ -151,8 +151,15 @@ export const SlotList: FC<SlotListProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background.mobileNav,
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: colors.background.primary,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
   },
   content: {
     paddingVertical: spacing.md,

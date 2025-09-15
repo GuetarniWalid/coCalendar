@@ -5,7 +5,7 @@ import { DayTasksProgress } from './DayTasksProgress';
 import { DateSelector } from './DateSelector';
 import { BottomNavigation } from '@project/bottom-navigation';
 import { colors } from '@project/shared';
- 
+
 import type { ReactNode } from 'react';
 
 type DayViewLayoutProps = {
@@ -15,26 +15,21 @@ type DayViewLayoutProps = {
 
 export const DayViewLayout = ({ progressPercentage = 0, children }: DayViewLayoutProps) => {
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerRow}>
-          <VisibleMonthYear />
-          <DayTasksProgress progressPercentage={progressPercentage} />
-        </View>
-        <DateSelector />
-        {children}
-      </SafeAreaView>
-      <BottomNavigation activeTab="today" />
-    </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.headerRow}>
+        <VisibleMonthYear />
+        <DayTasksProgress progressPercentage={progressPercentage} />
+      </View>
+      <DateSelector />
+      {children}
+      <BottomNavigation activeTab='today' />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.background.primary,
-    flex: 1,
-  },
   safeArea: {
+    backgroundColor: colors.background.primary,
     flex: 1,
   },
   headerRow: {
@@ -46,5 +41,3 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
-
-

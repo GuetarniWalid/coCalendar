@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   expo: {
     name: 'coCalendar',
     slug: 'cocalendar',
@@ -14,7 +14,8 @@ export default {
     ],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.walidg.cocalendar'
+      bundleIdentifier: 'com.walidg.cocalendar',
+      deploymentTarget: '14.0'
     },
     android: {
       package: 'com.walidg.cocalendar',
@@ -28,7 +29,8 @@ export default {
       supabaseKey: process.env.EXPO_PUBLIC_SUPABASE_KEY
     },
     plugins: [
-      'expo-font'
+      'expo-font',
+      'expo-notifications'
     ]
   }
 };

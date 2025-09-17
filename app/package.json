@@ -27,7 +27,9 @@
     "check-all": "npm run type-check && npm run lint",
     "db:push": "supabase db push",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "copy-rive-assets": "node scripts/copy-rive-assets.js",
+    "prebuild:clean": "expo prebuild --clean && npm run copy-rive-assets"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

@@ -9,16 +9,17 @@ import { colors } from '@project/shared';
 import type { ReactNode } from 'react';
 
 type DayViewLayoutProps = {
-  progressPercentage?: number;
+  progressPercentage: number;
+  hasTasksToday: boolean;
   children: ReactNode;
 };
 
-export const DayViewLayout = ({ progressPercentage = 0, children }: DayViewLayoutProps) => {
+export const DayViewLayout = ({ progressPercentage, hasTasksToday, children }: DayViewLayoutProps) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.headerRow}>
         <VisibleMonthYear />
-        <DayTasksProgress progressPercentage={progressPercentage} />
+        <DayTasksProgress progressPercentage={progressPercentage} hasTasksToday={hasTasksToday} />
       </View>
       <DateSelector />
       {children}

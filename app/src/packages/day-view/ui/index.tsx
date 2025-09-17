@@ -15,8 +15,8 @@ export const DayViewScreen = () => {
   const date = route.params?.date as string;
   const { slots, loading, selectedDate, getSlotsForDate } = useDayView(date);
   if (selectedDate) setCalendarSelectedDate(selectedDate);
-  
-  // Get setters from Teaful store  
+
+  // Get setters from Teaful store
   const [, setSelectedDate] = useSlotFormStore.selectedDate();
   const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
 
@@ -40,7 +40,7 @@ export const DayViewScreen = () => {
         title: slot.title,
         startTime: slot.startTime,
         endTime: slot.endTime,
-        visibility: (slot.visibility ?? (slot.type === 'shared' ? 'public' : 'private')),
+        visibility: slot.visibility ?? (slot.type === 'shared' ? 'public' : 'private'),
         ...(slot.description ? { description: slot.description } : {}),
         ...(slot.clientName ? { clientName: slot.clientName } : {}),
         ...(slot.color ? { color: slot.color } : {}),
@@ -51,9 +51,9 @@ export const DayViewScreen = () => {
 
   if (loading) {
     return (
-      <DayViewLayout progressPercentage={0}>
+      <DayViewLayout progressPercentage={0} hasTasksToday={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size='large' />
           <Text style={styles.loadingText}>{t.loading}</Text>
         </View>
       </DayViewLayout>
@@ -61,12 +61,8 @@ export const DayViewScreen = () => {
   }
 
   return (
-    <DayViewLayout progressPercentage={calculateTaskCompletion(slots, selectedDate).percentage}>
-      <SlotList
-        slots={slots}
-        onSlotPress={handleSlotPress}
-        getSlotsForDate={getSlotsForDate}
-      />
+    <DayViewLayout progressPercentage={calculateTaskCompletion(slots, selectedDate).percentage} hasTasksToday={slots.length > 0}>
+      <SlotList slots={slots} onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} />
     </DayViewLayout>
   );
 };

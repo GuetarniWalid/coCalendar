@@ -10,7 +10,8 @@ module.exports = {
       backgroundColor: '#ffffff'
     },
     assetBundlePatterns: [
-      '**/*'
+      '**/*',
+      '!assets/animations/*.riv'
     ],
     ios: {
       supportsTablet: true,

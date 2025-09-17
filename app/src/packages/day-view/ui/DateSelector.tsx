@@ -153,6 +153,12 @@ export const DateSelector: FC = () => {
                 <Text style={[styles.dateNumber, d.isSelected && styles.highlightDateNumber]}>
                   {dayjs(d.date).format('D')}
                 </Text>
+                {d.isToday && (
+                  <View style={[
+                    styles.todayDot,
+                    { backgroundColor: d.isSelected ? colors.action.typography.primary : colors.typography.secondary }
+                  ]} />
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -183,7 +189,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 999,
     maxWidth: 50,
-    paddingVertical: 20,
+    paddingTop: 20,
+    paddingBottom: 22,
+    position: 'relative',
   },
   dayCellHighlight: {
     backgroundColor: colors.action.background.primary,
@@ -203,6 +211,14 @@ const styles = StyleSheet.create({
   },
   highlightDateNumber: {
     color: colors.action.typography.primary,
+  },
+  todayDot: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+    bottom: 14,
+    alignSelf: 'center',
   },
 });
 

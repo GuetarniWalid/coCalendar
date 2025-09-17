@@ -146,7 +146,7 @@ export const DateSelector: FC = () => {
         renderItem={({ item }: { item: DayItem[] }) => (
           <View style={[styles.weekRow, { width: screenWidth }]}>
             {item.map((d: DayItem) => (
-              <TouchableOpacity key={d.date} style={styles.dayCell} onPress={() => setSelectedDate(d.date)}>
+              <TouchableOpacity key={d.date} style={[styles.dayCell, d.isSelected && styles.dayCellHighlight]} onPress={() => setSelectedDate(d.date)}>
                 <Text style={[styles.dateName, d.isSelected && styles.highlightDateName]}>
                   {d.day}
                 </Text>
@@ -168,7 +168,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 10,
     backgroundColor: colors.background.primary,
-    height: 100,
   },
   weekRow: {
     width: '100%',
@@ -176,20 +175,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 20,
   },
   dayCell: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 999,
+    maxWidth: 50,
+    paddingVertical: 20,
+  },
+  dayCellHighlight: {
+    backgroundColor: colors.action.background.primary,
   },
   dateName: {
-    fontSize: fontSize.xs,
+    fontSize: 12,
     color: colors.typography.secondary,
     marginBottom: 2,
   },
   dateNumber: {
-    fontSize: fontSize.base,
+    fontSize: fontSize['xl'],
     fontWeight: fontWeight.black,
     color: colors.typography.secondary,
   },

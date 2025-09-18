@@ -14,24 +14,13 @@ const artboardName = 'progression';
 export const DayTasksProgress: FC<DayTasksProgressProps> = ({ progressPercentage, hasTasksToday }) => {
   const riveRef = useRef<RiveRef>(null);
 
-  function getTriggerForProgress(percentage: number, hasTasks: boolean) {
-    if (!hasTasks) {
-      return 'trigger sleep';
-    }
-
-    // Round to the nearest 10% step
-    const roundedProgress = Math.floor(percentage / 10) * 10;
-    return 'trigger ' + roundedProgress;
-  };
-
-  // Compute the trigger name based on progress/hasTasks
-  const currentTrigger = getTriggerForProgress(progressPercentage, hasTasksToday);
+  const percent = hasTasksToday ? progressPercentage : -1
   
   useEffect(() => {
     const rive = riveRef.current;
     if (!rive) return;
-    rive.trigger(currentTrigger)
-  }, [currentTrigger])
+    rive.setNumber('percent', percent)
+  }, [percent])
 
   return (
     <View>
@@ -46,7 +35,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ progressPercentage
         onPlay={() => {
           const rive = riveRef.current;
           if (!rive) return;
-          rive.trigger(currentTrigger)
+          rive.setNumber('percent', percent)
         }}
       />
     </View>

@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import dayjs from 'dayjs';
+import { AppLayout } from '@project/app-layout';
  
 const CalendarScreen = () => {
   const navigation = useNavigation<any>();
@@ -15,7 +15,7 @@ const CalendarScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <AppLayout activeTab='today'>
       <View style={styles.header}>
         <Text style={styles.title}>coCalendar</Text>
         <Text style={styles.subtitle}>Tap a day to view timeline</Text>
@@ -24,17 +24,13 @@ const CalendarScreen = () => {
         calendarMonthId={calendarMonthId}
         onCalendarDayPress={onDayPress}
       />
-    </SafeAreaView>
+    </AppLayout>
   );
 };
 
 export default CalendarScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
   header: {
     padding: 20,
     backgroundColor: '#fff',

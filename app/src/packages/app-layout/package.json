@@ -1,0 +1,9 @@
+{
+  "name": "@project/app-layout",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@project/shared": "*",
+    "@project/bottom-navigation": "*"
+  }
+}

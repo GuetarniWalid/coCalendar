@@ -19,6 +19,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ progressPercentage
   useEffect(() => {
     const rive = riveRef.current;
     if (!rive) return;
+    rive.play()
     rive.setNumber('percent', percent)
   }, [percent])
 

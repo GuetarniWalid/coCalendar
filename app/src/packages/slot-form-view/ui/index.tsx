@@ -4,7 +4,7 @@ import { useAuthStore, useSlotFormStore } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
  
-import { DayViewLayout } from '@project/day-view';
+import { AppLayout } from '@project/app-layout';
 import { SlotForm } from './components/SlotForm';
 
 const SlotFormScreen = () => {
@@ -52,7 +52,7 @@ const SlotFormScreen = () => {
   const onClose = () => navigation.goBack();
 
   return (
-    <DayViewLayout>
+    <AppLayout activeTab='today'>
       <SlotForm
         startTime={startTime}
         endTime={endTime}
@@ -61,7 +61,7 @@ const SlotFormScreen = () => {
         titlePlaceholder={t.titleLabel}
         onClose={onClose}
       />
-    </DayViewLayout>
+    </AppLayout>
   );
 };
 

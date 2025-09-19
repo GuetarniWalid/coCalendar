@@ -2,11 +2,14 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDayView } from '../shared/hooks';
 import { useSlotFormStore } from '@project/shared';
+import { AppLayout } from '@project/app-layout';
 import { setCalendarSelectedDate } from '@project/shared/store/calendar';
 import { SlotList } from './slot-list';
 import { colors, spacing, fontSize, calculateTaskCompletion } from '@project/shared';
 import { useTranslation } from '@project/i18n';
-import { DayViewLayout } from './DayViewLayout';
+import { VisibleMonthYear } from './VisibleMonthYear';
+import { DayTasksProgress } from './DayTasksProgress';
+import { DateSelector } from './DateSelector';
 
 export const DayViewScreen = () => {
   const t = useTranslation();
@@ -51,30 +54,33 @@ export const DayViewScreen = () => {
 
   if (loading) {
     return (
-      <DayViewLayout progressPercentage={0} hasTasksToday={false}>
+      <AppLayout activeTab='today'>
+        <View style={styles.headerRow}>
+          <VisibleMonthYear />
+          <DayTasksProgress progressPercentage={0} hasTasksToday={false} />
+        </View>
+        <DateSelector />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size='large' />
           <Text style={styles.loadingText}>{t.loading}</Text>
         </View>
-      </DayViewLayout>
+      </AppLayout>
     );
   }
 
   return (
-    <DayViewLayout progressPercentage={calculateTaskCompletion(slots, selectedDate).percentage} hasTasksToday={slots.length > 0}>
+    <AppLayout activeTab='today'>
+      <View style={styles.headerRow}>
+        <VisibleMonthYear />
+        <DayTasksProgress progressPercentage={calculateTaskCompletion(slots, selectedDate).percentage} hasTasksToday={slots.length > 0} />
+      </View>
+      <DateSelector />
       <SlotList slots={slots} onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} />
-    </DayViewLayout>
+    </AppLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.background.primary,
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

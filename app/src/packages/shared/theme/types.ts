@@ -7,7 +7,6 @@ export interface ColorPalette {
   
   // Background colors
   background: {
-    mobileNav: string;
     primary: string;
     secondary: string;
     tertiary: string;
@@ -17,7 +16,6 @@ export interface ColorPalette {
   
   // Typography colors
   typography: {
-    mobileNav: string;
     primary: string;
     secondary: string;
   };
@@ -35,6 +33,13 @@ export interface ColorPalette {
     typography: {
       primary: string;
     };
+  };
+
+  // Bottom navigation colors
+  bottomNavigation: {
+    background: string;
+    selector: string;
+    selectorContrast: string;
   };
   
   // Utility colors

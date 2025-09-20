@@ -7,7 +7,6 @@ const lightColors: ColorPalette = {
 
   // Background colors
   background: {
-    mobileNav: '#FFF6D0',
     primary: '#ffffff',
     secondary: '#F7F7F7',
     tertiary: 'rgba(0, 0, 0, 0.08)',
@@ -41,7 +40,6 @@ const lightColors: ColorPalette = {
 
   // Typography colors
   typography: {
-    mobileNav: '#D47F69',
     primary: '#181818',
     secondary: '#9C9290',
   },
@@ -62,6 +60,13 @@ const lightColors: ColorPalette = {
     },
   },
 
+  // Bottom navigation colors
+  bottomNavigation: {
+    background: '#FFF6D0',
+    selector: '#D47F69',
+    selectorContrast: '#F2EAC8',
+  },
+
   // Utility colors
   transparent: 'transparent',
   black: '#000000',
@@ -75,7 +80,6 @@ const darkColors: ColorPalette = {
 
   // Background colors
   background: {
-    mobileNav: '#FFF6D0',
     primary: '#1a1a1a',
     secondary: 'rgba(255, 255, 255, 0.08)',
     tertiary: 'rgba(255, 255, 255, 0.1)',
@@ -85,7 +89,6 @@ const darkColors: ColorPalette = {
 
   // Typography colors
   typography: {
-    mobileNav: '#D47F69',
     primary: '#ffffff',
     secondary: '#9f9fa5',
   },
@@ -105,6 +108,13 @@ const darkColors: ColorPalette = {
     typography: {
       primary: '#6E2F1D',
     },
+  },
+
+  // Bottom navigation colors
+  bottomNavigation: {
+    background: '#FFF6D0',
+    selector: '#D47F69',
+    selectorContrast: '#F2EAC8',
   },
 
   // Utility colors

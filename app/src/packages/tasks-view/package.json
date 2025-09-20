@@ -1,0 +1,8 @@
+{
+  "name": "@project/tasks-view",
+  "version": "1.0.0",
+  "main": "ui/index.tsx",
+  "dependencies": {
+    "@project/shared": "*"
+  }
+}

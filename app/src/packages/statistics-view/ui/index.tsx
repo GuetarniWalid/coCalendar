@@ -3,18 +3,18 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, fontSize, spacing, setCurrentScreen } from '@project/shared';
 
-const SlotFormScreen = () => {
+const StatisticsScreen = () => {
   // Track when this screen becomes active
   useFocusEffect(
     useCallback(() => {
-      setCurrentScreen('SlotForm');
+      setCurrentScreen('Statistics');
     }, [])
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Slot Form</Text>
-      <Text style={styles.subtitle}>Create or edit your slots</Text>
+      <Text style={styles.title}>Statistics</Text>
+      <Text style={styles.subtitle}>Your productivity stats</Text>
     </View>
   );
 };
@@ -38,4 +38,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SlotFormScreen;
+export default StatisticsScreen;

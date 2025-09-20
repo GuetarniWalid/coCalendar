@@ -3,3 +3,5 @@ export { useAuthStore, signIn, signUp, signOut, registerAuthSetters, initializeA
 export { useThemeStore, setThemeMode, toggleThemeMode } from './theme';
 export { useSlotFormStore } from './slot-form';
 export { useCalendarStore } from './calendar';
+export { useNavigationStore, setNavigationStore, handleFirstButtonPress, setCurrentScreen } from './navigation';
+export type { ViewType, ScreenType } from './navigation';

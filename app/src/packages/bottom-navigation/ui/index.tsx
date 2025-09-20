@@ -1,120 +1,120 @@
-import { FC } from 'react';
-import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { FC, useEffect, useRef } from 'react';
+import { StyleSheet, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { colors, spacing, fontSize, fontWeight } from '@project/shared';
-import { CalendarDay, Profile, Breath, Timer } from '@project/icons';
+import Rive, { AutoBind, Fit, RiveRef } from 'rive-react-native';
+import { colors, useCalendarStore, handleFirstButtonPress } from '@project/shared';
 import { BottomNavigationProps } from '../shared/types';
-import { Plus } from '@project/icons/app/plus';
+import dayjs from 'dayjs';
+import { useNavigation } from '@react-navigation/native';
 
-export const BottomNavigation: FC<BottomNavigationProps> = ({ activeTab = 'today' }) => {
+const stateMachineName = 'State Machine 1';
+const resourceName = 'bottom_navigation';
+const artboardName = 'Artboard';
+const NAV_HEIGHT = 90;
+
+export const BottomNavigation: FC<BottomNavigationProps> = ({ 
+  activeTab: _activeTab = 1,
+  onTabPress 
+}) => {
+  const riveRef = useRef<RiveRef>(null);
+  const [selectedDate] = useCalendarStore.selectedDate();
+  const currentDay = dayjs(selectedDate).format('DD');
   const navigation = useNavigation<any>();
 
-  const handleTabPress = (tab: string) => {
-    switch (tab) {
-      case 'today':
-        navigation.navigate('Calendar');
-        break;
-      case 'profile':
-        // TODO: Implement when Profile screen exists
-        break;
-      case 'breath':
-        // TODO: Implement when Breath screen exists
-        break;
-      case 'timer':
-        // TODO: Implement when Timer screen exists
-        break;
+  // Screen mapping array - maps index to screen name (except index 0 which toggles)
+  const screenMap = [null, 'Profile', 'SlotForm', 'Statistics', 'Tasks'];
+
+  useEffect(() => {
+    const rive = riveRef.current;
+    if (!rive) return;
+    rive.play();
+    rive.setString('day', currentDay);
+  }, [currentDay]);
+
+  const handlePressablePress = (index: number) => {
+    const rive = riveRef.current;
+    if (!rive) return;
+    rive.play();
+    rive.setNumber('item selected', index + 1);
+    
+    // Index-based navigation logic
+    if (onTabPress) {
+      onTabPress(index);
+    } else {
+      // Special handling for index 0 - smart Day/Calendar navigation
+      if (index === 0) {
+        const targetScreen = handleFirstButtonPress();
+        navigation.navigate(targetScreen);
+      } else {
+        // Navigate using index to screen mapping for other indices
+        const screenName = screenMap[index];
+        if (screenName) {
+          navigation.navigate(screenName);
+        }
+      }
     }
   };
 
-  const tabs = [
-    {
-      id: 'today',
-      label: 'Today',
-      icon: CalendarDay,
-      isActive: activeTab === 'today',
-    },
-    {
-      id: 'profile',
-      label: 'Profile',
-      icon: Profile,
-      isActive: activeTab === 'profile',
-    },
-    {
-      id: 'breath',
-      label: 'Breath',
-      icon: Breath,
-      isActive: activeTab === 'breath',
-    },
-    {
-      id: 'timer',
-      label: 'Timer',
-      icon: Timer,
-      isActive: activeTab === 'timer',
-    },
-  ];
-
   return (
-      <SafeAreaView style={styles.container} edges={['bottom']}>
-        {tabs.map(tab => {
-          const IconComponent = tab.icon;
-          return (
-            <TouchableOpacity key={tab.id} style={styles.tab} onPress={() => handleTabPress(tab.id)} activeOpacity={0.7}>
-              <IconComponent size={30} color={tab.isActive ? colors.typography.mobileNav : colors.typography.secondary} />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    color: tab.isActive ? colors.typography.mobileNav : colors.typography.secondary,
-                  },
-                ]}
-              >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-        <View style={styles.plusButton}>
-          <Plus size={22} color={colors.typography.mobileNav} />
+    <SafeAreaView edges={['bottom']} style={styles.container}>
+      <View style={styles.riveContainer}>
+        <Rive
+          style={styles.rive}
+          ref={riveRef}
+          resourceName={resourceName}
+          artboardName={artboardName}
+          stateMachineName={stateMachineName}
+          autoplay={true}
+          dataBinding={AutoBind(true)}
+          fit={Fit.Layout}
+          onPlay={() => {
+            const rive = riveRef.current;
+            if (!rive) return;
+            rive.setColor('background', colors.bottomNavigation.background);
+            rive.setColor('selector', colors.bottomNavigation.selector);
+            rive.setColor('primary', colors.typography.primary);
+            rive.setColor('selector contrast', colors.bottomNavigation.selectorContrast);
+          }}  
+          onError={(error) => {
+            console.log('Error loading Rive animation', error);
+          }}
+        />
+        <View style={styles.overlay}>
+          {Array.from({ length: 5 }, (_, index) => (
+            <Pressable
+              key={index}
+              style={styles.pressable}
+              onPress={() => handlePressablePress(index)}
+            />
+          ))}
         </View>
-      </SafeAreaView>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: colors.background.mobileNav,
-    paddingBottom: spacing.sm,
-    paddingTop: spacing.xxl,
-    paddingHorizontal: spacing.xl,
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    backgroundColor: colors.bottomNavigation.background,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingTop: 5,
   },
-  tab: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    minWidth: 60,
+  riveContainer: {
+    position: 'relative',
   },
-  tabLabel: {
-    fontSize: fontSize.xxs,
-    fontWeight: fontWeight.medium,
-    marginTop: spacing.xs,
-    textAlign: 'center',
+  rive: {
+    height: NAV_HEIGHT,
   },
-  plusButton: {
+  overlay: {
     position: 'absolute',
-    top: "-60%",
-    left: "50%",
-    transform: [{ translateX: '-25%' }],
-    backgroundColor: colors.background.mobileNav,
-    borderRadius: 999,
-    width: 76,
-    height: 76,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 6,
-    borderColor: colors.background.primary,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+  },
+  pressable: {
+    flex: 1,
   },
 });

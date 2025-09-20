@@ -1,8 +1,8 @@
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import { useDayView } from '../shared/hooks';
-import { useSlotFormStore } from '@project/shared';
-import { AppLayout } from '@project/app-layout';
+import { useSlotFormStore, setCurrentScreen } from '@project/shared';
 import { setCalendarSelectedDate } from '@project/shared/store/calendar';
 import { SlotList } from './slot-list';
 import { colors, spacing, fontSize, calculateTaskCompletion } from '@project/shared';
@@ -18,6 +18,13 @@ export const DayViewScreen = () => {
   const date = route.params?.date as string;
   const { slots, loading, selectedDate, getSlotsForDate } = useDayView(date);
   if (selectedDate) setCalendarSelectedDate(selectedDate);
+
+  // Track when this screen becomes active
+  useFocusEffect(
+    useCallback(() => {
+      setCurrentScreen('Day');
+    }, [])
+  );
 
   // Get setters from Teaful store
   const [, setSelectedDate] = useSlotFormStore.selectedDate();
@@ -54,7 +61,7 @@ export const DayViewScreen = () => {
 
   if (loading) {
     return (
-      <AppLayout activeTab='today'>
+      <>
         <View style={styles.headerRow}>
           <VisibleMonthYear />
           <DayTasksProgress progressPercentage={0} hasTasksToday={false} />
@@ -64,19 +71,19 @@ export const DayViewScreen = () => {
           <ActivityIndicator size='large' />
           <Text style={styles.loadingText}>{t.loading}</Text>
         </View>
-      </AppLayout>
+      </>
     );
   }
 
   return (
-    <AppLayout activeTab='today'>
+    <>
       <View style={styles.headerRow}>
         <VisibleMonthYear />
         <DayTasksProgress progressPercentage={calculateTaskCompletion(slots, selectedDate).percentage} hasTasksToday={slots.length > 0} />
       </View>
       <DateSelector />
       <SlotList slots={slots} onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} />
-    </AppLayout>
+    </>
   );
 };
 
@@ -88,6 +95,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     paddingLeft: 24,
     paddingBottom: 8,
+    backgroundColor: colors.background.primary,
   },
   loadingContainer: {
     flex: 1,

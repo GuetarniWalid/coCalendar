@@ -140,7 +140,6 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
   );
 
   return (
-    <View style={styles.container}>
       <FlatList
         ref={flatListRef}
         data={pageIndices.current}
@@ -159,22 +158,15 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
         renderItem={renderPageItem}
         onMomentumScrollEnd={handleMomentumEnd}
       />
-    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.mobileNav,
-  },
   scrollView: {
     flex: 1,
-    backgroundColor: colors.background.primary,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
+    backgroundColor: colors.background.primary,
   },
   content: {
     paddingVertical: spacing.md,

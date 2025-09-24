@@ -19,9 +19,14 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
 
   // Calculate progress based on real-time data
   const percent = useMemo(() => {
-    // If slots haven't loaded yet, return 0 as initial state
-    if (!slots || slots.length === 0) {
+    // If slots haven't loaded yet (null/undefined), return 0 as initial state
+    if (!slots) {
       return 0;
+    }
+    
+    // If slots are loaded but empty array, return -1 for "no work" state
+    if (slots.length === 0) {
+      return -1;
     }
     
     const progressData = calculateTaskCompletion(slots, selectedDate);
@@ -33,8 +38,8 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
     const now = new Date();
     const currentDate = dayjs().format('YYYY-MM-DD');
     
-    // Only track if viewing today's slots
-    if (selectedDate !== currentDate) {
+    // Only track if viewing today's slots and slots are loaded
+    if (selectedDate !== currentDate || !slots || slots.length === 0) {
       return;
     }
 

@@ -110,3 +110,131 @@ export const formatTime = (isoTimeString: string): string => {
     return '--:--';
   }
 };
+
+/**
+ * Determines if a slot has specific time (hours/minutes) or is a date-only slot
+ * Date-only slots (punctual tasks) should not show progress bars
+ */
+export const hasSpecificTime = (isoTimeString: string): boolean => {
+  try {
+    const date = dayjs(isoTimeString);
+    // Check if the time component is at midnight (00:00:00)
+    // Date-only slots typically have start/end times at midnight
+    const timeString = date.format('HH:mm:ss');
+    return timeString !== '00:00:00';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Calculates the elapsed time percentage for a currently active slot
+ * Returns percentage of time that has passed (0% at start, 100% at end)
+ * Returns null if slot is not currently active or doesn't have specific times
+ */
+export const calculateSlotProgress = (startTime: string, endTime: string): { percentage: number; isCompleted: boolean } | null => {
+  try {
+    // Check if this slot has specific times
+    if (!hasSpecificTime(startTime) || !hasSpecificTime(endTime)) {
+      return null;
+    }
+
+    // Always use fresh current time for maximum precision
+    const now = dayjs();
+    const start = dayjs(startTime);
+    const end = dayjs(endTime);
+    
+    // Check if current time is before the slot starts
+    if (now.isBefore(start)) {
+      return null;
+    }
+    
+    // If the slot has ended, return 100% (completed)
+    if (now.isAfter(end)) {
+      return { percentage: 100, isCompleted: true };
+    }
+    
+    const totalDuration = end.diff(start);
+    const elapsedDuration = now.diff(start);
+    
+    // Calculate elapsed percentage (how much time has passed)
+    const elapsedPercentage = (elapsedDuration / totalDuration) * 100;
+    
+    return { 
+      percentage: Math.max(0, Math.min(100, elapsedPercentage)), 
+      isCompleted: false 
+    };
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Formats remaining time into a human-readable string with seconds precision
+ * Returns formatted string like "45 min", "1h 30min", "38 secondes", etc.
+ * Uses internationalization for proper language support
+ */
+export const formatRemainingTime = (startTime: string, endTime: string, translations?: {
+  remainingPrefix: string;
+  minutesSingular: string;
+  minutesPlural: string;
+  secondsSingular: string;
+  secondsPlural: string;
+}): string | null => {
+  try {
+    // Always use fresh current time for maximum precision
+    const now = dayjs();
+    const end = dayjs(endTime);
+    
+    // Check if we're within the time range or the event has ended
+    const start = dayjs(startTime);
+    if (now.isBefore(start)) {
+      return null; // Event hasn't started yet
+    }
+    
+    // Calculate remaining duration in milliseconds
+    const remainingMs = end.diff(now);
+    
+    // If time is up or past end time, return null (no text shown)
+    if (remainingMs <= 0) {
+      return null;
+    }
+    
+    // Use default English if translations not provided
+    const t = translations || {
+      remainingPrefix: 'Still',
+      minutesSingular: 'minute',
+      minutesPlural: 'min',
+      secondsSingular: 'second',
+      secondsPlural: 'seconds',
+    };
+    
+    const totalSeconds = Math.floor(remainingMs / 1000);
+    
+    // If less than 1 minute, show seconds
+    if (totalSeconds < 60) {
+      const unit = totalSeconds === 1 ? t.secondsSingular : t.secondsPlural;
+      return `${t.remainingPrefix} ${totalSeconds} ${unit}`;
+    }
+    
+    const remainingMinutes = Math.floor(remainingMs / (1000 * 60));
+    
+    // If less than 1 hour, show minutes
+    if (remainingMinutes < 60) {
+      const unit = remainingMinutes === 1 ? t.minutesSingular : t.minutesPlural;
+      return `${t.remainingPrefix} ${remainingMinutes} ${unit}`;
+    }
+    
+    // Show hours and minutes
+    const hours = Math.floor(remainingMinutes / 60);
+    const minutes = remainingMinutes % 60;
+    
+    if (minutes === 0) {
+      return `${t.remainingPrefix} ${hours}h`;
+    }
+    
+    return `${t.remainingPrefix} ${hours}h ${minutes}${t.minutesPlural}`;
+  } catch {
+    return null;
+  }
+};

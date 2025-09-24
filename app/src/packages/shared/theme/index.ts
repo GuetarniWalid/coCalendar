@@ -3,7 +3,7 @@ export { colors, getColors } from './colors';
 export { spacing } from './spacing';
 export { fontFamily, fontSize, fontWeight } from './typography';
 export { borderRadius } from './borderRadius';
-export { commonStyles } from './theme';
+export { commonStyles, progressBarConfig } from './theme';
 
 // Re-export types
 export type { ColorPalette, ThemeMode, Theme } from './types';

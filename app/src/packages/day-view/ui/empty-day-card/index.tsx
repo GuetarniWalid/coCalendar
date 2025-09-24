@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxxl,
     borderRadius: 36,
     minHeight: 129,
-    backgroundColor: colors.background.slot!.default,
+    backgroundColor: colors.background.slot.default?.default || colors.background.secondary,
   },
   content: {
     flex: 1,
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     right: 15,
     width: 150,
     height: 150,
-  },
+  } as const,
 });
 
 

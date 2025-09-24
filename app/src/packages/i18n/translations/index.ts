@@ -27,6 +27,13 @@ export interface Translations {
   // Time
   startTime: string;
   endTime: string;
+  
+  // Progress time remaining
+  remainingPrefix: string; // "Encore" / "Still" / etc.
+  minutesSingular: string; // "minute"
+  minutesPlural: string; // "minutes" / "min"
+  secondsSingular: string; // "seconde" 
+  secondsPlural: string; // "secondes"
 
   // Slot form labels
   titleLabel: string;
@@ -70,6 +77,13 @@ export const translations: Record<SupportedLocale, Translations> = {
     startTime: 'Start Time',
     endTime: 'End Time',
     
+    // Progress time remaining
+    remainingPrefix: 'Still',
+    minutesSingular: 'minute',
+    minutesPlural: 'min',
+    secondsSingular: 'second',
+    secondsPlural: 'seconds',
+    
     // Slot form labels
     titleLabel: 'Title',
     timeLabel: 'Time',
@@ -109,6 +123,13 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Time
     startTime: 'Heure de début',
     endTime: 'Heure de fin',
+    
+    // Progress time remaining
+    remainingPrefix: 'Encore',
+    minutesSingular: 'minute',
+    minutesPlural: 'min',
+    secondsSingular: 'seconde',
+    secondsPlural: 'secondes',
     
     // Slot form labels
     titleLabel: 'Titre',
@@ -150,6 +171,13 @@ export const translations: Record<SupportedLocale, Translations> = {
     startTime: 'Hora de inicio',
     endTime: 'Hora de fin',
     
+    // Progress time remaining
+    remainingPrefix: 'Quedan',
+    minutesSingular: 'minuto',
+    minutesPlural: 'min',
+    secondsSingular: 'segundo',
+    secondsPlural: 'segundos',
+    
     // Slot form labels
     titleLabel: 'Título',
     timeLabel: 'Hora',
@@ -189,6 +217,13 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Time
     startTime: 'Startzeit',
     endTime: 'Endzeit',
+    
+    // Progress time remaining
+    remainingPrefix: 'Noch',
+    minutesSingular: 'Minute',
+    minutesPlural: 'Min',
+    secondsSingular: 'Sekunde',
+    secondsPlural: 'Sekunden',
     
     // Slot form labels
     titleLabel: 'Titel',

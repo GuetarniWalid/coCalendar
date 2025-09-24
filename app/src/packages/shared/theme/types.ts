@@ -10,8 +10,8 @@ export interface ColorPalette {
     primary: string;
     secondary: string;
     tertiary: string;
-    // Optional slot color variants map (e.g., for slot backgrounds)
-    slot?: Record<string, string>;
+    // Slot color variants with default and contrast colors
+    slot: Record<string, { default: string; contrast: string }>;
   };
   
   // Typography colors

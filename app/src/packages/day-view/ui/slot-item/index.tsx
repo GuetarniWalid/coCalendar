@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from '
 import { SlotItem as SlotItemType, formatTime } from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { TaskChecked } from '@project/icons';
+import { ProgressBar } from './ProgressBar';
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -13,7 +14,7 @@ interface SlotItemProps {
 const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
   const dynamicStyle = useMemo(
     () => ({
-      backgroundColor: slot.color || colors.background.secondary,
+      backgroundColor: slot.color || colors.background.slot.default?.default || colors.background.secondary,
     }),
     [slot.color]
   );
@@ -93,6 +94,11 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
           <Text nativeID={titleNativeId} style={styles.title}>
             {slot.title}
           </Text>
+          <ProgressBar 
+            startTime={slot.startTime} 
+            endTime={slot.endTime} 
+            slotColor={slot.color}
+          />
           {slot.clientName && <Text style={styles.clientName}>Client: {slot.clientName}</Text>}
         </View>
       </View>

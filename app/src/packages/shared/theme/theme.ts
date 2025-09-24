@@ -4,6 +4,22 @@ import { spacing } from './spacing';
 import { fontSize, fontWeight } from './typography';
 import { borderRadius } from './borderRadius';
 
+// Progress bar configuration - calculated from design tokens
+export const progressBarConfig = {
+  // Progress bar track height
+  trackHeight: 10,
+  
+  // Text configuration
+  textFontSize: fontSize.sm, // 14px
+  textLineHeight: 1.2, // Standard line height multiplier
+  textPadding: spacing.md, // Bottom padding for text
+  
+  // Calculated text container height (font size * line height + padding)
+  get textContainerHeight() {
+    return Math.ceil(this.textFontSize * this.textLineHeight) + this.textPadding;
+  },
+} as const;
+
 // Re-export all tokens for convenience
 export { colors, spacing, fontSize, fontWeight, borderRadius };
 

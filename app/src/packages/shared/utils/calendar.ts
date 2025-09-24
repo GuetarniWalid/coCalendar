@@ -34,9 +34,14 @@ export const calculateTaskCompletion = (
 
     if (!taskDate || !currentDate) continue;
 
-    if (taskDate < currentDate) {
+    // Check if task is manually marked as completed
+    if (task.completed) {
+      completedTasks++;
+    } else if (taskDate < currentDate) {
+      // Task is from a previous date - consider it completed
       completedTasks++;
     } else if (taskDate === currentDate) {
+      // Task is from today - check if end time has passed
       if (taskEndTime && currentTime && taskEndTime <= currentTime) {
         completedTasks++;
       }
@@ -105,5 +110,3 @@ export const formatTime = (isoTimeString: string): string => {
     return '--:--';
   }
 };
-
-

@@ -15,6 +15,7 @@ export interface SlotItem {
   description?: string;
   clientName?: string;
   color?: string;
+  completed?: boolean;
 }
 
 

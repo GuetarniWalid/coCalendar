@@ -5,7 +5,7 @@ import { useDayView } from '../shared/hooks';
 import { useSlotFormStore, setCurrentScreen } from '@project/shared';
 import { setCalendarSelectedDate } from '@project/shared/store/calendar';
 import { SlotList } from './slot-list';
-import { colors, spacing, fontSize, calculateTaskCompletion } from '@project/shared';
+import { colors, spacing, fontSize } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import { VisibleMonthYear } from './VisibleMonthYear';
 import { DayTasksProgress } from './DayTasksProgress';
@@ -64,7 +64,7 @@ export const DayViewScreen = () => {
       <>
         <View style={styles.headerRow}>
           <VisibleMonthYear />
-          <DayTasksProgress progressPercentage={0} hasTasksToday={false} />
+          <DayTasksProgress slots={[]} selectedDate={selectedDate || ''} />
         </View>
         <DateSelector />
         <View style={styles.loadingContainer}>
@@ -79,7 +79,7 @@ export const DayViewScreen = () => {
     <>
       <View style={styles.headerRow}>
         <VisibleMonthYear />
-        <DayTasksProgress progressPercentage={calculateTaskCompletion(slots, selectedDate).percentage} hasTasksToday={slots.length > 0} />
+        <DayTasksProgress slots={slots} selectedDate={selectedDate || ''} />
       </View>
       <DateSelector />
       <SlotList slots={slots} onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} />

@@ -1,20 +1,69 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useState, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Rive, { AutoBind, RiveRef } from 'rive-react-native';
+import { SlotItem, calculateTaskCompletion } from '@project/shared';
+import dayjs from 'dayjs';
 
 interface DayTasksProgressProps {
-  progressPercentage: number;
-  hasTasksToday: boolean;
+  slots: SlotItem[];
+  selectedDate: string;
 }
 
 const stateMachineName = 'State Machine Progression';
 const resourceName = 'progression';
 const artboardName = 'progression';
 
-export const DayTasksProgress: FC<DayTasksProgressProps> = ({ progressPercentage, hasTasksToday }) => {
+export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDate }) => {
   const riveRef = useRef<RiveRef>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const percent = hasTasksToday ? progressPercentage : -1
+  // Calculate progress based on real-time data
+  const percent = useMemo(() => {
+    const progressData = calculateTaskCompletion(slots, selectedDate);
+    const hasTasksToday = slots.length > 0;
+    return hasTasksToday ? progressData.percentage : -1;
+  }, [slots, selectedDate, currentTime]);
+
+  // Set up real-time tracking for slots that haven't ended yet
+  useEffect(() => {
+    const now = new Date();
+    const currentDate = dayjs().format('YYYY-MM-DD');
+    
+    // Only track if viewing today's slots
+    if (selectedDate !== currentDate) {
+      return;
+    }
+
+    // Find the next slot to end
+    const upcomingSlots = slots.filter(slot => {
+      if (slot.completed) return false;
+      const endTime = new Date(slot.endTime);
+      return endTime > now;
+    });
+
+    if (upcomingSlots.length === 0) {
+      return;
+    }
+
+    // Find the earliest ending slot
+    const nextSlotToEnd = upcomingSlots.reduce((earliest, slot) => {
+      const slotEndTime = new Date(slot.endTime);
+      const earliestEndTime = new Date(earliest.endTime);
+      return slotEndTime < earliestEndTime ? slot : earliest;
+    });
+
+    const timeUntilEnd = new Date(nextSlotToEnd.endTime).getTime() - now.getTime();
+    
+    if (timeUntilEnd > 0) {
+      const timeout = setTimeout(() => {
+        setCurrentTime(new Date());
+      }, timeUntilEnd);
+
+      return () => clearTimeout(timeout);
+    }
+    
+    return undefined;
+  }, [slots, selectedDate, currentTime]);
   
   useEffect(() => {
     const rive = riveRef.current;

@@ -19,9 +19,13 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
 
   // Calculate progress based on real-time data
   const percent = useMemo(() => {
+    // If slots haven't loaded yet, return 0 as initial state
+    if (!slots || slots.length === 0) {
+      return 0;
+    }
+    
     const progressData = calculateTaskCompletion(slots, selectedDate);
-    const hasTasksToday = slots.length > 0;
-    return hasTasksToday ? progressData.percentage : -1;
+    return progressData.percentage;
   }, [slots, selectedDate, currentTime]);
 
   // Set up real-time tracking for slots that haven't ended yet
@@ -82,11 +86,6 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
         style={styles.riveAnimation}
         autoplay={true}
         dataBinding={AutoBind(true)}
-        onPlay={() => {
-          const rive = riveRef.current;
-          if (!rive) return;
-          rive.setNumber('percent', percent)
-        }}
       />
     </View>
   );

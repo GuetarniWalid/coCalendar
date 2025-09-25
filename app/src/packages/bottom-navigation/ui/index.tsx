@@ -34,25 +34,29 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
   const handlePressablePress = (index: number) => {
     const rive = riveRef.current;
     if (!rive) return;
+    
+    // Trigger animation immediately for instant feedback
     rive.play();
     rive.setNumber('item selected', index + 1);
     
-    // Index-based navigation logic
-    if (onTabPress) {
-      onTabPress(index);
-    } else {
-      // Special handling for index 0 - smart Day/Calendar navigation
-      if (index === 0) {
-        const targetScreen = handleFirstButtonPress();
-        navigation.navigate(targetScreen);
+    // Defer navigation to next frame to avoid blocking animation
+    requestAnimationFrame(() => {
+      if (onTabPress) {
+        onTabPress(index);
       } else {
-        // Navigate using index to screen mapping for other indices
-        const screenName = screenMap[index];
-        if (screenName) {
-          navigation.navigate(screenName);
+        // Special handling for index 0 - smart Day/Calendar navigation
+        if (index === 0) {
+          const targetScreen = handleFirstButtonPress();
+          navigation.navigate(targetScreen);
+        } else {
+          // Navigate using index to screen mapping for other indices
+          const screenName = screenMap[index];
+          if (screenName) {
+            navigation.navigate(screenName);
+          }
         }
       }
-    }
+    });
   };
 
   return (

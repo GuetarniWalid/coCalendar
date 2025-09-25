@@ -16,6 +16,12 @@ export interface SlotItem {
   clientName?: string;
   color?: string;
   completed?: boolean;
+  image?: {
+    persona: 'adult-female' | 'adult-male' | 'child-female' | 'child-male';
+    activity: string;
+    name: string;
+    extension: 'webp';
+  };
 }
 
 

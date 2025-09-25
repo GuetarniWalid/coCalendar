@@ -15,6 +15,7 @@ export const fetchSlotsForDate = async (
       visibility,
       description,
       color,
+      image,
       clients(display_name)
     `)
     .eq('pro_id', userId)
@@ -34,6 +35,7 @@ export const fetchSlotsForDate = async (
     description: slot.description ?? undefined,
     clientName: Array.isArray(slot.clients) && slot.clients.length > 0 ? slot.clients[0].display_name : undefined,
     color: slot.color ?? undefined,
+    image: slot.image ?? undefined,
   })) || [];
 };
 
@@ -58,6 +60,7 @@ export const fetchSlotsInRange = async (
       visibility,
       description,
       color,
+      image,
       clients(display_name)
     `)
     .eq('pro_id', userId)
@@ -80,6 +83,7 @@ export const fetchSlotsInRange = async (
       description: slot.description ?? undefined,
       clientName: Array.isArray(slot.clients) && slot.clients.length > 0 ? slot.clients[0].display_name : undefined,
       color: slot.color ?? undefined,
+      image: slot.image ?? undefined,
     });
   }
   return byDate;

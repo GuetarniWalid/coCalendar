@@ -27,7 +27,6 @@ const EmptyDayCardBase: FC<EmptyDayCardProps> = ({ onPress }) => {
           allowDownscaling={false}
           key="stable-avatar-image"
           blurRadius={0}
-          fadeDuration={0}
         />
       )}
       <View style={styles.content}>

@@ -1,9 +1,10 @@
 import { FC, useMemo, memo, useCallback, useEffect, useState } from 'react';
 import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { SlotItem as SlotItemType, formatTime } from '@project/shared';
+import { SlotItem as SlotItemType, formatTime, getAvatarPublicUrl } from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { TaskChecked } from '@project/icons';
+import { Image } from 'expo-image';
 import { ProgressBar } from './ProgressBar';
 
 interface SlotItemProps {
@@ -24,6 +25,25 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
   const titleNativeId = useMemo(() => `slot-title-${baseId}`, [baseId]);
 
   const timeText = useMemo(() => `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`, [slot.startTime, slot.endTime]);
+
+  // Generate image URI - use slot image if provided, otherwise default
+  const imageUri = useMemo(() => {
+    const imageConfig = slot.image || {
+      persona: 'adult-female' as const,
+      activity: 'job_study',
+      name: 'working_desktop',
+      extension: 'webp' as const
+    };
+    
+    const uri = getAvatarPublicUrl({
+      persona: imageConfig.persona,
+      activity: imageConfig.activity,
+      name: imageConfig.name,
+      extension: imageConfig.extension
+    });
+    
+    return uri;
+  }, [slot.image]);
 
   // Real-time tracking for slot completion
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -83,24 +103,38 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
 
   return (
     <TouchableOpacity style={[styles.container, dynamicStyle]} onPress={handlePress}>
-      <View style={styles.cardContainer} nativeID={cardNativeId}>
-        {isCompleted && (
-          <Animated.View style={[styles.checkmarkContainer, animatedCheckmarkStyle]}>
-            <TaskChecked height={60} color={colors.success} />
-          </Animated.View>
-        )}
-        <View style={styles.contentContainer}>
-          <Text style={styles.time}>{timeText}</Text>
-          <Text nativeID={titleNativeId} style={styles.title}>
-            {slot.title}
-          </Text>
-          <ProgressBar 
-            startTime={slot.startTime} 
-            endTime={slot.endTime} 
-            slotColor={slot.color}
-          />
-          {slot.clientName && <Text style={styles.clientName}>Client: {slot.clientName}</Text>}
+      <View style={styles.slotWrapper}>
+        <View style={styles.cardContainer} nativeID={cardNativeId}>
+          {isCompleted && (
+            <Animated.View style={[styles.checkmarkContainer, animatedCheckmarkStyle]}>
+              <TaskChecked height={60} color={colors.success} />
+            </Animated.View>
+          )}
+          <View style={styles.contentContainer}>
+            <Text style={styles.time}>{timeText}</Text>
+            <Text nativeID={titleNativeId} style={styles.title}>
+              {slot.title}
+            </Text>
+            <ProgressBar 
+              startTime={slot.startTime} 
+              endTime={slot.endTime} 
+              slotColor={slot.color}
+            />
+            {slot.clientName && <Text style={styles.clientName}>Client: {slot.clientName}</Text>}
+          </View>
         </View>
+        {imageUri && (
+          <Image 
+            source={imageUri} 
+            style={styles.slotImage} 
+            contentFit='contain' 
+            cachePolicy='memory-disk' 
+            transition={0} 
+            pointerEvents='none' 
+            priority='normal'
+            allowDownscaling={false}
+          />
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -115,6 +149,7 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prevProps.slot.color === nextProps.slot.color &&
     prevProps.slot.clientName === nextProps.slot.clientName &&
     prevProps.slot.completed === nextProps.slot.completed &&
+    JSON.stringify(prevProps.slot.image) === JSON.stringify(nextProps.slot.image) &&
     prevProps.onPress === nextProps.onPress
   );
 });
@@ -125,18 +160,31 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
     borderRadius: 36,
     minHeight: 129,
-    // No clipping on the main container to allow future image overflow
+  },
+  slotWrapper: {
+    position: 'relative',
+    // No overflow hidden here to allow image to extend outside
+    flex: 1,
   },
   cardContainer: {
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.xxxl,
     borderRadius: 36,
     position: 'relative',
-    overflow: 'hidden', // Clip overflow for TaskChecked animation
+    overflow: 'hidden', // Clip overflow for TaskChecked animation only
     flex: 1,
   },
   contentContainer: {
-    // Container for text content
+    // Container for text content - limit width to 3/5 to not go under image
+    width: '60%',
+  },
+  slotImage: {
+    position: 'absolute',
+    top: -30,
+    right: 15,
+    width: 150,
+    height: 150,
+    zIndex: 2,
   },
   checkmarkContainer: {
     position: 'absolute',

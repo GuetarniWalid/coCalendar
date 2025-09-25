@@ -217,7 +217,7 @@ export const formatRemainingTime = (startTime: string, endTime: string, translat
       return `${t.remainingPrefix} ${totalSeconds} ${unit}`;
     }
     
-    const remainingMinutes = Math.floor(remainingMs / (1000 * 60));
+    const remainingMinutes = Math.ceil(remainingMs / (1000 * 60));
     
     // If less than 1 hour, show minutes
     if (remainingMinutes < 60) {

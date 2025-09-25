@@ -2,7 +2,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useDayView } from '../shared/hooks';
-import { useSlotFormStore, setCurrentScreen } from '@project/shared';
+import { useSlotFormStore, setCurrentScreen, startTimeTracking, stopTimeTracking } from '@project/shared';
 import { setCalendarSelectedDate } from '@project/shared/store/calendar';
 import { SlotList } from './slot-list';
 import { colors, spacing, fontSize } from '@project/shared';
@@ -19,10 +19,17 @@ export const DayViewScreen = () => {
   const { slots, loading, selectedDate, getSlotsForDate } = useDayView(date);
   if (selectedDate) setCalendarSelectedDate(selectedDate);
 
-  // Track when this screen becomes active
+  // Track when this screen becomes active and manage time tracking
   useFocusEffect(
     useCallback(() => {
       setCurrentScreen('Day');
+      // Start real-time tracking when day view is focused
+      startTimeTracking();
+      
+      return () => {
+        // Stop real-time tracking when day view is unfocused
+        stopTimeTracking();
+      };
     }, [])
   );
 

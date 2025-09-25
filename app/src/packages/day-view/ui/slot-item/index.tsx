@@ -1,7 +1,7 @@
-import { FC, useMemo, memo, useCallback, useEffect, useState } from 'react';
+import { FC, useMemo, memo, useCallback, useEffect } from 'react';
 import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { SlotItem as SlotItemType, formatTime, getAvatarPublicUrl, getSlotBackgroundColor } from '@project/shared';
+import { SlotItem as SlotItemType, formatTime, getAvatarPublicUrl, getSlotBackgroundColor, useTimeTrackerStore } from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { TaskChecked } from '@project/icons';
 import { Image } from 'expo-image';
@@ -45,41 +45,18 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
     return uri;
   }, [slot.image]);
 
-  // Real-time tracking for slot completion
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // Use Teaful time tracker for real-time completion tracking
+  const [currentTime] = useTimeTrackerStore.currentTime();
   
-  // Check if slot should show as completed
+  // Check if slot should show as completed using Teaful real-time tracking
   const isCompleted = useMemo(() => {
     if (slot.completed) return true;
     
-    // Check if current time is after end time
+    // Check if current time is after end time using Teaful's real-time current time
     const endTime = new Date(slot.endTime);
-    return currentTime > endTime;
+    const now = new Date(currentTime);
+    return now > endTime;
   }, [slot.completed, slot.endTime, currentTime]);
-
-  // Update current time dynamically to track slot completion
-  useEffect(() => {
-    const endTime = new Date(slot.endTime);
-    const now = new Date();
-    
-    // If slot hasn't ended yet, set a timeout for when it should end
-    if (now < endTime && !slot.completed) {
-      const timeUntilEnd = endTime.getTime() - now.getTime();
-      
-      const timeout = setTimeout(() => {
-        setCurrentTime(new Date());
-      }, timeUntilEnd);
-
-      return () => clearTimeout(timeout);
-    }
-    
-    // For slots that have already ended or are completed, update immediately
-    if (now >= endTime || slot.completed) {
-      setCurrentTime(now);
-    }
-    
-    return undefined;
-  }, [slot.endTime, slot.completed]);
 
   // Animation for TaskChecked slide-in
   const slideAnimation = useSharedValue(isCompleted ? 0 : -100);
@@ -141,6 +118,7 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
 };
 
 export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
+  // Simplified comparison - most critical props for performance
   return (
     prevProps.slot.id === nextProps.slot.id &&
     prevProps.slot.title === nextProps.slot.title &&
@@ -149,7 +127,9 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prevProps.slot.color === nextProps.slot.color &&
     prevProps.slot.clientName === nextProps.slot.clientName &&
     prevProps.slot.completed === nextProps.slot.completed &&
-    JSON.stringify(prevProps.slot.image) === JSON.stringify(nextProps.slot.image) &&
+    // Simple image comparison instead of expensive JSON.stringify
+    prevProps.slot.image?.name === nextProps.slot.image?.name &&
+    prevProps.slot.image?.persona === nextProps.slot.image?.persona &&
     prevProps.onPress === nextProps.onPress
   );
 });

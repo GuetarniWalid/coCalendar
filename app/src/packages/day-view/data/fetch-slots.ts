@@ -1,13 +1,10 @@
-import { SlotItem } from '@project/shared';
+import { SlotItem, SlotColorName } from '@project/shared';
 
-export const fetchSlotsForDate = async (
-  supabase: any,
-  userId: string,
-  selectedDate: string
-): Promise<SlotItem[]> => {
+export const fetchSlotsForDate = async (supabase: any, userId: string, selectedDate: string): Promise<SlotItem[]> => {
   const { data, error } = await supabase
     .from('slots')
-    .select(`
+    .select(
+      `
       id,
       title,
       start_at,
@@ -17,7 +14,8 @@ export const fetchSlotsForDate = async (
       color,
       image,
       clients(display_name)
-    `)
+    `
+    )
     .eq('pro_id', userId)
     .gte('start_at', `${selectedDate}T00:00:00`)
     .lt('start_at', `${selectedDate}T23:59:59`)
@@ -25,34 +23,32 @@ export const fetchSlotsForDate = async (
 
   if (error) throw error;
 
-  return data?.map((slot: any) => ({
-    id: slot.id,
-    title: slot.title,
-    startTime: slot.start_at,
-    endTime: slot.end_at,
-    type: slot.visibility as 'private' | 'shared',
-    visibility: slot.visibility as 'private' | 'public',
-    description: slot.description ?? undefined,
-    clientName: Array.isArray(slot.clients) && slot.clients.length > 0 ? slot.clients[0].display_name : undefined,
-    color: slot.color ?? undefined,
-    image: slot.image ?? undefined,
-  })) || [];
+  return (
+    data?.map((slot: any) => ({
+      id: slot.id,
+      title: slot.title,
+      startTime: slot.start_at,
+      endTime: slot.end_at,
+      type: slot.visibility as 'private' | 'shared',
+      visibility: slot.visibility as 'private' | 'public',
+      description: slot.description ?? undefined,
+      clientName: Array.isArray(slot.clients) && slot.clients.length > 0 ? slot.clients[0].display_name : undefined,
+      color: slot.color as SlotColorName | undefined,
+      image: slot.image ?? undefined,
+    })) || []
+  );
 };
 
 // Fetch slots for a date range [startDate, endDate] inclusive. Dates in YYYY-MM-DD.
-export const fetchSlotsInRange = async (
-  supabase: any,
-  userId: string,
-  startDate: string,
-  endDate: string
-): Promise<Record<string, SlotItem[]>> => {
+export const fetchSlotsInRange = async (supabase: any, userId: string, startDate: string, endDate: string): Promise<Record<string, SlotItem[]>> => {
   const startIso = `${startDate}T00:00:00`;
   // Add one day to endDate and use lt to make inclusive range
   const endIsoExclusive = `${endDate}T23:59:59`;
 
   const { data, error } = await supabase
     .from('slots')
-    .select(`
+    .select(
+      `
       id,
       title,
       start_at,
@@ -62,7 +58,8 @@ export const fetchSlotsInRange = async (
       color,
       image,
       clients(display_name)
-    `)
+    `
+    )
     .eq('pro_id', userId)
     .gte('start_at', startIso)
     .lte('start_at', endIsoExclusive)
@@ -82,7 +79,7 @@ export const fetchSlotsInRange = async (
       visibility: slot.visibility as 'private' | 'public',
       description: slot.description ?? undefined,
       clientName: Array.isArray(slot.clients) && slot.clients.length > 0 ? slot.clients[0].display_name : undefined,
-      color: slot.color ?? undefined,
+      color: slot.color as SlotColorName | undefined,
       image: slot.image ?? undefined,
     });
   }

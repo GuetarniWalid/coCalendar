@@ -1,13 +1,13 @@
 import { FC, useMemo, useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { colors, spacing, progressBarConfig, hasSpecificTime, calculateSlotProgress, formatRemainingTime } from '@project/shared';
+import { spacing, progressBarConfig, hasSpecificTime, calculateSlotProgress, formatRemainingTime, getSlotContrastColor, SlotColorName } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
 
 interface ProgressBarProps {
   startTime: string;
   endTime: string;
-  slotColor?: string | undefined;
+  slotColor?: SlotColorName | undefined;
 }
 
 const ProgressBarBase: FC<ProgressBarProps> = ({ startTime, endTime, slotColor }) => {
@@ -54,16 +54,7 @@ const ProgressBarBase: FC<ProgressBarProps> = ({ startTime, endTime, slotColor }
   // For completed slots (end time has passed), show a simple filled progress bar without animations
   if (isCompleted) {
     const progressColor = useMemo(() => {
-      if (!slotColor) {
-        return colors.background.slot.default?.contrast || colors.success;
-      }
-      
-      // Find the slot color definition that matches the provided color
-      const slotColorEntry = Object.values(colors.background.slot).find(
-        colorDef => colorDef.default === slotColor
-      );
-      
-      return slotColorEntry?.contrast || colors.background.slot.default?.contrast || colors.success;
+      return getSlotContrastColor(slotColor);
     }, [slotColor]);
 
     return (
@@ -306,16 +297,7 @@ const ProgressBarBase: FC<ProgressBarProps> = ({ startTime, endTime, slotColor }
   
   // Find the contrast color based on the slot color
   const progressColor = useMemo(() => {
-    if (!slotColor) {
-      return colors.background.slot.default?.contrast || colors.success;
-    }
-    
-    // Find the slot color definition that matches the provided color
-    const slotColorEntry = Object.values(colors.background.slot).find(
-      colorDef => colorDef.default === slotColor
-    );
-    
-    return slotColorEntry?.contrast || colors.background.slot.default?.contrast || colors.success;
+    return getSlotContrastColor(slotColor);
   }, [slotColor]);
   
   // Don't render if no progress data - but this comes after all hooks

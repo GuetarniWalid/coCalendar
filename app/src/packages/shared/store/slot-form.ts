@@ -1,4 +1,5 @@
 import createStore from 'teaful';
+import type { SlotColorName } from '../utils/colors';
 
 interface SelectedSlotData {
   id: string | null;
@@ -8,7 +9,7 @@ interface SelectedSlotData {
   visibility?: 'private' | 'public';
   clientName?: string;
   description?: string;
-  color?: string;
+  color?: SlotColorName | undefined;
 }
 
 interface SlotFormState {

@@ -1,7 +1,7 @@
 import { FC, useMemo, memo, useCallback, useEffect, useState } from 'react';
 import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { SlotItem as SlotItemType, formatTime, getAvatarPublicUrl } from '@project/shared';
+import { SlotItem as SlotItemType, formatTime, getAvatarPublicUrl, getSlotBackgroundColor } from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { TaskChecked } from '@project/icons';
 import { Image } from 'expo-image';
@@ -15,7 +15,7 @@ interface SlotItemProps {
 const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
   const dynamicStyle = useMemo(
     () => ({
-      backgroundColor: slot.color || colors.background.slot.default?.default || colors.background.secondary,
+      backgroundColor: getSlotBackgroundColor(slot.color),
     }),
     [slot.color]
   );

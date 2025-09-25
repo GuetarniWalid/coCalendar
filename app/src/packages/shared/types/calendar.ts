@@ -1,3 +1,5 @@
+import type { SlotColorName } from '../utils/colors';
+
 export interface DayItem {
   date: string;
   day: string;
@@ -14,7 +16,7 @@ export interface SlotItem {
   visibility?: 'private' | 'public';
   description?: string;
   clientName?: string;
-  color?: string;
+  color?: SlotColorName | undefined;
   completed?: boolean;
   image?: {
     persona: 'adult-female' | 'adult-male' | 'child-female' | 'child-male';

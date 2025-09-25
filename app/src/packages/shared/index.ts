@@ -4,4 +4,5 @@ export * from './store';
 export * from './types/calendar';
 export * from './utils/calendar';
 export * from './utils/avatars';
+export * from './utils/colors';
 export * from './ui/AvatarImage';

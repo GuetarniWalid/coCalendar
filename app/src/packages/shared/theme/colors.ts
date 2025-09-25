@@ -45,7 +45,7 @@ const lightColors: ColorPalette = {
   },
 
   // Semantic colors
-  success: '#41DB81',
+  success: '#76C496',
   warning: '#fbbf24',
   error: '#f87171',
 
@@ -94,7 +94,7 @@ const darkColors: ColorPalette = {
   },
 
   // Semantic colors
-  success: '#41DB81',
+  success: '#76C496',
   warning: '#fbbf24',
   error: '#f87171',
 

@@ -35,6 +35,9 @@ export interface Translations {
   secondsSingular: string; // "seconde" 
   secondsPlural: string; // "secondes"
 
+  // Remaining time card
+  remainingTimeText: string; // "Take a break"
+
   // Slot form labels
   titleLabel: string;
   timeLabel: string;
@@ -83,6 +86,9 @@ export const translations: Record<SupportedLocale, Translations> = {
     minutesPlural: 'min',
     secondsSingular: 'second',
     secondsPlural: 'seconds',
+
+    // Remaining time card
+    remainingTimeText: 'Take a break',
     
     // Slot form labels
     titleLabel: 'Title',
@@ -130,6 +136,9 @@ export const translations: Record<SupportedLocale, Translations> = {
     minutesPlural: 'min',
     secondsSingular: 'seconde',
     secondsPlural: 'secondes',
+
+    // Remaining time card
+    remainingTimeText: 'Prenez une pause',
     
     // Slot form labels
     titleLabel: 'Titre',
@@ -177,6 +186,9 @@ export const translations: Record<SupportedLocale, Translations> = {
     minutesPlural: 'min',
     secondsSingular: 'segundo',
     secondsPlural: 'segundos',
+
+    // Remaining time card
+    remainingTimeText: 'Tómese un descanso',
     
     // Slot form labels
     titleLabel: 'Título',
@@ -224,6 +236,9 @@ export const translations: Record<SupportedLocale, Translations> = {
     minutesPlural: 'Min',
     secondsSingular: 'Sekunde',
     secondsPlural: 'Sekunden',
+
+    // Remaining time card
+    remainingTimeText: 'Machen Sie eine Pause',
     
     // Slot form labels
     titleLabel: 'Titel',

@@ -41,8 +41,8 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTi
     let timeDisplay: string;
     let shouldUpdate: boolean;
 
-    if (totalSeconds < 60) {
-      // Less than 1 minute - show seconds only
+    if (totalSeconds <= 59) {
+      // 59 seconds or less - show seconds only
       timeDisplay = `${totalSeconds}s`;
       shouldUpdate = true; // Update every second
     } else {
@@ -50,15 +50,8 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTi
 
       if (totalMinutes < 60) {
         // Less than 1 hour - show minutes only
-        // But if we're close to switching to seconds (under 70 seconds), be more precise
-        if (totalSeconds < 70) {
-          // Show minutes but update every second to catch the transition
-          timeDisplay = `${totalMinutes}min`;
-          shouldUpdate = true;
-        } else {
-          timeDisplay = `${totalMinutes}min`;
-          shouldUpdate = false; // Update every minute
-        }
+        timeDisplay = `${totalMinutes}min`;
+        shouldUpdate = totalSeconds <= 120; // Update every second when 2 minutes or less
       } else {
         // 1 hour or more - show hours and minutes
         const hours = Math.floor(totalMinutes / 60);
@@ -87,8 +80,8 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTi
     const remainingMs = nextActivity.diff(now);
     const totalSeconds = Math.floor(remainingMs / 1000);
 
-    if (totalSeconds < 70) {
-      // When close to switching to seconds, update every second aligned to the clock
+    if (totalSeconds <= 120) {
+      // When 2 minutes or less, update every second aligned to the clock
       const msUntilNextSecond = 1000 - now.millisecond();
 
       // First update at the next exact second

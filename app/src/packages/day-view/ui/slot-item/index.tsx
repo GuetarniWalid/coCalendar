@@ -8,6 +8,7 @@ import { Image } from 'expo-image';
 import { ProgressBar } from './ProgressBar';
 import { TaskCounter } from './TaskCounter';
 import { NoteIndicator } from './NoteIndicator';
+import { VoiceIndicator } from './VoiceIndicator';
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -102,6 +103,7 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
             <View style={styles.indicatorsRow}>
               <TaskCounter tasks={slot.tasks ?? undefined} />
               <NoteIndicator description={slot.description} />
+              <VoiceIndicator voice_path={slot.voice_path} />
             </View>
             {slot.clientName && <Text style={styles.clientName}>Client: {slot.clientName}</Text>}
           </View>
@@ -134,6 +136,7 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prevProps.slot.clientName === nextProps.slot.clientName &&
     prevProps.slot.completed === nextProps.slot.completed &&
     prevProps.slot.description === nextProps.slot.description &&
+    prevProps.slot.voice_path === nextProps.slot.voice_path &&
     // Simple image comparison instead of expensive JSON.stringify
     prevProps.slot.image?.name === nextProps.slot.image?.name &&
     prevProps.slot.image?.persona === nextProps.slot.image?.persona &&
@@ -171,7 +174,8 @@ const styles = StyleSheet.create({
   indicatorsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 14,
+    paddingLeft: 6,
   },
   slotImage: {
     position: 'absolute',

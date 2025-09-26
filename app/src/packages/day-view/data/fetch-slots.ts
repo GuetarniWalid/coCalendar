@@ -13,6 +13,11 @@ export const fetchSlotsForDate = async (supabase: any, userId: string, selectedD
       description,
       color,
       image,
+      voice_path,
+      voice_duration,
+      voice_mime,
+      voice_size_bytes,
+      voice_created_at,
       clients(display_name),
       slot_tasks(id, text, is_done, position)
     `
@@ -37,6 +42,11 @@ export const fetchSlotsForDate = async (supabase: any, userId: string, selectedD
       color: slot.color as SlotColorName | undefined,
       image: slot.image ?? undefined,
       tasks: Array.isArray(slot.slot_tasks) ? slot.slot_tasks.sort((a: any, b: any) => a.position - b.position) : undefined,
+      voice_path: slot.voice_path ?? undefined,
+      voice_duration: slot.voice_duration ?? undefined,
+      voice_mime: slot.voice_mime ?? undefined,
+      voice_size_bytes: slot.voice_size_bytes ?? undefined,
+      voice_created_at: slot.voice_created_at ?? undefined,
     })) || []
   );
 };
@@ -59,6 +69,11 @@ export const fetchSlotsInRange = async (supabase: any, userId: string, startDate
       description,
       color,
       image,
+      voice_path,
+      voice_duration,
+      voice_mime,
+      voice_size_bytes,
+      voice_created_at,
       clients(display_name),
       slot_tasks(id, text, is_done, position)
     `
@@ -85,6 +100,11 @@ export const fetchSlotsInRange = async (supabase: any, userId: string, startDate
       color: slot.color as SlotColorName | undefined,
       image: slot.image ?? undefined,
       tasks: Array.isArray(slot.slot_tasks) ? slot.slot_tasks.sort((a: any, b: any) => a.position - b.position) : undefined,
+      voice_path: slot.voice_path ?? undefined,
+      voice_duration: slot.voice_duration ?? undefined,
+      voice_mime: slot.voice_mime ?? undefined,
+      voice_size_bytes: slot.voice_size_bytes ?? undefined,
+      voice_created_at: slot.voice_created_at ?? undefined,
     });
   }
   return byDate;

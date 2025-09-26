@@ -25,6 +25,11 @@ export interface SlotItem {
     extension: 'webp';
   };
   tasks?: SlotTask[];
+  voice_path?: string;
+  voice_duration?: number;
+  voice_mime?: string;
+  voice_size_bytes?: number;
+  voice_created_at?: string;
 }
 
 export interface SlotTask {

@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { ScrollView, StyleSheet, View, FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { StyleSheet, View, FlatList, ScrollView, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SlotItem } from '../slot-item';
 import { EmptyDayCard } from '../empty-day-card';
 import { RemainingTimeCard } from '../remaining-time-card';
@@ -13,273 +13,264 @@ interface SlotListProps {
   getSlotsForDate: (date: string) => SlotItemType[] | undefined;
 }
 
+const TOTAL_DAYS = 7305;
+const ORIGIN_DATE = '2020-01-01';
+const GESTURE_THRESHOLD = {
+  QUICK_TIME: 300,
+  MIN_DISTANCE: 0.1,
+  FORWARD_SNAP: 0.15,
+  BACKWARD_SNAP: 0.85,
+  SLOW_SNAP: 0.5
+};
+
 export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, getSlotsForDate }) => {
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
-  const flatListRef = useRef<FlatList<number>>(null);
-  const screenWidth = Dimensions.get('window').width;
-
-  // Current center date that drives all page calculations
-  const [centerDate, setCenterDate] = useState<string>(selectedDate);
-
-  // Force refresh trigger for dynamic updates
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Large stable array of page indices - never changes
-  const pageIndices = useRef<number[]>([]);
-  if (pageIndices.current.length === 0) {
-    for (let i = -50; i <= 50; i++) {
-      pageIndices.current.push(i);
-    }
-  }
-  const centerIndex = 50; // Middle of our array
-
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  const flatListRef = useRef<FlatList>(null);
+  const screenWidth = Dimensions.get('window').width;
   const lastShownByDateRef = useRef<Record<string, SlotItemType[]>>({});
+  
+  const dayIndices = useMemo(() => 
+    Array.from({ length: TOTAL_DAYS }, (_, i) => i), 
+    []
+  );
 
-  // Memoized handler for remaining time card to avoid creating new functions on each render
+  const getDateFromIndex = useCallback((index: number) => 
+    dayjs(ORIGIN_DATE).add(index, 'day').format('YYYY-MM-DD'), []
+  );
+
+  const getIndexFromDate = useCallback((date: string) => 
+    dayjs(date).diff(dayjs(ORIGIN_DATE), 'day'), []
+  );
+
+  const createDefaultSlot = useCallback((startTime: string, endTime: string) => ({
+    id: 'default-slot',
+    title: '',
+    startTime,
+    endTime,
+    type: 'private' as const,
+    visibility: 'private',
+  } as any), []);
+
   const handleRemainingTimeCardPress = useCallback((nextActivityStartTime: string) => {
     const now = dayjs();
     const nextActivityStart = dayjs(nextActivityStartTime);
-    onSlotPress({
-      id: 'default-slot',
-      title: '',
-      startTime: now.toISOString(),
-      endTime: nextActivityStart.toISOString(),
-      type: 'private' as const,
-      visibility: 'private',
-    } as any);
-  }, [onSlotPress]);
+    onSlotPress(createDefaultSlot(now.toISOString(), nextActivityStart.toISOString()));
+  }, [onSlotPress, createDefaultSlot]);
 
-  // Memoized handler for empty day card
   const handleEmptyDayCardPress = useCallback((date: string) => {
     const now = dayjs();
     const start = dayjs(`${date} ${now.format('HH:mm')}`);
     const end = start.add(1, 'hour');
-    onSlotPress({
-      id: 'default-slot',
-      title: '',
-      startTime: start.toISOString(),
-      endTime: end.toISOString(),
-      type: 'private' as const,
-      visibility: 'private',
-    } as any);
-  }, [onSlotPress]);
+    onSlotPress(createDefaultSlot(start.toISOString(), end.toISOString()));
+  }, [onSlotPress, createDefaultSlot]);
 
-  // Create enhanced data with remaining time cards
-  const createEnhancedSlotData = useCallback(
-    (slots: SlotItemType[]) => {
-      if (!slots || slots.length === 0) return [];
+  const createEnhancedSlotData = useCallback((slots: SlotItemType[]) => {
+    if (!slots?.length) return [];
 
-      const enhancedData: Array<{ type: 'slot' | 'remaining-time'; data: any; id: string }> = [];
-      const now = dayjs();
+    const enhancedData: Array<{ type: 'slot' | 'remaining-time'; data: any; id: string }> = [];
+    const now = dayjs();
 
-      for (let i = 0; i < slots.length; i++) {
-        const currentSlot = slots[i];
-        const nextSlot = slots[i + 1];
+    slots.forEach((currentSlot, i) => {
+      const nextSlot = slots[i + 1];
+      
+      enhancedData.push({
+        type: 'slot',
+        data: currentSlot,
+        id: `slot-${currentSlot.id?.toString() || i}`,
+      });
 
-        if (!currentSlot) continue;
+      if (nextSlot) {
+        const currentEndTime = dayjs(currentSlot.endTime);
+        const nextStartTime = dayjs(nextSlot.startTime);
+        const gapMs = nextStartTime.diff(currentEndTime);
+        const showRemainingCard = gapMs > 0 && 
+          now.isAfter(currentEndTime) && 
+          now.isBefore(nextStartTime.add(1, 'second'));
 
-        // Add current slot
-        enhancedData.push({
-          type: 'slot',
-          data: currentSlot,
-          id: `slot-${currentSlot.id?.toString() || i}`,
-        });
-
-        // Check if we should add a remaining time card after this slot
-        if (nextSlot) {
-          const currentEndTime = dayjs(currentSlot.endTime);
-          const nextStartTime = dayjs(nextSlot.startTime);
-          const gapMs = nextStartTime.diff(currentEndTime);
-
-          // Show remaining time card if:
-          // 1. There's a gap between activities (> 0 seconds)
-          // 2. The current activity has ended
-          // 3. The next activity hasn't started yet (with buffer for animation)
-          if (gapMs > 0 && now.isAfter(currentEndTime) && now.isBefore(nextStartTime.add(1, 'second'))) {
-            enhancedData.push({
-              type: 'remaining-time',
-              data: { nextActivityStartTime: nextSlot.startTime },
-              id: `remaining-${currentSlot.id}-${nextSlot.id}`, // Use slot IDs for stable keys
-            });
-          }
+        if (showRemainingCard) {
+          enhancedData.push({
+            type: 'remaining-time',
+            data: { nextActivityStartTime: nextSlot.startTime },
+            id: `remaining-${currentSlot.id}-${nextSlot.id}`,
+          });
         }
       }
+    });
 
-      return enhancedData;
-    },
-    [refreshTrigger]
-  );
+    return enhancedData;
+  }, [refreshTrigger]);
 
-  // Timer to refresh when slots end and remaining time cards should appear
   useEffect(() => {
-    const checkForSlotEndTimes = () => {
-      const now = dayjs();
-      const todaySlots = getSlotsForDate(selectedDate);
+    const todaySlots = getSlotsForDate(selectedDate);
+    if (!todaySlots?.length) return;
 
-      if (!todaySlots || todaySlots.length === 0) return () => {};
+    const now = dayjs();
+    const nextEndTime = todaySlots
+      .map(slot => dayjs(slot.endTime))
+      .filter(endTime => now.isBefore(endTime))
+      .sort((a, b) => a.unix() - b.unix())[0];
 
-      // Find the next slot end time that's in the future
-      let nextEndTime: dayjs.Dayjs | null = null;
+    if (!nextEndTime) return;
 
-      for (const slot of todaySlots) {
-        const endTime = dayjs(slot.endTime);
-        if (now.isBefore(endTime)) {
-          if (!nextEndTime || endTime.isBefore(nextEndTime)) {
-            nextEndTime = endTime;
-          }
-        }
-      }
+    const timeout = setTimeout(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, nextEndTime.diff(now) + 100);
 
-      if (nextEndTime) {
-        const msUntilEnd = nextEndTime.diff(now);
-        // Set a timeout to refresh when the slot ends
-        const timeout = setTimeout(() => {
-          setRefreshTrigger(prev => prev + 1);
-        }, msUntilEnd + 100); // Add 100ms buffer
-
-        return () => clearTimeout(timeout);
-      }
-
-      return () => {};
-    };
-
-    return checkForSlotEndTimes();
+    return () => clearTimeout(timeout);
   }, [selectedDate, getSlotsForDate, refreshTrigger]);
 
-  // Memoize the vertical list renderer with stable dependencies
-  const renderVerticalList = useCallback(
-    (date: string) => {
-      const cacheOrUndefined = getSlotsForDate(date);
-      const daySlots = cacheOrUndefined ?? lastShownByDateRef.current[date] ?? null;
+  useEffect(() => {
+    const targetIndex = getIndexFromDate(selectedDate);
+    
+    if (!isInitialized) {
+      setIsInitialized(true);
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index: targetIndex, animated: false });
+      }, 100);
+    } else {
+      flatListRef.current?.scrollToIndex({ index: targetIndex, animated: true });
+    }
+  }, [isInitialized, selectedDate, getIndexFromDate]);
 
-      if (!daySlots || daySlots.length === 0) {
-        return (
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-            <EmptyDayCard
-              onPress={() => handleEmptyDayCardPress(date)}
-            />
-          </ScrollView>
-        );
+  const renderDayPage = useCallback(({ item: dayIndex }: { item: number }) => {
+    const date = getDateFromIndex(dayIndex);
+    const daySlots = getSlotsForDate(date) ?? lastShownByDateRef.current[date] ?? null;
+
+    if (daySlots?.length) {
+      lastShownByDateRef.current[date] = daySlots;
+    }
+
+    const renderContent = () => {
+      if (!daySlots?.length) {
+        return <EmptyDayCard onPress={() => handleEmptyDayCardPress(date)} />;
       }
 
-      // Persist last non-empty render for this date
-      if (daySlots && daySlots.length > 0) {
-        lastShownByDateRef.current[date] = daySlots;
-      }
-
-      // Sort slots by start time before processing
       const sortedSlots = [...daySlots].sort((a, b) => dayjs(a.startTime).unix() - dayjs(b.startTime).unix());
       const enhancedData = createEnhancedSlotData(sortedSlots);
 
-      return (
-        <FlatList
-          data={enhancedData}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => {
-            if (item.type === 'slot') {
-              return <SlotItem slot={item.data} onPress={onSlotPress} />;
-            } else {
-              return (
-                <RemainingTimeCard
-                  nextActivityStartTime={item.data.nextActivityStartTime}
-                  onPress={() => handleRemainingTimeCardPress(item.data.nextActivityStartTime)}
-                />
-              );
-            }
-          }}
-          style={styles.scrollView}
-          contentContainerStyle={styles.content}
+      return enhancedData.map((item) => 
+        item.type === 'slot' ? (
+          <SlotItem 
+            key={item.id} 
+            slot={item.data} 
+            onPress={onSlotPress} 
+          />
+        ) : (
+          <RemainingTimeCard
+            key={item.id}
+            nextActivityStartTime={item.data.nextActivityStartTime}
+            onPress={() => handleRemainingTimeCardPress(item.data.nextActivityStartTime)}
+          />
+        )
+      );
+    };
+
+    return (
+      <View style={[styles.dayContainer, { width: screenWidth }]}>
+        <ScrollView 
+          style={styles.dayScrollView} 
+          contentContainerStyle={styles.dayContent} 
           showsVerticalScrollIndicator={false}
-          // Improved performance settings
-          initialNumToRender={5}
-          maxToRenderPerBatch={3}
-          windowSize={5}
-          removeClippedSubviews={true}
-          updateCellsBatchingPeriod={100}
-        />
-      );
-    },
-    [getSlotsForDate, onSlotPress, createEnhancedSlotData, handleRemainingTimeCardPress, handleEmptyDayCardPress]
-  );
+        >
+          {renderContent()}
+        </ScrollView>
+      </View>
+    );
+  }, [screenWidth, getSlotsForDate, onSlotPress, createEnhancedSlotData, handleRemainingTimeCardPress, handleEmptyDayCardPress, getDateFromIndex]);
 
-  const currentPageRef = useRef(centerIndex);
-  const baseSelectedDateRef = useRef<string>(selectedDate);
+  const gestureStateRef = useRef({ startOffset: 0, startTime: 0, lastOffset: 0 });
 
-  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const x = e.nativeEvent.contentOffset.x;
-    const pageIndex = Math.round(x / screenWidth);
+  const handleScrollBeginDrag = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    gestureStateRef.current = { startOffset: offsetX, startTime: Date.now(), lastOffset: offsetX };
+  }, []);
 
-    // Only update if we actually moved to a different page
-    if (pageIndex !== currentPageRef.current) {
-      // Calculate absolute offset from the original starting date
-      const absoluteOffset = pageIndex - centerIndex;
-      const newDate = dayjs(baseSelectedDateRef.current).add(absoluteOffset, 'day').format('YYYY-MM-DD');
+  const handleScrollEndDrag = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset: { x: offsetX } } = event.nativeEvent;
+    const gestureDistance = offsetX - gestureStateRef.current.startOffset;
+    const gestureTime = Date.now() - gestureStateRef.current.startTime;
+    
+    const exactIndex = offsetX / screenWidth;
+    const currentPageIndex = Math.floor(exactIndex);
+    const transitionProgress = exactIndex - currentPageIndex;
+    
+    const isQuickGesture = gestureTime < GESTURE_THRESHOLD.QUICK_TIME;
+    const hasMinimumDistance = Math.abs(gestureDistance) > screenWidth * GESTURE_THRESHOLD.MIN_DISTANCE;
+    const isForwardGesture = gestureDistance > 0;
+    
+    let targetIndex = currentPageIndex;
+    
+    if (isQuickGesture && hasMinimumDistance) {
+      if (isForwardGesture && transitionProgress > GESTURE_THRESHOLD.FORWARD_SNAP) {
+        targetIndex = currentPageIndex + 1;
+      } else if (!isForwardGesture && transitionProgress < GESTURE_THRESHOLD.BACKWARD_SNAP) {
+        targetIndex = currentPageIndex;
+      } else {
+        targetIndex = Math.round(exactIndex);
+      }
+    } else {
+      targetIndex = transitionProgress > GESTURE_THRESHOLD.SLOW_SNAP ? currentPageIndex + 1 : currentPageIndex;
+    }
+    
+    setTimeout(() => {
+      flatListRef.current?.scrollToOffset({ 
+        offset: targetIndex * screenWidth, 
+        animated: true 
+      });
+    }, 10);
+  }, [screenWidth]);
 
-      setCenterDate(newDate);
+  const handleMomentumScrollEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset: { x: offsetX } } = event.nativeEvent;
+    const currentIndex = Math.round(offsetX / screenWidth);
+    const newDate = getDateFromIndex(currentIndex);
+    
+    if (newDate !== selectedDate) {
       setSelectedDate(newDate);
-      currentPageRef.current = pageIndex;
     }
-  };
-
-  // Sync with external selectedDate changes and reset base reference
-  useEffect(() => {
-    if (selectedDate !== centerDate) {
-      setCenterDate(selectedDate);
-      baseSelectedDateRef.current = selectedDate;
-      currentPageRef.current = centerIndex; // Reset to center when external date changes
-      // Force scroll to center to ensure visual consistency
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({ index: centerIndex, animated: false });
-      }, 100);
-    }
-  }, [selectedDate, centerDate]);
-
-  const pageContainerStyle = useMemo(() => ({ width: screenWidth }), [screenWidth]);
-
-  // Memoize the page item renderer to prevent unnecessary re-renders
-  const renderPageItem = useCallback(
-    ({ item }: { item: number; index: number }) => {
-      const absolutePageOffset = Number(item);
-      const date = dayjs(baseSelectedDateRef.current).add(absolutePageOffset, 'day').format('YYYY-MM-DD');
-      return (
-        <View style={pageContainerStyle} key={`content-${date}`}>
-          {renderVerticalList(date)}
-        </View>
-      );
-    },
-    [pageContainerStyle, renderVerticalList]
-  );
+  }, [screenWidth, selectedDate, setSelectedDate, getDateFromIndex]);
 
   return (
     <FlatList
       ref={flatListRef}
-      data={pageIndices.current}
-      keyExtractor={item => `page-${item}`}
+      data={dayIndices}
+      keyExtractor={item => `day-${item}`}
       horizontal
-      pagingEnabled
-      initialNumToRender={3}
-      windowSize={5}
-      maxToRenderPerBatch={3}
-      updateCellsBatchingPeriod={50}
-      removeClippedSubviews={true}
-      decelerationRate='fast'
+      pagingEnabled={false}
       showsHorizontalScrollIndicator={false}
-      initialScrollIndex={centerIndex}
-      getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
-      renderItem={renderPageItem}
-      onMomentumScrollEnd={handleMomentumEnd}
+      renderItem={renderDayPage}
+      onScrollBeginDrag={handleScrollBeginDrag}
+      onScrollEndDrag={handleScrollEndDrag}
+      onMomentumScrollEnd={handleMomentumScrollEnd}
+      getItemLayout={(_, index) => ({ 
+        length: screenWidth, 
+        offset: screenWidth * index, 
+        index 
+      })}
+      initialNumToRender={3}
+      maxToRenderPerBatch={3}
+      windowSize={7}
+      removeClippedSubviews
+      updateCellsBatchingPeriod={100}
+      decelerationRate={0.92}
     />
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  dayContainer: {
+    flex: 1,
+  },
+  dayScrollView: {
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     backgroundColor: colors.background.primary,
   },
-  content: {
+  dayContent: {
     paddingVertical: spacing.md,
   },
 });

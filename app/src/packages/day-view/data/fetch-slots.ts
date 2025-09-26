@@ -13,7 +13,8 @@ export const fetchSlotsForDate = async (supabase: any, userId: string, selectedD
       description,
       color,
       image,
-      clients(display_name)
+      clients(display_name),
+      slot_tasks(id, text, is_done, position)
     `
     )
     .eq('pro_id', userId)
@@ -35,6 +36,7 @@ export const fetchSlotsForDate = async (supabase: any, userId: string, selectedD
       clientName: Array.isArray(slot.clients) && slot.clients.length > 0 ? slot.clients[0].display_name : undefined,
       color: slot.color as SlotColorName | undefined,
       image: slot.image ?? undefined,
+      tasks: Array.isArray(slot.slot_tasks) ? slot.slot_tasks.sort((a: any, b: any) => a.position - b.position) : undefined,
     })) || []
   );
 };
@@ -57,7 +59,8 @@ export const fetchSlotsInRange = async (supabase: any, userId: string, startDate
       description,
       color,
       image,
-      clients(display_name)
+      clients(display_name),
+      slot_tasks(id, text, is_done, position)
     `
     )
     .eq('pro_id', userId)
@@ -81,6 +84,7 @@ export const fetchSlotsInRange = async (supabase: any, userId: string, startDate
       clientName: Array.isArray(slot.clients) && slot.clients.length > 0 ? slot.clients[0].display_name : undefined,
       color: slot.color as SlotColorName | undefined,
       image: slot.image ?? undefined,
+      tasks: Array.isArray(slot.slot_tasks) ? slot.slot_tasks.sort((a: any, b: any) => a.position - b.position) : undefined,
     });
   }
   return byDate;

@@ -24,6 +24,14 @@ export interface SlotItem {
     name: string;
     extension: 'webp';
   };
+  tasks?: SlotTask[];
+}
+
+export interface SlotTask {
+  id: string;
+  text: string;
+  is_done: boolean;
+  position: number;
 }
 
 

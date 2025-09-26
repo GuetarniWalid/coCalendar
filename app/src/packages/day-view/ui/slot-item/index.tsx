@@ -6,6 +6,7 @@ import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { TaskChecked } from '@project/icons';
 import { Image } from 'expo-image';
 import { ProgressBar } from './ProgressBar';
+import { TaskCounter } from './TaskCounter';
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -97,6 +98,7 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
               endTime={slot.endTime} 
               slotColor={slot.color}
             />
+            <TaskCounter tasks={slot.tasks ?? undefined} />
             {slot.clientName && <Text style={styles.clientName}>Client: {slot.clientName}</Text>}
           </View>
         </View>
@@ -130,6 +132,9 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     // Simple image comparison instead of expensive JSON.stringify
     prevProps.slot.image?.name === nextProps.slot.image?.name &&
     prevProps.slot.image?.persona === nextProps.slot.image?.persona &&
+    // Compare tasks array length and completion status
+    prevProps.slot.tasks?.length === nextProps.slot.tasks?.length &&
+    prevProps.slot.tasks?.filter(t => t.is_done).length === nextProps.slot.tasks?.filter(t => t.is_done).length &&
     prevProps.onPress === nextProps.onPress
   );
 });

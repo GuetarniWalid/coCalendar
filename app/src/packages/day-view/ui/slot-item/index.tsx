@@ -7,6 +7,7 @@ import { TaskChecked } from '@project/icons';
 import { Image } from 'expo-image';
 import { ProgressBar } from './ProgressBar';
 import { TaskCounter } from './TaskCounter';
+import { NoteIndicator } from './NoteIndicator';
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -98,7 +99,10 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
               endTime={slot.endTime} 
               slotColor={slot.color}
             />
-            <TaskCounter tasks={slot.tasks ?? undefined} />
+            <View style={styles.indicatorsRow}>
+              <TaskCounter tasks={slot.tasks ?? undefined} />
+              <NoteIndicator description={slot.description} />
+            </View>
             {slot.clientName && <Text style={styles.clientName}>Client: {slot.clientName}</Text>}
           </View>
         </View>
@@ -129,6 +133,7 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prevProps.slot.color === nextProps.slot.color &&
     prevProps.slot.clientName === nextProps.slot.clientName &&
     prevProps.slot.completed === nextProps.slot.completed &&
+    prevProps.slot.description === nextProps.slot.description &&
     // Simple image comparison instead of expensive JSON.stringify
     prevProps.slot.image?.name === nextProps.slot.image?.name &&
     prevProps.slot.image?.persona === nextProps.slot.image?.persona &&
@@ -162,6 +167,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     // Container for text content - limit width to 3/5 to not go under image
     width: '60%',
+  },
+  indicatorsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   slotImage: {
     position: 'absolute',

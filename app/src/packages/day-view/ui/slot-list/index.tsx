@@ -35,6 +35,35 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
 
   const lastShownByDateRef = useRef<Record<string, SlotItemType[]>>({});
 
+  // Memoized handler for remaining time card to avoid creating new functions on each render
+  const handleRemainingTimeCardPress = useCallback((nextActivityStartTime: string) => {
+    const now = dayjs();
+    const nextActivityStart = dayjs(nextActivityStartTime);
+    onSlotPress({
+      id: 'default-slot',
+      title: '',
+      startTime: now.toISOString(),
+      endTime: nextActivityStart.toISOString(),
+      type: 'private' as const,
+      visibility: 'private',
+    } as any);
+  }, [onSlotPress]);
+
+  // Memoized handler for empty day card
+  const handleEmptyDayCardPress = useCallback((date: string) => {
+    const now = dayjs();
+    const start = dayjs(`${date} ${now.format('HH:mm')}`);
+    const end = start.add(1, 'hour');
+    onSlotPress({
+      id: 'default-slot',
+      title: '',
+      startTime: start.toISOString(),
+      endTime: end.toISOString(),
+      type: 'private' as const,
+      visibility: 'private',
+    } as any);
+  }, [onSlotPress]);
+
   // Create enhanced data with remaining time cards
   const createEnhancedSlotData = useCallback(
     (slots: SlotItemType[]) => {
@@ -127,19 +156,7 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
         return (
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <EmptyDayCard
-              onPress={() => {
-                const now = dayjs();
-                const start = dayjs(`${date} ${now.format('HH:mm')}`);
-                const end = start.add(1, 'hour');
-                onSlotPress({
-                  id: 'default-slot',
-                  title: '',
-                  startTime: start.toISOString(),
-                  endTime: end.toISOString(),
-                  type: 'private' as const,
-                  visibility: 'private',
-                } as any);
-              }}
+              onPress={() => handleEmptyDayCardPress(date)}
             />
           </ScrollView>
         );
@@ -165,19 +182,7 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
               return (
                 <RemainingTimeCard
                   nextActivityStartTime={item.data.nextActivityStartTime}
-                  onPress={() => {
-                    // When pressed, create a new slot from now until the next activity
-                    const now = dayjs();
-                    const nextActivityStart = dayjs(item.data.nextActivityStartTime);
-                    onSlotPress({
-                      id: 'default-slot',
-                      title: '',
-                      startTime: now.toISOString(),
-                      endTime: nextActivityStart.toISOString(),
-                      type: 'private' as const,
-                      visibility: 'private',
-                    } as any);
-                  }}
+                  onPress={() => handleRemainingTimeCardPress(item.data.nextActivityStartTime)}
                 />
               );
             }
@@ -194,7 +199,7 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
         />
       );
     },
-    [getSlotsForDate, onSlotPress, createEnhancedSlotData]
+    [getSlotsForDate, onSlotPress, createEnhancedSlotData, handleRemainingTimeCardPress, handleEmptyDayCardPress]
   );
 
   const currentPageRef = useRef(centerIndex);

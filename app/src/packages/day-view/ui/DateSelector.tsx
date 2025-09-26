@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import dayjs from 'dayjs';
 import { DayItem } from '@project/shared';
@@ -6,6 +6,33 @@ import { colors, spacing, fontSize, fontWeight, useCalendarStore } from '@projec
 
 export const DateSelector: FC = () => {
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
+  
+  // Memoized handler to avoid creating new functions on each render
+  const handleDatePress = useCallback((date: string) => {
+    setSelectedDate(date);
+  }, [setSelectedDate]);
+
+  // Memoized day item component to optimize performance
+  const renderDayItem = useCallback((d: DayItem) => (
+    <TouchableOpacity 
+      key={d.date} 
+      style={[styles.dayCell, d.isSelected && styles.dayCellHighlight]} 
+      onPress={() => handleDatePress(d.date)}
+    >
+      <Text style={[styles.dateName, d.isSelected && styles.highlightDateName]}>
+        {d.day}
+      </Text>
+      <Text style={[styles.dateNumber, d.isSelected && styles.highlightDateNumber]}>
+        {dayjs(d.date).format('D')}
+      </Text>
+      {d.isToday && (
+        <View style={[
+          styles.todayDot,
+          { backgroundColor: d.isSelected ? colors.action.typography.primary : colors.typography.secondary }
+        ]} />
+      )}
+    </TouchableOpacity>
+  ), [handleDatePress]);
   // Build current week's days from selectedDate
   const startOfWeek = useMemo(() => {
     const d = dayjs(selectedDate);
@@ -138,29 +165,14 @@ export const DateSelector: FC = () => {
         initialNumToRender={3}
         windowSize={3}
         maxToRenderPerBatch={3}
-        updateCellsBatchingPeriod={0}
+        updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
         decelerationRate="fast"
         getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
         onMomentumScrollEnd={handleMomentumEnd}
         renderItem={({ item }: { item: DayItem[] }) => (
           <View style={[styles.weekRow, { width: screenWidth }]}>
-            {item.map((d: DayItem) => (
-              <TouchableOpacity key={d.date} style={[styles.dayCell, d.isSelected && styles.dayCellHighlight]} onPress={() => setSelectedDate(d.date)}>
-                <Text style={[styles.dateName, d.isSelected && styles.highlightDateName]}>
-                  {d.day}
-                </Text>
-                <Text style={[styles.dateNumber, d.isSelected && styles.highlightDateNumber]}>
-                  {dayjs(d.date).format('D')}
-                </Text>
-                {d.isToday && (
-                  <View style={[
-                    styles.todayDot,
-                    { backgroundColor: d.isSelected ? colors.action.typography.primary : colors.typography.secondary }
-                  ]} />
-                )}
-              </TouchableOpacity>
-            ))}
+            {item.map(renderDayItem)}
           </View>
         )}
       />

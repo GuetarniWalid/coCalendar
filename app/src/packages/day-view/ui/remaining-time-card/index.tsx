@@ -1,6 +1,7 @@
-import { FC, memo, useState, useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { colors, spacing, fontSize, fontWeight, getAvatarPublicUrl } from '@project/shared';
+import { FC, memo, useEffect, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, spacing, fontSize, fontWeight, getAvatarPublicUrl, useTimeTrackerStore } from '@project/shared';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
@@ -14,10 +15,10 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTi
   const t = useTranslation();
   const uri = getAvatarPublicUrl({ persona: 'adult-female', activity: 'home_daily_life', name: 'coffee_break', extension: 'webp' });
 
-  const [currentTime, setCurrentTime] = useState(() => new Date());
-  const [animatedHeight] = useState(new Animated.Value(0));
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const hasAnimatedInRef = useRef(false);
+  // Use Teaful time tracker for currentTime instead of individual useState
+  const [currentTime] = useTimeTrackerStore.currentTime();
+  const heightAnimation = useSharedValue(0);
+  const hasShownRef = useRef(false);
 
   // Calculate remaining time to next activity
   const remainingTimeData = useMemo(() => {
@@ -67,88 +68,39 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTi
     };
   }, [currentTime, nextActivityStartTime]);
 
-  // Update timer with precise timing
+  // Handle smooth show/hide animations with reanimated
+  const shouldShow = remainingTimeData !== null;
+  
   useEffect(() => {
-    if (!remainingTimeData) return;
-
-    const updateTime = () => {
-      setCurrentTime(new Date());
-    };
-
-    const now = dayjs();
-    const nextActivity = dayjs(nextActivityStartTime);
-    const remainingMs = nextActivity.diff(now);
-    const totalSeconds = Math.floor(remainingMs / 1000);
-
-    if (totalSeconds <= 120) {
-      // When 2 minutes or less, update every second aligned to the clock
-      const msUntilNextSecond = 1000 - now.millisecond();
-
-      // First update at the next exact second
-      const initialTimeout = setTimeout(() => {
-        updateTime();
-
-        // Then update every second
-        const timer = setInterval(updateTime, 1000);
-
-        // Clean up the interval when effect changes
-        const cleanup = () => clearInterval(timer);
-        (window as any)._remainingTimeCardCleanup = cleanup;
-      }, msUntilNextSecond);
-
-      return () => {
-        clearTimeout(initialTimeout);
-        if ((window as any)._remainingTimeCardCleanup) {
-          (window as any)._remainingTimeCardCleanup();
-          delete (window as any)._remainingTimeCardCleanup;
-        }
-      };
-    } else {
-      // Update every minute
-      const timer = setInterval(updateTime, 60000);
-      return () => clearInterval(timer);
-    }
-  }, [remainingTimeData, nextActivityStartTime]);
-
-  // Animate height on mount/unmount
-  useEffect(() => {
-    const shouldShow = remainingTimeData !== null;
-
-    if (!shouldShow && !isAnimatingOut) {
-      // Start animating out
-      setIsAnimatingOut(true);
-      Animated.timing(animatedHeight, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: false,
-      }).start(() => {
-        // Animation finished, safe to hide component
-        setIsAnimatingOut(false);
-      });
-    } else if (shouldShow && !isAnimatingOut) {
+    if (shouldShow && !hasShownRef.current) {
       // Animate in
-      Animated.timing(animatedHeight, {
-        toValue: 1,
+      heightAnimation.value = withTiming(1, {
         duration: 300,
-        useNativeDriver: false,
-      }).start(() => {
-        hasAnimatedInRef.current = true;
+        easing: Easing.out(Easing.quad),
       });
+      hasShownRef.current = true;
+    } else if (!shouldShow && hasShownRef.current) {
+      // Animate out
+      heightAnimation.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.in(Easing.quad),
+      });
+      hasShownRef.current = false;
     }
-  }, [remainingTimeData, animatedHeight, isAnimatingOut]);
+  }, [shouldShow, heightAnimation]);
 
-  // Only return null if no data AND not animating AND never animated in (prevents flash)
-  if (!remainingTimeData && !isAnimatingOut && !hasAnimatedInRef.current) {
+  // Animated style using reanimated
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      height: heightAnimation.value * (129 + spacing.sm * 2), // minHeight + margins
+      opacity: heightAnimation.value,
+    };
+  });
+
+  // Only return null if never shown and not supposed to show
+  if (!remainingTimeData && !hasShownRef.current) {
     return null;
   }
-
-  const animatedStyle = {
-    height: animatedHeight.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 129 + spacing.sm * 2], // minHeight + margins
-    }),
-    opacity: animatedHeight,
-  };
 
   return (
     <Animated.View style={animatedStyle}>

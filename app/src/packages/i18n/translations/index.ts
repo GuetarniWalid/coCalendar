@@ -27,6 +27,8 @@ export interface Translations {
   // Time
   startTime: string;
   endTime: string;
+  timeToday: string; // For slots with date but no specific time
+  timeToDo: string; // For slots without any date
   
   // Progress time remaining
   remainingPrefix: string; // "Encore" / "Still" / etc.
@@ -79,6 +81,8 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Time
     startTime: 'Start Time',
     endTime: 'End Time',
+    timeToday: 'Today',
+    timeToDo: 'To do',
     
     // Progress time remaining
     remainingPrefix: 'Still',
@@ -129,6 +133,8 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Time
     startTime: 'Heure de début',
     endTime: 'Heure de fin',
+    timeToday: 'Aujourd\'hui',
+    timeToDo: 'À faire',
     
     // Progress time remaining
     remainingPrefix: 'Encore',
@@ -179,6 +185,8 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Time
     startTime: 'Hora de inicio',
     endTime: 'Hora de fin',
+    timeToday: 'Hoy',
+    timeToDo: 'Por hacer',
     
     // Progress time remaining
     remainingPrefix: 'Quedan',
@@ -229,6 +237,8 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Time
     startTime: 'Startzeit',
     endTime: 'Endzeit',
+    timeToday: 'Heute',
+    timeToDo: 'Zu erledigen',
     
     // Progress time remaining
     remainingPrefix: 'Noch',

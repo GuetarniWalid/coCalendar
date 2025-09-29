@@ -82,20 +82,27 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
         id: `slot-${currentSlot.id?.toString() || i}`,
       });
 
-      if (nextSlot) {
-        const currentEndTime = dayjs(currentSlot.endTime);
-        const nextStartTime = dayjs(nextSlot.startTime);
-        const gapMs = nextStartTime.diff(currentEndTime);
-        const showRemainingCard = gapMs > 0 && 
-          now.isAfter(currentEndTime) && 
-          now.isBefore(nextStartTime.add(1, 'second'));
+      if (nextSlot && nextSlot.startTime) {
+        const currentReferenceTime = currentSlot.endTime 
+          ? dayjs(currentSlot.endTime)
+          : currentSlot.startTime 
+            ? dayjs(currentSlot.startTime) 
+            : null;
+        
+        if (currentReferenceTime) {
+          const nextStartTime = dayjs(nextSlot.startTime);
+          const gapMs = nextStartTime.diff(currentReferenceTime);
+          const showRemainingCard = gapMs > 0 && 
+            now.isAfter(currentReferenceTime) && 
+            now.isBefore(nextStartTime.add(1, 'second'));
 
-        if (showRemainingCard) {
-          enhancedData.push({
-            type: 'remaining-time',
-            data: { nextActivityStartTime: nextSlot.startTime },
-            id: `remaining-${currentSlot.id}-${nextSlot.id}`,
-          });
+          if (showRemainingCard) {
+            enhancedData.push({
+              type: 'remaining-time',
+              data: { nextActivityStartTime: nextSlot.startTime },
+              id: `remaining-${currentSlot.id}-${nextSlot.id}`,
+            });
+          }
         }
       }
     });
@@ -109,7 +116,8 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
 
     const now = dayjs();
     const nextEndTime = todaySlots
-      .map(slot => dayjs(slot.endTime))
+      .filter(slot => slot.endTime) // Only consider slots with end times
+      .map(slot => dayjs(slot.endTime!))
       .filter(endTime => now.isBefore(endTime))
       .sort((a, b) => a.unix() - b.unix())[0];
 
@@ -148,7 +156,30 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
         return <EmptyDayCard onPress={() => handleEmptyDayCardPress(date)} />;
       }
 
-      const sortedSlots = [...daySlots].sort((a, b) => dayjs(a.startTime).unix() - dayjs(b.startTime).unix());
+      const sortedSlots = [...daySlots].sort((a, b) => {
+        // Without time slots first
+        if (a.withoutTime && b.withoutTime) return 0;
+        if (a.withoutTime) return -1;
+        if (b.withoutTime) return 1;
+        
+        // No start date slots next
+        if (!a.startTime && !b.startTime) return 0;
+        if (!a.startTime) return -1;
+        if (!b.startTime) return 1;
+        
+        // Sort by start time
+        const startTimeDiff = dayjs(a.startTime).unix() - dayjs(b.startTime).unix();
+        
+        // If same start time, prioritize no end time
+        if (startTimeDiff === 0) {
+          if (!a.endTime && !b.endTime) return 0;
+          if (!a.endTime) return -1;
+          if (!b.endTime) return 1;
+          return dayjs(a.endTime).unix() - dayjs(b.endTime).unix();
+        }
+        
+        return startTimeDiff;
+      });
       const enhancedData = createEnhancedSlotData(sortedSlots);
 
       return enhancedData.map((item) => 

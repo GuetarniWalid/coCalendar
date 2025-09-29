@@ -103,7 +103,11 @@ export const generateWeekDays = (startDate: string): DayItem[] => {
   return days;
 };
 
-export const formatTime = (isoTimeString: string): string => {
+export const formatTime = (isoTimeString: string | null): string => {
+  if (!isoTimeString) {
+    return '--:--';
+  }
+  
   try {
     return dayjs(isoTimeString).format('HH:mm');
   } catch {
@@ -115,7 +119,9 @@ export const formatTime = (isoTimeString: string): string => {
  * Determines if a slot has specific time (hours/minutes) or is a date-only slot
  * Date-only slots (punctual tasks) should not show progress bars
  */
-export const hasSpecificTime = (isoTimeString: string): boolean => {
+export const hasSpecificTime = (isoTimeString: string | null): boolean => {
+  if (!isoTimeString) return false;
+  
   try {
     const date = dayjs(isoTimeString);
     // Check if the time component is at midnight (00:00:00)
@@ -132,10 +138,10 @@ export const hasSpecificTime = (isoTimeString: string): boolean => {
  * Returns percentage of time that has passed (0% at start, 100% at end)
  * Returns null if slot is not currently active or doesn't have specific times
  */
-export const calculateSlotProgress = (startTime: string, endTime: string): { percentage: number; isCompleted: boolean } | null => {
+export const calculateSlotProgress = (startTime: string | null, endTime: string | null): { percentage: number; isCompleted: boolean } | null => {
   try {
     // Check if this slot has specific times
-    if (!hasSpecificTime(startTime) || !hasSpecificTime(endTime)) {
+    if (!startTime || !endTime || !hasSpecificTime(startTime) || !hasSpecificTime(endTime)) {
       return null;
     }
 
@@ -174,7 +180,7 @@ export const calculateSlotProgress = (startTime: string, endTime: string): { per
  * Returns formatted string like "45 min", "1h 30min", "38 secondes", etc.
  * Uses internationalization for proper language support
  */
-export const formatRemainingTime = (startTime: string, endTime: string, translations?: {
+export const formatRemainingTime = (startTime: string | null, endTime: string | null, translations?: {
   remainingPrefix: string;
   minutesSingular: string;
   minutesPlural: string;
@@ -182,6 +188,8 @@ export const formatRemainingTime = (startTime: string, endTime: string, translat
   secondsPlural: string;
 }): string | null => {
   try {
+    if (!startTime || !endTime) return null;
+    
     // Always use fresh current time for maximum precision
     const now = dayjs();
     const end = dayjs(endTime);

@@ -10,8 +10,9 @@ export interface DayItem {
 export interface SlotItem {
   id: string;
   title: string;
-  startTime: string;
-  endTime: string;
+  startTime: string | null;
+  endTime: string | null;
+  withoutTime?: boolean;
   type: 'private' | 'shared';
   visibility?: 'private' | 'public';
   description?: string;

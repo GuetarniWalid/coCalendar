@@ -5,8 +5,8 @@ import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
 
 interface ProgressBarProps {
-  startTime: string;
-  endTime: string;
+  startTime: string | null;
+  endTime: string | null;
   slotColor?: SlotColorName | undefined;
 }
 
@@ -22,12 +22,14 @@ const ProgressBarBase: FC<ProgressBarProps> = ({ startTime, endTime, slotColor }
   
   // Check if this slot should show progress (has specific times)
   const shouldShowProgress = useMemo(() => {
+    if (!startTime || !endTime) return false;
     return hasSpecificTime(startTime) && hasSpecificTime(endTime);
   }, [startTime, endTime]);
 
   // Check if slot has completed (end time has passed)
   // This improves performance by showing static filled bars for past slots
   const isCompleted = useMemo(() => {
+    if (!endTime) return false;
     const now = dayjs();
     const endDateTime = dayjs(endTime);
     return now.isAfter(endDateTime);
@@ -36,6 +38,7 @@ const ProgressBarBase: FC<ProgressBarProps> = ({ startTime, endTime, slotColor }
   // Check if slot is on a future day (not today)
   // This improves performance by not showing progress bars for future days
   const isFutureDay = useMemo(() => {
+    if (!startTime) return false;
     const today = dayjs().format('YYYY-MM-DD');
     const slotDate = dayjs(startTime).format('YYYY-MM-DD');
     return slotDate > today;

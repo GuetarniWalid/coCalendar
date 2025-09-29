@@ -9,6 +9,7 @@ import { ProgressBar } from './ProgressBar';
 import { TaskCounter } from './TaskCounter';
 import { NoteIndicator } from './NoteIndicator';
 import { VoiceIndicator } from './VoiceIndicator';
+import { useTranslation } from '@project/i18n';
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -16,6 +17,8 @@ interface SlotItemProps {
 }
 
 const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
+  const t = useTranslation();
+  
   const dynamicStyle = useMemo(
     () => ({
       backgroundColor: getSlotBackgroundColor(slot.color),
@@ -27,7 +30,13 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
   const cardNativeId = useMemo(() => `slot-card-${baseId}`, [baseId]);
   const titleNativeId = useMemo(() => `slot-title-${baseId}`, [baseId]);
 
-  const timeText = useMemo(() => `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`, [slot.startTime, slot.endTime]);
+  const timeText = useMemo(() => {
+    if (!slot.startTime && !slot.endTime) return t.timeToDo;
+    if (slot.startTime && slot.withoutTime) return t.timeToday;
+    if (slot.startTime && !slot.endTime) return formatTime(slot.startTime);
+    if (slot.startTime && slot.endTime) return `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`;
+    return t.timeToDo;
+  }, [slot.startTime, slot.endTime, slot.withoutTime, t]);
 
   // Generate image URI - use slot image if provided, otherwise default
   const imageUri = useMemo(() => {
@@ -54,6 +63,9 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
   // Check if slot should show as completed using Teaful real-time tracking
   const isCompleted = useMemo(() => {
     if (slot.completed) return true;
+    
+    // If no end time, slot can't be auto-completed based on time
+    if (!slot.endTime) return false;
     
     // Check if current time is after end time using Teaful's real-time current time
     const endTime = new Date(slot.endTime);

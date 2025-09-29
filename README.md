@@ -1,8 +1,8 @@
 # coCalendar
 
-**A beautifully designed personal calendar app for iOS and Android that makes scheduling effortless.**
+**A beautifully designed personal calendar app for iOS and Android that makes scheduling and sharing effortless.**
 
-coCalendar is a premium mobile calendar application that prioritizes exceptional design and user experience. Built for professionals, families, and anyone who values organized time management, it transforms how you schedule and share appointments.
+coCalendar is a premium mobile calendar application that prioritizes exceptional design and user experience. Built for anyone who values organized time management and seamless sharing, it transforms how you schedule and collaborate on appointments with friends, family, and colleagues.
 
 ## Key Features
 
@@ -12,27 +12,52 @@ coCalendar is a premium mobile calendar application that prioritizes exceptional
 - Color-coded slots for immediate visual recognition
 
 **👥 Smart Sharing**
-- Share specific time slots with friends, family, or professional clients
+- Share specific time slots directly with anyone
 - Maintain privacy with personal slots while selectively sharing others
-- Perfect for professionals tracking billable hours with clients
+- Perfect for coordinating with friends, family, or working together
+- Invite others to view your scheduled activities
 
 **⚡ Effortless Setup**
 - Quick and intuitive onboarding process
 - Seamless synchronization across devices
 - No complex configuration required
 
-**📊 Professional Tools**
-- Automatic time tracking for client billing
-- Shared accountability between you and your clients
-- Future features: mileage tracking for tax purposes, client statistics, and detailed analytics
+**🤝 Collaborative Planning**
+- Share slots for better coordination and accountability
+- Read-only access for shared users ensures data integrity
+- Direct user-to-user invitations for specific time slots
+- Perfect transparency without compromising privacy
 
-**🔒 Flexible Privacy**
-- Personal slots remain completely private
-- Shared slots create transparency without compromising privacy
-- Perfect for parent-child coordination (doctor appointments, activities)
-- Ideal for professional-client relationships
+**🔒 Privacy Control**
+- Personal slots remain completely private by default
+- Shared slots create transparency when needed
+- Perfect for family coordination (appointments, activities, events)
+- Great for professionals tracking time with others
 
-Whether you're a consultant tracking billable hours, a parent coordinating family schedules, or a professional maintaining client relationships, coCalendar serves as your shared source of truth for time management.
+Whether you're coordinating family schedules, planning with friends, or managing professional commitments, coCalendar serves as your shared source of truth for time management.
+
+## 🔄 **Peer-to-Peer Model**
+
+coCalendar uses a **peer-to-peer sharing system** where all users have equal status:
+
+### **How Sharing Works:**
+1. **Create slots** - All your slots are private by default
+2. **Invite specific users** - Send direct invitations for individual slots  
+3. **Granular control** - Share only what you want, when you want
+4. **Read-only participants** - Shared slots are view-only for participants
+
+### **Example Use Cases:**
+- **Family**: Share "Soccer Practice" with family members for coordination
+- **Social**: Share "Birthday Party" planning with friend group  
+- **Work**: Share "Team Meeting" with colleagues for transparency
+- **Professional**: Share appointment or work slots for accountability
+- **Healthcare**: Share medical appointments with caregivers
+
+### **Privacy by Design:**
+- **No participants** = Private slot (owner only)
+- **Has participants** = Shared slot (owner + invited users)
+- **Owner always** has full edit control
+- **Participants always** have read-only access
 
 ## Stack
 
@@ -99,22 +124,52 @@ The app uses a **workspace-based package architecture** with npm workspaces. Eac
 - **Centralized theming** with design tokens
 - **Modular package structure** for scalability
 
-## Data Model (Supabase)
+## Data Model (Supabase) - Peer-to-Peer Architecture
 
-- `profiles(id, role, display_name, created_at)`
-- `clients(id, pro_id, display_name, email, user_id, created_at)`
-- `slots(id, pro_id, client_id, title, start_at, end_at, visibility, color, created_at)` with index `(pro_id, start_at)`
-- `slot_tasks(id, slot_id, title, completed, created_at)`
-- `slot_shared_content(slot_id PK, shared_note, shared_checklist)`
-- `slot_private_content(slot_id PK, private_note, private_checklist)`
-- `reminders(id, slot_id, minutes_before, target, created_at)`
-- `push_tokens(user_id, expo_token, platform)` unique `(user_id, expo_token)`
-- `invites(id, pro_id, client_id, token unique, status, created_at, expires_at)`
+### **Core Tables:**
+```sql
+-- All users are equal (no roles)
+profiles(id, display_name, created_at)
 
-**RLS (Row Level Security)** essentials implemented in the migration:
-- **Pro**: full access where `pro_id = auth.uid()`
-- **Client**: can select only slots where `visibility = 'public'` and `client_id` belongs to them (via `clients.user_id = auth.uid()`)
-- `slot_private_content`: pro-only; `slot_shared_content`: pro + linked client
+-- Slots with owner-based permissions  
+slots(id, owner_id, title, start_at, end_at, color, image, voice_*, completed, without_time, created_at)
+-- Index: (owner_id, start_at)
+
+-- Peer-to-peer sharing via junction table
+slot_participants(slot_id, user_id, invited_by, created_at)
+-- Primary key: (slot_id, user_id)
+-- Index: (user_id) for "show me shared slots"
+
+-- Task management within slots
+slot_tasks(id, slot_id, text, is_done, position, created_at)
+
+-- Notification system
+reminders(id, slot_id, minutes_before, target, created_at)
+-- target: 'owner' | 'participants'
+
+-- Push notification tokens
+push_tokens(user_id, expo_token, platform)
+
+-- Direct user-to-user invitations for specific slots
+invites(id, inviter_id, invitee_id, slot_id, invitee_email, token, status, created_at, expires_at)
+-- Either invitee_id OR invitee_email (for users without accounts)
+-- Index: (invitee_id) for "show me my invites"
+```
+
+### **Privacy Model:**
+```sql
+-- Private slot (owner only)
+SELECT COUNT(*) FROM slot_participants WHERE slot_id = ? -- Returns: 0
+
+-- Shared slot (has participants)  
+SELECT COUNT(*) FROM slot_participants WHERE slot_id = ? -- Returns: 1+
+```
+
+### **Access Control (RLS):**
+- **Slot Owner**: Full read/write access (`owner_id = auth.uid()`)
+- **Slot Participant**: Read-only access via `slot_participants` table
+- **Tasks & Reminders**: Owner manages, participants have read-only access
+- **Invitations**: Inviters manage sent invites, invitees see received invites
 
 ## Setup
 
@@ -145,6 +200,7 @@ For **cloud Supabase** (recommended):
 cd supabase
 supabase db push
 ```
+*Note: This will apply the new peer-to-peer model migrations*
 
 For **local development**:
 ```bash
@@ -168,6 +224,7 @@ cd app
 npm install
 npm start
 ```
+
 
 ## Development
 
@@ -231,10 +288,10 @@ feat(day-view): add slot drag and drop functionality
 ## Roadmap
 
 ### Upcoming Features
-- **Mileage Tracking**: Automatic distance calculation for tax deduction purposes
-- **Client Analytics**: Detailed statistics and reporting per client
-- **Advanced Billing**: Automated invoicing based on tracked hours
-- **Enhanced Sharing**: Group calendars for teams and families
+- **Group Calendars**: Multi-user collaborative calendars for teams and families
+- **Enhanced Sharing**: Bulk sharing and calendar templates
+- **Social Features**: Activity feeds and shared calendar discovery
+- **Advanced Notifications**: Smart scheduling suggestions and conflict detection
 
 ### Technical Enhancements
 - **Advanced Theming**: Dark mode and customizable color schemes
@@ -242,8 +299,8 @@ feat(day-view): add slot drag and drop functionality
 - **Performance**: Enhanced animations and faster load times
 - **Platform Features**: Deep iOS and Android integration
 
-### Professional Tools
-- **Export Capabilities**: PDF reports, CSV exports for accounting
-- **Integration**: Connect with popular billing and CRM systems
-- **Advanced Notifications**: Smart reminders and scheduling suggestions
-- **Multi-timezone**: Global professional support
+### Professional Features
+- **Time Tracking**: Optional time tracking for professional use cases
+- **Export Capabilities**: PDF reports, CSV exports for planning and billing
+- **Integration**: Connect with popular calendar and productivity systems
+- **Advanced Permissions**: Granular sharing controls and time-limited access

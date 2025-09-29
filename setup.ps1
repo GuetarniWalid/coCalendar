@@ -38,9 +38,9 @@ try {
 }
 
 # Supabase setup
-Write-Host '🗄️ Supabase setup next:' -ForegroundColor Yellow
-Write-Host '   1) Start local: cd supabase && supabase start' -ForegroundColor Yellow
-Write-Host '   2) Reset DB: supabase db reset --debug' -ForegroundColor Yellow
+Write-Host '🗄️ Supabase setup (Peer-to-Peer Model):' -ForegroundColor Yellow
+Write-Host '   For CLOUD: cd supabase && supabase db push' -ForegroundColor Yellow  
+Write-Host '   For LOCAL: cd supabase && supabase start && supabase db reset --debug' -ForegroundColor Yellow
 
 # Edge Functions
 Write-Host '⚡ Deploy Edge Functions:' -ForegroundColor Yellow

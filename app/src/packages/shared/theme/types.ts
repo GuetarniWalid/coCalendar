@@ -11,7 +11,7 @@ export interface ColorPalette {
     secondary: string;
     tertiary: string;
     // Slot color variants with default and contrast colors
-    slot: Record<string, { default: string; contrast: string }>;
+    slot: Record<string, { default: string; contrast: string; participants: string[] }>;
   };
   
   // Typography colors

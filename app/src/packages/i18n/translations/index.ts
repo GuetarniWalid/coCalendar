@@ -51,6 +51,7 @@ export interface Translations {
   slotColorLabel: string;
   descriptionOptionalLabel: string;
   addMessage?: string;
+  
 }
 
 export const translations: Record<SupportedLocale, Translations> = {
@@ -105,6 +106,7 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Slot color',
     descriptionOptionalLabel: 'Description (Optional)',
     addMessage: 'Add a message',
+    
   },
   fr: {
     // Day View
@@ -157,6 +159,7 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Couleur du créneau',
     descriptionOptionalLabel: 'Description (Optionnel)',
     addMessage: 'Ajouter un message',
+    
   },
   es: {
     // Day View
@@ -209,6 +212,7 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Color del espacio',
     descriptionOptionalLabel: 'Descripción (Opcional)',
     addMessage: 'Añadir un mensaje',
+    
   },
   de: {
     // Day View
@@ -261,5 +265,6 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Terminfarbe',
     descriptionOptionalLabel: 'Beschreibung (Optional)',
     addMessage: 'Nachricht hinzufügen',
+    
   },
 };

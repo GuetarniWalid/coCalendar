@@ -45,7 +45,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
 
     // Find the next slot to end
     const upcomingSlots = slots.filter(slot => {
-      if (slot.completed) return false;
+      if (slot.completed || !slot.endTime) return false;
       const endTime = new Date(slot.endTime);
       return endTime > now;
     });
@@ -56,12 +56,12 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
 
     // Find the earliest ending slot
     const nextSlotToEnd = upcomingSlots.reduce((earliest, slot) => {
-      const slotEndTime = new Date(slot.endTime);
-      const earliestEndTime = new Date(earliest.endTime);
+      const slotEndTime = new Date(slot.endTime!);
+      const earliestEndTime = new Date(earliest.endTime!);
       return slotEndTime < earliestEndTime ? slot : earliest;
     });
 
-    const timeUntilEnd = new Date(nextSlotToEnd.endTime).getTime() - now.getTime();
+    const timeUntilEnd = new Date(nextSlotToEnd.endTime!).getTime() - now.getTime();
     
     if (timeUntilEnd > 0) {
       const timeout = setTimeout(() => {

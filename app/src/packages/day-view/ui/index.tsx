@@ -35,10 +35,11 @@ export const DayViewScreen = () => {
   const [, setSelectedDate] = useSlotFormStore.selectedDate();
   const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
 
-  const handleSlotPress = (slot: any) => {
+  const handleSlotPress = useCallback((slot: any) => {
+    setSelectedDate(selectedDate);
+
     if (slot.id === 'default-slot') {
-      // Set data in Teaful store for new slot creation
-      setSelectedDate(selectedDate);
+      // New slot creation
       setSelectedSlot({
         id: null,
         title: '',
@@ -46,23 +47,21 @@ export const DayViewScreen = () => {
         endTime: slot.endTime,
         visibility: 'private',
       });
-      navigation.navigate('SlotForm');
     } else {
-      // Set data in Teaful store for editing existing slot
-      setSelectedDate(selectedDate);
+      // Edit existing slot
       setSelectedSlot({
         id: slot.id,
         title: slot.title,
         startTime: slot.startTime,
         endTime: slot.endTime,
-        visibility: slot.visibility ?? (slot.type === 'shared' ? 'public' : 'private'),
-        ...(slot.description ? { description: slot.description } : {}),
-        ...(slot.clientName ? { clientName: slot.clientName } : {}),
-        ...(slot.color ? { color: slot.color } : {}),
+        visibility: slot.type === 'shared' ? 'public' : 'private',
+        ...(slot.description && { description: slot.description }),
+        ...(slot.color && { color: slot.color }),
       });
-      navigation.navigate('SlotForm');
     }
-  };
+    
+    navigation.navigate('SlotForm');
+  }, [selectedDate, setSelectedDate, setSelectedSlot, navigation]);
 
   return (
     <>

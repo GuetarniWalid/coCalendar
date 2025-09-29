@@ -189,7 +189,7 @@ const ProgressBarBase: FC<ProgressBarProps> = ({ startTime, endTime, slotColor }
   
   // Set up continuous timer for active slots (only for non-completed current day slots)
   useEffect(() => {
-    if (!shouldShowProgress || !progressData || isCompleted || isFutureDay) return;
+    if (!shouldShowProgress || !progressData || isCompleted || isFutureDay || !startTime || !endTime) return;
     
     const endTimeDate = new Date(endTime);
     const startTimeDate = new Date(startTime);
@@ -227,7 +227,7 @@ const ProgressBarBase: FC<ProgressBarProps> = ({ startTime, endTime, slotColor }
   
   // Set up precise timeouts for slot boundaries (only for non-completed current day slots)
   useEffect(() => {
-    if (!shouldShowProgress || isCompleted || isFutureDay) return;
+    if (!shouldShowProgress || isCompleted || isFutureDay || !startTime || !endTime) return;
     
     const endTimeDate = new Date(endTime);
     const startTimeDate = new Date(startTime);

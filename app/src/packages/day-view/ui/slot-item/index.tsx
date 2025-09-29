@@ -1,7 +1,7 @@
 import { FC, useMemo, memo, useCallback, useEffect } from 'react';
 import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { SlotItem as SlotItemType, formatTime, getAvatarPublicUrl, getSlotBackgroundColor, useTimeTrackerStore } from '@project/shared';
+import { SlotItem as SlotItemType, SlotColorName, formatTime, getAvatarPublicUrl, getSlotBackgroundColor, useTimeTrackerStore } from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { TaskChecked } from '@project/icons';
 import { Image } from 'expo-image';
@@ -9,6 +9,7 @@ import { ProgressBar } from './ProgressBar';
 import { TaskCounter } from './TaskCounter';
 import { NoteIndicator } from './NoteIndicator';
 import { VoiceIndicator } from './VoiceIndicator';
+import { ParticipantsIndicator } from './ParticipantsIndicator';
 import { useTranslation } from '@project/i18n';
 
 interface SlotItemProps {
@@ -117,7 +118,11 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
               <NoteIndicator description={slot.description} />
               <VoiceIndicator voice_path={slot.voice_path} />
             </View>
-            {slot.clientName && <Text style={styles.clientName}>Client: {slot.clientName}</Text>}
+            {slot.participants && slot.participants.length > 0 && (
+              <View style={styles.participantsRow}>
+                <ParticipantsIndicator participants={slot.participants} slotColor={slot.color as SlotColorName} />
+              </View>
+            )}
           </View>
         </View>
         {imageUri && (
@@ -138,24 +143,23 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
 };
 
 export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
-  // Simplified comparison - most critical props for performance
+  const prev = prevProps.slot;
+  const next = nextProps.slot;
+  
+  // Compare essential props that affect rendering
   return (
-    prevProps.slot.id === nextProps.slot.id &&
-    prevProps.slot.title === nextProps.slot.title &&
-    prevProps.slot.startTime === nextProps.slot.startTime &&
-    prevProps.slot.endTime === nextProps.slot.endTime &&
-    prevProps.slot.color === nextProps.slot.color &&
-    prevProps.slot.clientName === nextProps.slot.clientName &&
-    prevProps.slot.completed === nextProps.slot.completed &&
-    prevProps.slot.description === nextProps.slot.description &&
-    prevProps.slot.voice_path === nextProps.slot.voice_path &&
-    // Simple image comparison instead of expensive JSON.stringify
-    prevProps.slot.image?.name === nextProps.slot.image?.name &&
-    prevProps.slot.image?.persona === nextProps.slot.image?.persona &&
-    // Compare tasks array length and completion status
-    prevProps.slot.tasks?.length === nextProps.slot.tasks?.length &&
-    prevProps.slot.tasks?.filter(t => t.is_done).length === nextProps.slot.tasks?.filter(t => t.is_done).length &&
-    prevProps.onPress === nextProps.onPress
+    prev.id === next.id &&
+    prev.title === next.title &&
+    prev.startTime === next.startTime &&
+    prev.endTime === next.endTime &&
+    prev.color === next.color &&
+    prev.completed === next.completed &&
+    prev.description === next.description &&
+    prev.voice_path === next.voice_path &&
+    prev.image?.name === next.image?.name &&
+    prev.tasks?.length === next.tasks?.length &&
+    prev.tasks?.filter(t => t.is_done).length === next.tasks?.filter(t => t.is_done).length &&
+    prev.participants?.length === next.participants?.length
   );
 });
 
@@ -189,6 +193,12 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingLeft: 6,
   },
+  participantsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 20,
+  },
   slotImage: {
     position: 'absolute',
     top: -30,
@@ -212,10 +222,5 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     marginBottom: spacing.xs,
     color: colors.typography.primary,
-  },
-  clientName: {
-    fontSize: fontSize.sm,
-    color: colors.typography.secondary,
-    fontStyle: 'italic',
   },
 });

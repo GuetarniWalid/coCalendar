@@ -1,16 +1,19 @@
 import { FC, useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { StyleSheet, View, FlatList, ScrollView, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { StyleSheet, View, FlatList, ScrollView, Dimensions, NativeScrollEvent, NativeSyntheticEvent, ActivityIndicator, Text } from 'react-native';
 import { SlotItem } from '../slot-item';
 import { EmptyDayCard } from '../empty-day-card';
 import { RemainingTimeCard } from '../remaining-time-card';
-import { colors, SlotItem as SlotItemType, useCalendarStore } from '@project/shared';
+import { colors, SlotItem as SlotItemType, useCalendarStore, fontSize } from '@project/shared';
 import { spacing } from '@project/shared';
+import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
 
 interface SlotListProps {
   slots: SlotItemType[];
   onSlotPress: (slot: SlotItemType) => void;
   getSlotsForDate: (date: string) => SlotItemType[] | undefined;
+  loading?: boolean;
+  selectedDate: string;
 }
 
 const TOTAL_DAYS = 7305;
@@ -23,7 +26,8 @@ const GESTURE_THRESHOLD = {
   SLOW_SNAP: 0.5
 };
 
-export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, getSlotsForDate }) => {
+export const SlotList: FC<SlotListProps> = ({ slots: currentSlots, onSlotPress, getSlotsForDate, loading = false, selectedDate: _propSelectedDate }) => {
+  const t = useTranslation();
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -36,6 +40,7 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
     Array.from({ length: TOTAL_DAYS }, (_, i) => i), 
     []
   );
+
 
   const getDateFromIndex = useCallback((index: number) => 
     dayjs(ORIGIN_DATE).add(index, 'day').format('YYYY-MM-DD'), []
@@ -143,6 +148,12 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
     }
   }, [isInitialized, selectedDate, getIndexFromDate]);
 
+  useEffect(() => {
+    if (selectedDate && currentSlots.length >= 0) {
+      lastShownByDateRef.current[selectedDate] = currentSlots;
+    }
+  }, [selectedDate, currentSlots]);
+
   const renderDayPage = useCallback(({ item: dayIndex }: { item: number }) => {
     const date = getDateFromIndex(dayIndex);
     const daySlots = getSlotsForDate(date) ?? lastShownByDateRef.current[date] ?? null;
@@ -152,10 +163,18 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
     }
 
     const renderContent = () => {
+      if (loading && date === selectedDate) {
+        return (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size='large' />
+            <Text style={styles.loadingText}>{t.loading}</Text>
+          </View>
+        );
+      }
+
       if (!daySlots?.length) {
         return <EmptyDayCard onPress={() => handleEmptyDayCardPress(date)} />;
       }
-
       const sortedSlots = [...daySlots].sort((a, b) => {
         // Without time slots first
         if (a.withoutTime && b.withoutTime) return 0;
@@ -210,7 +229,7 @@ export const SlotList: FC<SlotListProps> = ({ slots: _unusedSlots, onSlotPress, 
         </ScrollView>
       </View>
     );
-  }, [screenWidth, getSlotsForDate, onSlotPress, createEnhancedSlotData, handleRemainingTimeCardPress, handleEmptyDayCardPress, getDateFromIndex]);
+  }, [screenWidth, getSlotsForDate, onSlotPress, createEnhancedSlotData, handleRemainingTimeCardPress, handleEmptyDayCardPress, getDateFromIndex, selectedDate, loading, t]);
 
   const gestureStateRef = useRef({ startOffset: 0, startTime: 0, lastOffset: 0 });
 
@@ -303,5 +322,16 @@ const styles = StyleSheet.create({
   },
   dayContent: {
     paddingVertical: spacing.md,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+  },
+  loadingText: {
+    marginTop: spacing.md,
+    fontSize: fontSize.base,
+    color: colors.typography.secondary,
   },
 });

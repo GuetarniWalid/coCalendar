@@ -73,6 +73,7 @@ export const useDayView = (initialDate: string) => {
 						return;
 					}
 					// Covered by prefetch and no entry added => empty day
+					slotsCacheRef.current[selectedDate] = [];
 					setSlots([]);
 					setLoading(false);
 					return;
@@ -118,8 +119,9 @@ export const useDayView = (initialDate: string) => {
 						cursor = cursor.add(1, 'day');
 					}
 					// If current selection arrived via prefetch, use it immediately
-					if (result[selectedDate]) {
-						setSlots(result[selectedDate]);
+					const currentDateSlots = slotsCacheRef.current[selectedDate];
+					if (currentDateSlots !== undefined) {
+						setSlots(currentDateSlots);
 						setLoading(false);
 					}
 				})

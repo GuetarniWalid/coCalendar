@@ -1,18 +1,16 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useDayView } from '../shared/hooks';
 import { useSlotFormStore, setCurrentScreen, startTimeTracking, stopTimeTracking } from '@project/shared';
 import { setCalendarSelectedDate } from '@project/shared/store/calendar';
 import { SlotList } from './slot-list';
-import { colors, spacing, fontSize } from '@project/shared';
-import { useTranslation } from '@project/i18n';
+import { colors } from '@project/shared';
 import { VisibleMonthYear } from './VisibleMonthYear';
 import { DayTasksProgress } from './DayTasksProgress';
 import { DateSelector } from './DateSelector';
 
 export const DayViewScreen = () => {
-  const t = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const date = route.params?.date as string;
@@ -66,30 +64,14 @@ export const DayViewScreen = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <>
-        <View style={styles.headerRow}>
-          <VisibleMonthYear />
-          <DayTasksProgress slots={[]} selectedDate={selectedDate || ''} />
-        </View>
-        <DateSelector />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size='large' />
-          <Text style={styles.loadingText}>{t.loading}</Text>
-        </View>
-      </>
-    );
-  }
-
   return (
     <>
       <View style={styles.headerRow}>
         <VisibleMonthYear />
-        <DayTasksProgress slots={slots} selectedDate={selectedDate || ''} />
+        <DayTasksProgress slots={loading ? [] : slots} selectedDate={selectedDate || ''} />
       </View>
       <DateSelector />
-      <SlotList slots={slots} onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} />
+      <SlotList slots={slots} onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} loading={loading} selectedDate={selectedDate || ''} />
     </>
   );
 };
@@ -103,15 +85,5 @@ const styles = StyleSheet.create({
     paddingLeft: 24,
     paddingBottom: 8,
     backgroundColor: colors.background.primary,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    fontSize: fontSize.base,
-    color: colors.typography.secondary,
   },
 });

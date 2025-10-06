@@ -23,7 +23,7 @@ export const DayViewScreen = () => {
       setCurrentScreen('Day');
       // Start real-time tracking when day view is focused
       startTimeTracking();
-      
+
       return () => {
         // Stop real-time tracking when day view is unfocused
         stopTimeTracking();
@@ -35,33 +35,36 @@ export const DayViewScreen = () => {
   const [, setSelectedDate] = useSlotFormStore.selectedDate();
   const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
 
-  const handleSlotPress = useCallback((slot: any) => {
-    setSelectedDate(selectedDate);
+  const handleSlotPress = useCallback(
+    (slot: any) => {
+      setSelectedDate(selectedDate);
 
-    if (slot.id === 'default-slot') {
-      // New slot creation
-      setSelectedSlot({
-        id: null,
-        title: '',
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        visibility: 'private',
-      });
-    } else {
-      // Edit existing slot
-      setSelectedSlot({
-        id: slot.id,
-        title: slot.title,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        visibility: slot.type === 'shared' ? 'public' : 'private',
-        ...(slot.description && { description: slot.description }),
-        ...(slot.color && { color: slot.color }),
-      });
-    }
-    
-    navigation.navigate('SlotForm');
-  }, [selectedDate, setSelectedDate, setSelectedSlot, navigation]);
+      if (slot.id === 'default-slot') {
+        // New slot creation
+        setSelectedSlot({
+          id: null,
+          title: '',
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          visibility: 'private',
+        });
+      } else {
+        // Edit existing slot
+        setSelectedSlot({
+          id: slot.id,
+          title: slot.title,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          visibility: slot.type === 'shared' ? 'public' : 'private',
+          ...(slot.description && { description: slot.description }),
+          ...(slot.color && { color: slot.color }),
+        });
+      }
+
+      navigation.navigate('SlotForm');
+    },
+    [selectedDate, setSelectedDate, setSelectedSlot, navigation]
+  );
 
   return (
     <>

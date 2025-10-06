@@ -1,11 +1,8 @@
-import { FC, useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { StyleSheet, View, FlatList, ScrollView, Dimensions, NativeScrollEvent, NativeSyntheticEvent, ActivityIndicator, Text } from 'react-native';
-import { SlotItem } from '../slot-item';
-import { EmptyDayCard } from '../empty-day-card';
-import { RemainingTimeCard } from '../remaining-time-card';
-import { colors, SlotItem as SlotItemType, useCalendarStore, fontSize } from '@project/shared';
-import { spacing } from '@project/shared';
-import { useTranslation } from '@project/i18n';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { DayPage } from './DayPage';
+import { SlotItem as SlotItemType, useCalendarStore, CALENDAR_CONSTANTS } from '@project/shared';
+import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import dayjs from 'dayjs';
 
 interface SlotListProps {
@@ -15,9 +12,6 @@ interface SlotListProps {
   loading?: boolean;
   selectedDate: string;
 }
-
-const TOTAL_DAYS = 7305;
-const ORIGIN_DATE = '2020-01-01';
 const GESTURE_THRESHOLD = {
   QUICK_TIME: 300,
   MIN_DISTANCE: 0.1,
@@ -26,28 +20,27 @@ const GESTURE_THRESHOLD = {
   SLOW_SNAP: 0.5
 };
 
-export const SlotList: FC<SlotListProps> = ({ slots: currentSlots, onSlotPress, getSlotsForDate, loading = false, selectedDate: _propSelectedDate }) => {
-  const t = useTranslation();
+export const SlotList = ({ slots: currentSlots, onSlotPress, getSlotsForDate, loading = false, selectedDate: _propSelectedDate }: SlotListProps) => {
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { currentDayIndex, setFlatListScrollToIndex, draggedSlotIndexRN } = useDraggedSlotContext();
   
   const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
   const lastShownByDateRef = useRef<Record<string, SlotItemType[]>>({});
   
   const dayIndices = useMemo(() => 
-    Array.from({ length: TOTAL_DAYS }, (_, i) => i), 
+    Array.from({ length: CALENDAR_CONSTANTS.TOTAL_DAYS }, (_, i) => i), 
     []
   );
 
-
   const getDateFromIndex = useCallback((index: number) => 
-    dayjs(ORIGIN_DATE).add(index, 'day').format('YYYY-MM-DD'), []
+    dayjs(CALENDAR_CONSTANTS.ORIGIN_DATE).add(index, 'day').format('YYYY-MM-DD'), []
   );
 
   const getIndexFromDate = useCallback((date: string) => 
-    dayjs(date).diff(dayjs(ORIGIN_DATE), 'day'), []
+    dayjs(date).diff(dayjs(CALENDAR_CONSTANTS.ORIGIN_DATE), 'day'), []
   );
 
   const createDefaultSlot = useCallback((startTime: string, endTime: string) => ({
@@ -137,6 +130,7 @@ export const SlotList: FC<SlotListProps> = ({ slots: currentSlots, onSlotPress, 
 
   useEffect(() => {
     const targetIndex = getIndexFromDate(selectedDate);
+    currentDayIndex.value = targetIndex;
     
     if (!isInitialized) {
       setIsInitialized(true);
@@ -146,7 +140,7 @@ export const SlotList: FC<SlotListProps> = ({ slots: currentSlots, onSlotPress, 
     } else {
       flatListRef.current?.scrollToIndex({ index: targetIndex, animated: true });
     }
-  }, [isInitialized, selectedDate, getIndexFromDate]);
+  }, [isInitialized, selectedDate, getIndexFromDate, currentDayIndex]);
 
   useEffect(() => {
     if (selectedDate && currentSlots.length >= 0) {
@@ -154,82 +148,33 @@ export const SlotList: FC<SlotListProps> = ({ slots: currentSlots, onSlotPress, 
     }
   }, [selectedDate, currentSlots]);
 
+  // Expose scroll function to DraggableLayer
+  useEffect(() => {
+    setFlatListScrollToIndex(() => (targetIndex: number) => {
+      if (targetIndex >= 0 && targetIndex < CALENDAR_CONSTANTS.TOTAL_DAYS) {
+        currentDayIndex.value = targetIndex;
+        flatListRef.current?.scrollToIndex({ index: targetIndex, animated: true });
+      }
+    });
+  }, [currentDayIndex, setFlatListScrollToIndex]);
+
   const renderDayPage = useCallback(({ item: dayIndex }: { item: number }) => {
-    const date = getDateFromIndex(dayIndex);
-    const daySlots = getSlotsForDate(date) ?? lastShownByDateRef.current[date] ?? null;
-
-    if (daySlots?.length) {
-      lastShownByDateRef.current[date] = daySlots;
-    }
-
-    const renderContent = () => {
-      if (loading && date === selectedDate) {
-        return (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size='large' />
-            <Text style={styles.loadingText}>{t.loading}</Text>
-          </View>
-        );
-      }
-
-      if (!daySlots?.length) {
-        return <EmptyDayCard onPress={() => handleEmptyDayCardPress(date)} />;
-      }
-      const sortedSlots = [...daySlots].sort((a, b) => {
-        // Without time slots first
-        if (a.withoutTime && b.withoutTime) return 0;
-        if (a.withoutTime) return -1;
-        if (b.withoutTime) return 1;
-        
-        // No start date slots next
-        if (!a.startTime && !b.startTime) return 0;
-        if (!a.startTime) return -1;
-        if (!b.startTime) return 1;
-        
-        // Sort by start time
-        const startTimeDiff = dayjs(a.startTime).unix() - dayjs(b.startTime).unix();
-        
-        // If same start time, prioritize no end time
-        if (startTimeDiff === 0) {
-          if (!a.endTime && !b.endTime) return 0;
-          if (!a.endTime) return -1;
-          if (!b.endTime) return 1;
-          return dayjs(a.endTime).unix() - dayjs(b.endTime).unix();
-        }
-        
-        return startTimeDiff;
-      });
-      const enhancedData = createEnhancedSlotData(sortedSlots);
-
-      return enhancedData.map((item) => 
-        item.type === 'slot' ? (
-          <SlotItem 
-            key={item.id} 
-            slot={item.data} 
-            onPress={onSlotPress} 
-          />
-        ) : (
-          <RemainingTimeCard
-            key={item.id}
-            nextActivityStartTime={item.data.nextActivityStartTime}
-            onPress={() => handleRemainingTimeCardPress(item.data.nextActivityStartTime)}
-          />
-        )
-      );
-    };
-
     return (
-      <View style={[styles.dayContainer, { width: screenWidth }]}>
-        <ScrollView 
-          style={styles.dayScrollView} 
-          contentContainerStyle={styles.dayContent} 
-          showsVerticalScrollIndicator={false}
-        >
-          {renderContent()}
-        </ScrollView>
-      </View>
+      <DayPage
+        dayIndex={dayIndex}
+        screenWidth={screenWidth}
+        getSlotsForDate={getSlotsForDate}
+        onSlotPress={onSlotPress}
+        createEnhancedSlotData={createEnhancedSlotData}
+        handleRemainingTimeCardPress={handleRemainingTimeCardPress}
+        handleEmptyDayCardPress={handleEmptyDayCardPress}
+        getDateFromIndex={getDateFromIndex}
+        selectedDate={selectedDate}
+        loading={loading}
+        lastShownByDateRef={lastShownByDateRef}
+      />
     );
-  }, [screenWidth, getSlotsForDate, onSlotPress, createEnhancedSlotData, handleRemainingTimeCardPress, handleEmptyDayCardPress, getDateFromIndex, selectedDate, loading, t]);
+  }, [screenWidth, getSlotsForDate, onSlotPress, createEnhancedSlotData, handleRemainingTimeCardPress, handleEmptyDayCardPress, getDateFromIndex, selectedDate, loading]);
 
   const gestureStateRef = useRef({ startOffset: 0, startTime: 0, lastOffset: 0 });
 
@@ -276,12 +221,13 @@ export const SlotList: FC<SlotListProps> = ({ slots: currentSlots, onSlotPress, 
   const handleMomentumScrollEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset: { x: offsetX } } = event.nativeEvent;
     const currentIndex = Math.round(offsetX / screenWidth);
+    currentDayIndex.value = currentIndex;
     const newDate = getDateFromIndex(currentIndex);
     
     if (newDate !== selectedDate) {
       setSelectedDate(newDate);
     }
-  }, [screenWidth, selectedDate, setSelectedDate, getDateFromIndex]);
+  }, [screenWidth, selectedDate, setSelectedDate, getDateFromIndex, currentDayIndex]);
 
   return (
     <FlatList
@@ -303,35 +249,9 @@ export const SlotList: FC<SlotListProps> = ({ slots: currentSlots, onSlotPress, 
       initialNumToRender={3}
       maxToRenderPerBatch={3}
       windowSize={7}
-      removeClippedSubviews
+      removeClippedSubviews={draggedSlotIndexRN === null}
       updateCellsBatchingPeriod={100}
       decelerationRate={0.92}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  dayContainer: {
-    flex: 1,
-  },
-  dayScrollView: {
-    flex: 1,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    backgroundColor: colors.background.primary,
-  },
-  dayContent: {
-    paddingVertical: spacing.md,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    fontSize: fontSize.base,
-    color: colors.typography.secondary,
-  },
-});

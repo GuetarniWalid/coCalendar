@@ -131,3 +131,31 @@ export const fetchSlotsInRange = async (supabase: any, userId: string, startDate
   
   return byDate;
 };
+
+// Update slot time and/or date
+export const updateSlotTime = async (
+  supabase: any, 
+  slotId: string, 
+  newStartTime: string, 
+  newEndTime: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('slots')
+      .update({
+        start_at: newStartTime,
+        end_at: newEndTime
+      })
+      .eq('id', slotId);
+    
+    if (error) {
+      console.error('Error updating slot time:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating slot time:', error);
+    return false;
+  }
+};

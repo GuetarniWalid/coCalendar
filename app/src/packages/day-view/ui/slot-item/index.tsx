@@ -1,25 +1,27 @@
-import { FC, useMemo, memo, useCallback, useEffect } from 'react';
-import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { SlotItem as SlotItemType, SlotColorName, formatTime, getAvatarPublicUrl, getSlotBackgroundColor, useTimeTrackerStore } from '@project/shared';
+import { FC, useMemo, memo } from 'react';
+import { Text, StyleSheet, View } from 'react-native';
+import { SlotItem as SlotItemType, SlotColorName, formatTime, getAvatarPublicUrl, getSlotBackgroundColor } from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
-import { TaskChecked } from '@project/icons';
 import { Image } from 'expo-image';
 import { ProgressBar } from './ProgressBar';
 import { TaskCounter } from './TaskCounter';
 import { NoteIndicator } from './NoteIndicator';
 import { VoiceIndicator } from './VoiceIndicator';
 import { ParticipantsIndicator } from './ParticipantsIndicator';
+import { CompletionCheckmark } from './CompletionCheckmark';
 import { useTranslation } from '@project/i18n';
+import { DraggableSlotWrapper } from './DraggableSlotWrapper';
 
 interface SlotItemProps {
   slot: SlotItemType;
+  index: number;
   onPress: (slot: SlotItemType) => void;
+  selectedDate: string;
 }
 
-const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
+const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate }) => {
   const t = useTranslation();
-  
+
   const dynamicStyle = useMemo(
     () => ({
       backgroundColor: getSlotBackgroundColor(slot.color),
@@ -45,74 +47,30 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
       persona: 'adult-female' as const,
       activity: 'job_study',
       name: 'working_desktop',
-      extension: 'webp' as const
+      extension: 'webp' as const,
     };
-    
+
     const uri = getAvatarPublicUrl({
       persona: imageConfig.persona,
       activity: imageConfig.activity,
       name: imageConfig.name,
-      extension: imageConfig.extension
+      extension: imageConfig.extension,
     });
-    
+
     return uri;
   }, [slot.image]);
 
-  // Use Teaful time tracker for real-time completion tracking
-  const [currentTime] = useTimeTrackerStore.currentTime();
-  
-  // Check if slot should show as completed using Teaful real-time tracking
-  const isCompleted = useMemo(() => {
-    if (slot.completed) return true;
-    
-    // If no end time, slot can't be auto-completed based on time
-    if (!slot.endTime) return false;
-    
-    // Check if current time is after end time using Teaful's real-time current time
-    const endTime = new Date(slot.endTime);
-    const now = new Date(currentTime);
-    return now > endTime;
-  }, [slot.completed, slot.endTime, currentTime]);
-
-  // Animation for TaskChecked slide-in
-  const slideAnimation = useSharedValue(isCompleted ? 0 : -100);
-
-  useEffect(() => {
-    slideAnimation.value = withTiming(isCompleted ? 0 : -100, {
-      duration: 500,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [isCompleted, slideAnimation]);
-
-  const animatedCheckmarkStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: `${slideAnimation.value}%` }],
-    };
-  });
-
-  const handlePress = useCallback(() => {
-    onPress(slot);
-  }, [onPress, slot]);
-
   return (
-    <TouchableOpacity style={[styles.container, dynamicStyle]} onPress={handlePress}>
-      <View style={styles.slotWrapper}>
+    <DraggableSlotWrapper onPress={() => onPress(slot)} index={index} selectedDate={selectedDate}>
+      <View style={[styles.container, dynamicStyle]}>
         <View style={styles.cardContainer} nativeID={cardNativeId}>
-          {isCompleted && (
-            <Animated.View style={[styles.checkmarkContainer, animatedCheckmarkStyle]}>
-              <TaskChecked height={60} color={colors.success} />
-            </Animated.View>
-          )}
+          <CompletionCheckmark completed={slot.completed} endTime={slot.endTime} index={index} />
           <View style={styles.contentContainer}>
             <Text style={styles.time}>{timeText}</Text>
             <Text nativeID={titleNativeId} style={styles.title}>
               {slot.title}
             </Text>
-            <ProgressBar 
-              startTime={slot.startTime} 
-              endTime={slot.endTime} 
-              slotColor={slot.color}
-            />
+            <ProgressBar startTime={slot.startTime} endTime={slot.endTime} slotColor={slot.color} />
             <View style={styles.indicatorsRow}>
               <TaskCounter tasks={slot.tasks ?? undefined} />
               <NoteIndicator description={slot.description} />
@@ -125,27 +83,16 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, onPress }) => {
             )}
           </View>
         </View>
-        {imageUri && (
-          <Image 
-            source={imageUri} 
-            style={styles.slotImage} 
-            contentFit='contain' 
-            cachePolicy='memory-disk' 
-            transition={0} 
-            pointerEvents='none' 
-            priority='normal'
-            allowDownscaling={false}
-          />
-        )}
+        {imageUri && <Image source={imageUri} style={styles.slotImage} contentFit='contain' cachePolicy='memory-disk' transition={0} pointerEvents='none' priority='normal' allowDownscaling={false} />}
       </View>
-    </TouchableOpacity>
+    </DraggableSlotWrapper>
   );
 };
 
 export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
   const prev = prevProps.slot;
   const next = nextProps.slot;
-  
+
   // Compare essential props that affect rendering
   return (
     prev.id === next.id &&
@@ -159,21 +106,20 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prev.image?.name === next.image?.name &&
     prev.tasks?.length === next.tasks?.length &&
     prev.tasks?.filter(t => t.is_done).length === next.tasks?.filter(t => t.is_done).length &&
-    prev.participants?.length === next.participants?.length
+    prev.participants?.length === next.participants?.length &&
+    prevProps.selectedDate === nextProps.selectedDate &&
+    prevProps.onPress === nextProps.onPress
   );
 });
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative',
+    // No overflow hidden here to allow image to extend outside
     marginHorizontal: spacing.md,
     marginVertical: spacing.sm,
     borderRadius: 36,
     minHeight: 129,
-  },
-  slotWrapper: {
-    position: 'relative',
-    // No overflow hidden here to allow image to extend outside
-    flex: 1,
   },
   cardContainer: {
     paddingVertical: spacing.xl,
@@ -206,12 +152,6 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     zIndex: 2,
-  },
-  checkmarkContainer: {
-    position: 'absolute',
-    left: -0.01,
-    top: 38,
-    zIndex: 1,
   },
   time: {
     fontSize: fontSize.xs,

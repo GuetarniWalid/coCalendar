@@ -22,6 +22,10 @@ interface DraggedSlotContextType {
   setPortalEnabled: (value: boolean) => void;
   verticalConstraintEnabled: SharedValue<boolean>;
   draggedSlotInitialOffsetY: SharedValue<number>;
+  isSnapped: SharedValue<boolean>;
+  isBreakingSnap: SharedValue<boolean>;
+  dragDirection: SharedValue<'vertical' | 'horizontal' | null>;
+  lockedOffsetY: SharedValue<number>;
 }
 
 const DraggedSlotContext = createContext<DraggedSlotContextType | null>(null);
@@ -59,6 +63,12 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
   const [portalEnabled, setPortalEnabled] = useState(false);
   const verticalConstraintEnabled = useSharedValue(true);
   const draggedSlotInitialOffsetY = useSharedValue(0);
+  
+  // Snap system state
+  const isSnapped = useSharedValue(true); // Whether slot is in snapped state
+  const isBreakingSnap = useSharedValue(false); // Whether snap break animation is playing
+  const dragDirection = useSharedValue<'vertical' | 'horizontal' | null>(null); // Locked drag direction
+  const lockedOffsetY = useSharedValue(0); // Y position locked when dragging horizontally
 
   const contextValue = {
     draggedSlotX,
@@ -80,6 +90,10 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     setPortalEnabled,
     verticalConstraintEnabled,
     draggedSlotInitialOffsetY,
+    isSnapped,
+    isBreakingSnap,
+    dragDirection,
+    lockedOffsetY,
   };
 
   return (

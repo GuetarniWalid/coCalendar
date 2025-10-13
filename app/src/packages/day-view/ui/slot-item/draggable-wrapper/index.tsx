@@ -32,7 +32,11 @@ export const DraggableSlotWrapper = forwardRef<Animated.View, DraggableSlotWrapp
     setDraggedSlotIndexRN, 
     draggedSlotIndexRN, 
     portalEnabled,
-    draggedSlotInitialOffsetY
+    draggedSlotInitialOffsetY,
+    isSnapped,
+    isBreakingSnap,
+    dragDirection,
+    lockedOffsetY
   } = useDraggedSlotContext();
   
   const [panState, setPanState] = useState<'idle' | 'start' | 'end'>('idle');
@@ -74,6 +78,10 @@ export const DraggableSlotWrapper = forwardRef<Animated.View, DraggableSlotWrapp
     draggedSlotZone,
     draggedSlotHorizontalZone,
     draggedSlotInitialOffsetY,
+    isSnapped,
+    isBreakingSnap,
+    dragDirection,
+    lockedOffsetY,
     setDraggedSlotIndexRN,
     setPanState,
     constrainVerticalOffset,

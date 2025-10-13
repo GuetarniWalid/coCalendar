@@ -1,17 +1,16 @@
-import { ReactNode, forwardRef } from 'react';
-import Animated, { AnimatedRef, measure, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { AnimatedRef } from 'react-native-reanimated';
+import Animated, { measure, useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
-import { useCalendarStore } from '@project/shared';
 
-interface SlotPositionerProps {
-  children: ReactNode;
-  index: number;
-  selectedDate: string;
-}
-
-export const SlotPositioner = forwardRef<Animated.View, SlotPositionerProps>(({ children, index, selectedDate }, ref) => {
-  const [currentSelectedDate] = useCalendarStore.selectedDate();
-  const isCurrentDay = selectedDate === currentSelectedDate;
+/**
+ * Hook to manage slot reordering logic
+ * Calculates when and how a slot should shift position when another slot is dragged over it
+ */
+export const useSlotReordering = (
+  ref: AnimatedRef<Animated.View>,
+  index: number,
+  isCurrentDay: boolean
+) => {
   const { draggedSlotHeight, draggedSlotMiddleY, draggedSlotIndex, dayPageScrollY } = useDraggedSlotContext();
   const offsetY = useSharedValue(0);
   const draggedSlotPosition = useSharedValue<'above' | 'below' | null>(null);
@@ -64,25 +63,8 @@ export const SlotPositioner = forwardRef<Animated.View, SlotPositionerProps>(({ 
     }
   );
 
-  const animatedSlotStyle = useAnimatedStyle(() => {
-    if (!isCurrentDay) return {};
-    const isDraggedSlot = draggedSlotIndex.value === index;
-    if (isDraggedSlot) {
-      return {};
-    }
+  return {
+    offsetY,
+  };
+};
 
-    return {
-      transform: [
-        {
-          translateY: withSpring(offsetY.value),
-        },
-      ],
-    };
-  });
-
-  return (
-    <Animated.View ref={ref} style={animatedSlotStyle}>
-      {children}
-    </Animated.View>
-  );
-});

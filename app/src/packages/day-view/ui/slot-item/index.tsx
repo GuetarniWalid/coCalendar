@@ -1,5 +1,6 @@
 import { FC, useMemo, memo } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { SlotItem as SlotItemType, SlotColorName, formatTime, getAvatarPublicUrl, getSlotBackgroundColor } from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { Image } from 'expo-image';
@@ -10,7 +11,8 @@ import { VoiceIndicator } from './VoiceIndicator';
 import { ParticipantsIndicator } from './ParticipantsIndicator';
 import { CompletionCheckmark } from './CompletionCheckmark';
 import { useTranslation } from '@project/i18n';
-import { DraggableSlotWrapper } from './DraggableSlotWrapper';
+import { DraggableSlotWrapper } from './draggable-wrapper';
+import { SlotPositioner } from './slot-positioner';
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -21,6 +23,7 @@ interface SlotItemProps {
 
 const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate }) => {
   const t = useTranslation();
+  const slotRef = useAnimatedRef<Animated.View>();
 
   const dynamicStyle = useMemo(
     () => ({
@@ -61,8 +64,9 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
   }, [slot.image]);
 
   return (
-    <DraggableSlotWrapper onPress={() => onPress(slot)} index={index} selectedDate={selectedDate}>
-      <View style={[styles.container, dynamicStyle]}>
+    <SlotPositioner ref={slotRef} index={index} selectedDate={selectedDate}>
+      <DraggableSlotWrapper ref={slotRef} onPress={() => onPress(slot)} index={index}>
+        <View style={[styles.container, dynamicStyle]}>
         <View style={styles.cardContainer} nativeID={cardNativeId}>
           <CompletionCheckmark completed={slot.completed} endTime={slot.endTime} startTime={slot.startTime} index={index} />
           <View style={styles.contentContainer}>
@@ -84,8 +88,9 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
           </View>
         </View>
         {imageUri && <Image source={imageUri} style={styles.slotImage} contentFit='contain' cachePolicy='memory-disk' transition={0} pointerEvents='none' priority='normal' allowDownscaling={false} />}
-      </View>
-    </DraggableSlotWrapper>
+        </View>
+      </DraggableSlotWrapper>
+    </SlotPositioner>
   );
 };
 

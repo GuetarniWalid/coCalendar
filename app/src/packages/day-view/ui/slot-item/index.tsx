@@ -64,7 +64,7 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
     <DraggableSlotWrapper onPress={() => onPress(slot)} index={index} selectedDate={selectedDate}>
       <View style={[styles.container, dynamicStyle]}>
         <View style={styles.cardContainer} nativeID={cardNativeId}>
-          <CompletionCheckmark completed={slot.completed} endTime={slot.endTime} index={index} />
+          <CompletionCheckmark completed={slot.completed} endTime={slot.endTime} startTime={slot.startTime} index={index} />
           <View style={styles.contentContainer}>
             <Text style={styles.time}>{timeText}</Text>
             <Text nativeID={titleNativeId} style={styles.title}>

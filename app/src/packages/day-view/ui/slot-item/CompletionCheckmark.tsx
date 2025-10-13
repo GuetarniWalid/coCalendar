@@ -9,16 +9,31 @@ import { scheduleOnRN } from 'react-native-worklets';
 interface CompletionCheckmarkProps {
   completed: boolean | undefined;
   endTime: string | null;
+  startTime: string | null;
   index: number;
 }
 
-export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, endTime, index }) => {
+// Helper function to check if the slot's day has passed
+const isDayPassed = (startTime: string | null): boolean => {
+  if (!startTime) return false;
+  
+  const slotDate = new Date(startTime);
+  const today = new Date();
+  // Set both to start of day for comparison
+  slotDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return slotDate < today;
+};
+
+export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, endTime, startTime, index }) => {
   // Calculate initial completion state once
   const [isCompleted, setIsCompleted] = useState<boolean>(() => {
     if (completed === true) return true;
 
-    // If no end time, slot can't be auto-completed based on time
-    if (!endTime) return false;
+    // If no end time, check if the day has passed
+    if (!endTime) {
+      return isDayPassed(startTime);
+    }
 
     // Check if current time is after end time
     const endTimeDate = new Date(endTime);
@@ -52,16 +67,27 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
   }, [slideAnimation]);
 
   useEffect(() => {
-    if (isDragged) return;
+    if (isDragged) {
+      setIsCompleted(false);
+      return;
+    }
 
     // If manually completed, show checkmark immediately
-    if (completed === true && !isCompleted && !isDragged) {
+    if (completed === true && !isCompleted) {
       setIsCompleted(true);
       return;
     }
 
-    // If no end time or already completed, nothing to schedule
-    if (!endTime || isCompleted || !isDragged) return;
+    // If no end time, check if the day has passed
+    if (!endTime) {
+      if (isDayPassed(startTime) && !isCompleted) {
+        setIsCompleted(true);
+      }
+      return;
+    }
+
+    // If already completed, nothing to schedule
+    if (isCompleted) return;
 
     // Calculate time remaining until end time
     const endTimeDate = new Date(endTime);
@@ -69,7 +95,7 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
     const timeRemaining = endTimeDate.getTime() - now.getTime();
 
     // If end time has already passed, show checkmark immediately
-    if (timeRemaining <= 0 && !isDragged) {
+    if (timeRemaining <= 0) {
       setIsCompleted(true);
       return;
     }
@@ -81,33 +107,7 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
 
     // Cleanup timeout on unmount or when dependencies change
     return () => clearTimeout(timeoutId);
-  }, [completed, endTime, isCompleted, slideAnimation, isDragged]);
-
-  useEffect(() => {
-    if (isDragged) {
-      setIsCompleted(false);
-      return;
-    }
-    
-    // When drag ends, check if slot should be completed
-    if (!isDragged) {
-      // Check if manually completed
-      if (completed === true) {
-        setIsCompleted(true);
-        return;
-      }
-      
-      // Check if time has passed
-      if (endTime) {
-        const endTimeDate = new Date(endTime);
-        const now = new Date();
-        if (now > endTimeDate) {
-          setIsCompleted(true);
-          return;
-        }
-      }
-    }
-  }, [isDragged, completed, endTime]);
+  }, [completed, endTime, startTime, isCompleted, isDragged]);
 
   useEffect(() => {
     if (isCompleted) animateCompletion();

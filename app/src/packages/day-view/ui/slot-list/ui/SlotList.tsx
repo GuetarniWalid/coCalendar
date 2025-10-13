@@ -1,6 +1,6 @@
-import { useCallback, useRef, useMemo, useEffect } from 'react';
-import { FlatList, Dimensions } from 'react-native';
-import { CALENDAR_CONSTANTS } from '@project/shared';
+import { useCallback, useRef, useMemo, useEffect, ReactElement } from 'react';
+import { FlatList, Dimensions, View, StyleSheet } from 'react-native';
+import { CALENDAR_CONSTANTS, colors } from '@project/shared';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { DayPage } from './DayPage';
 import { SlotListProps } from '../shared/types';
@@ -13,7 +13,6 @@ import {
 } from '../shared/hooks';
 
 export const SlotList = ({
-  slots: currentSlots,
   onSlotPress,
   getSlotsForDate,
   loading = false,
@@ -21,6 +20,9 @@ export const SlotList = ({
   const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
   const { draggedSlotIndexRN } = useDraggedSlotContext();
+  
+  // JSX cache for instant rendering
+  const renderedJSXCacheRef = useRef<Record<string, ReactElement>>({});
 
   const dayIndices = useMemo(
     () => Array.from({ length: CALENDAR_CONSTANTS.TOTAL_DAYS }, (_, i) => i),
@@ -51,6 +53,16 @@ export const SlotList = ({
     setOnScrollComplete(handleScrollComplete);
   }, [setOnScrollComplete, handleScrollComplete]);
 
+  // Cell renderer with forced background color to prevent grey flash
+  const CellRendererComponent = useCallback(
+    ({ children, style, ...props }: any) => (
+      <View style={[style, styles.cell]} {...props}>
+        {children}
+      </View>
+    ),
+    []
+  );
+
   const renderDayPage = useCallback(
     ({ item: dayIndex }: { item: number }) => {
       return (
@@ -66,6 +78,7 @@ export const SlotList = ({
           selectedDate={selectedDate}
           loading={loading}
           lastShownByDateRef={lastShownByDateRef}
+          renderedJSXCacheRef={renderedJSXCacheRef}
         />
       );
     },
@@ -83,29 +96,42 @@ export const SlotList = ({
   );
 
   return (
-    <FlatList
-      ref={flatListRef}
-      data={dayIndices}
-      keyExtractor={(item) => `day-${item}`}
-      horizontal
-      pagingEnabled={false}
-      scrollEnabled={isScrollEnabled}
-      showsHorizontalScrollIndicator={false}
-      renderItem={renderDayPage}
-      onScrollBeginDrag={handleScrollBeginDrag}
-      onScrollEndDrag={handleScrollEndDrag}
-      onMomentumScrollEnd={handleMomentumScrollEnd}
-      getItemLayout={(_, index) => ({
-        length: screenWidth,
-        offset: screenWidth * index,
-        index,
-      })}
-      initialNumToRender={3}
-      maxToRenderPerBatch={3}
-      windowSize={7}
-      removeClippedSubviews={draggedSlotIndexRN === null}
-      updateCellsBatchingPeriod={100}
-      decelerationRate={0}
-    />
+    <View style={styles.container}>
+      <FlatList
+        ref={flatListRef}
+        data={dayIndices}
+        keyExtractor={(item) => `day-${item}`}
+        horizontal
+        pagingEnabled={false}
+        scrollEnabled={isScrollEnabled}
+        showsHorizontalScrollIndicator={false}
+        renderItem={renderDayPage}
+        CellRendererComponent={CellRendererComponent}
+        onScrollBeginDrag={handleScrollBeginDrag}
+        onScrollEndDrag={handleScrollEndDrag}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        getItemLayout={(_, index) => ({
+          length: screenWidth,
+          offset: screenWidth * index,
+          index,
+        })}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={7}
+        removeClippedSubviews={draggedSlotIndexRN === null}
+        updateCellsBatchingPeriod={100}
+        decelerationRate={0}
+      />
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background.primary,
+  },
+  cell: {
+    backgroundColor: colors.background.primary,
+  },
+});

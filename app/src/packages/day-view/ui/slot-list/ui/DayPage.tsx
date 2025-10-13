@@ -1,4 +1,4 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, ReactElement } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { SlotItem } from '../../slot-item';
 import { EmptyDayCard } from '../../empty-day-card';
@@ -19,7 +19,8 @@ interface DayPageProps {
   getDateFromIndex: (index: number) => string;
   selectedDate: string;
   loading: boolean;
-  lastShownByDateRef: React.MutableRefObject<Record<string, SlotItemType[]>>;
+  lastShownByDateRef: { current: Record<string, SlotItemType[]> };
+  renderedJSXCacheRef: { current: Record<string, ReactElement> };
 }
 
 const DayPageComponent = ({
@@ -33,28 +34,34 @@ const DayPageComponent = ({
   getDateFromIndex,
   selectedDate,
   loading,
-  lastShownByDateRef
+  lastShownByDateRef,
+  renderedJSXCacheRef
 }: DayPageProps) => {
   const t = useTranslation();
   const date = getDateFromIndex(dayIndex);
+  
+  // Check if we have cached JSX - return it IMMEDIATELY to prevent grey flash
+  const cachedJSX = renderedJSXCacheRef.current[date];
+  
   const fetchedSlots = getSlotsForDate(date);
+  const cachedSlots = lastShownByDateRef.current[date];
   
   // Use cache if fetched slots are undefined or empty, but we have cached data
   const daySlots = (fetchedSlots && fetchedSlots.length > 0) 
     ? fetchedSlots 
-    : lastShownByDateRef.current[date] ?? fetchedSlots ?? null;
+    : cachedSlots ?? fetchedSlots ?? null;
 
-  // Update cache in useEffect to avoid race conditions during render
+  // Update slot cache in useEffect to avoid race conditions during render
   useEffect(() => {
     if (daySlots?.length) {
       lastShownByDateRef.current[date] = daySlots;
     }
   }, [date, daySlots, lastShownByDateRef]);
 
-  // Render content directly - no useCallback to avoid stale closures
-  const renderContent = () => {
-    // Only show loading if we're loading AND have no cached data
-    if (loading && date === selectedDate && !daySlots) {
+  // Build JSX content
+  const buildContent = () => {
+    // Only show loading if we're loading AND have no cached data AND no cached JSX
+    if (loading && date === selectedDate && !daySlots && !cachedJSX) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size='large' />
@@ -64,6 +71,7 @@ const DayPageComponent = ({
     }
 
     if (!daySlots?.length) {
+      // Don't cache empty state
       return <EmptyDayCard onPress={() => handleEmptyDayCardPress(date)} />;
     }
     
@@ -94,29 +102,41 @@ const DayPageComponent = ({
     
     const enhancedData = createEnhancedSlotData(sortedSlots);
 
-    return enhancedData.map((item, index) => 
-      item.type === 'slot' ? (
-        <SlotItem 
-          key={item.id} 
-          index={index}
-          slot={item.data} 
-          onPress={onSlotPress}
-          selectedDate={date}
-        />
-      ) : (
-        <RemainingTimeCard
-          key={item.id}
-          nextActivityStartTime={item.data.nextActivityStartTime}
-          onPress={() => handleRemainingTimeCardPress(item.data.nextActivityStartTime)}
-        />
-      )
+    const slotsJSX = (
+      <>
+        {enhancedData.map((item, index) => 
+          item.type === 'slot' ? (
+            <SlotItem 
+              key={item.id} 
+              index={index}
+              slot={item.data} 
+              onPress={onSlotPress}
+              selectedDate={date}
+            />
+          ) : (
+            <RemainingTimeCard
+              key={item.id}
+              nextActivityStartTime={item.data.nextActivityStartTime}
+              onPress={() => handleRemainingTimeCardPress(item.data.nextActivityStartTime)}
+            />
+          )
+        )}
+      </>
     );
+    
+    // Cache the built JSX for instant re-render on next mount
+    renderedJSXCacheRef.current[date] = slotsJSX;
+    
+    return slotsJSX;
   };
+
+  // If we have cached JSX and cached slots, return cached JSX immediately
+  const content = (cachedJSX && cachedSlots) ? cachedJSX : buildContent();
 
   return (
     <View style={[styles.dayContainer, { width: screenWidth }]}>
       <ControllableScrollView selectedDate={date}>
-        {renderContent()}
+        {content}
       </ControllableScrollView>
     </View>
   );
@@ -129,6 +149,7 @@ DayPage.displayName = 'DayPage';
 const styles = StyleSheet.create({
   dayContainer: {
     flex: 1,
+    backgroundColor: colors.background.primary,
   },
   loadingContainer: {
     flex: 1,

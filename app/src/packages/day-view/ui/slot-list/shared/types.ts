@@ -1,11 +1,9 @@
 import { SlotItem } from '@project/shared';
 
 export interface SlotListProps {
-  slots: SlotItem[];
   onSlotPress: (slot: SlotItem) => void;
   getSlotsForDate: (date: string) => SlotItem[] | undefined;
   loading?: boolean;
-  selectedDate: string;
 }
 
 export interface GestureState {

@@ -73,7 +73,7 @@ export const DayViewScreen = () => {
         <DayTasksProgress slots={loading ? [] : slots} selectedDate={selectedDate || ''} />
       </View>
       <DateSelector />
-      <SlotList slots={slots} onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} loading={loading} selectedDate={selectedDate || ''} />
+      <SlotList onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} loading={loading} />
     </>
   );
 };

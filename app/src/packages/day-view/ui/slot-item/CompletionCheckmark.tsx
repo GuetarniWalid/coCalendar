@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from '
 import { colors } from '@project/shared';
 import { TaskChecked } from '@project/icons';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
+import { scheduleOnRN } from 'react-native-worklets';
 
 interface CompletionCheckmarkProps {
   completed: boolean | undefined;
@@ -24,6 +25,7 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
     const now = new Date();
     return now > endTimeDate;
   });
+  const [shouldRender, setShouldRender] = useState<boolean>(isCompleted);
   const { draggedSlotIndexRN } = useDraggedSlotContext();
   const isDragged = draggedSlotIndexRN === index;
 
@@ -31,6 +33,7 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
   const slideAnimation = useSharedValue(isCompleted ? 0 : -100);
 
   const animateCompletion = useCallback(() => {
+    setShouldRender(true);
     slideAnimation.value = withTiming(0, {
       duration: 500,
       easing: Easing.out(Easing.cubic),
@@ -39,8 +42,12 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
 
   const animateUncompletion = useCallback(() => {
     slideAnimation.value = withTiming(-100, {
-      duration: 500,
+      duration: 200,
       easing: Easing.out(Easing.cubic),
+    }, (finished) => {
+      if (finished) {
+        scheduleOnRN(setShouldRender, false);
+      }
     });
   }, [slideAnimation]);
 
@@ -81,15 +88,31 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
       setIsCompleted(false);
       return;
     }
-    if(!isDragged && isCompleted) {
-      setIsCompleted(true);
+    
+    // When drag ends, check if slot should be completed
+    if (!isDragged) {
+      // Check if manually completed
+      if (completed === true) {
+        setIsCompleted(true);
+        return;
+      }
+      
+      // Check if time has passed
+      if (endTime) {
+        const endTimeDate = new Date(endTime);
+        const now = new Date();
+        if (now > endTimeDate) {
+          setIsCompleted(true);
+          return;
+        }
+      }
     }
-  }, [isDragged, isCompleted]);
+  }, [isDragged, completed, endTime]);
 
   useEffect(() => {
     if (isCompleted) animateCompletion();
     else animateUncompletion();
-  }, [isCompleted]);
+  }, [isCompleted, animateCompletion, animateUncompletion]);
 
   const animatedCheckmarkStyle = useAnimatedStyle(() => {
     return {
@@ -97,7 +120,7 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
     };
   });
 
-  if (!isCompleted) return null;
+  if (!shouldRender) return null;
 
   return (
     <Animated.View style={[styles.checkmarkContainer, animatedCheckmarkStyle]}>

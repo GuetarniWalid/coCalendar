@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
+import { memo, useEffect } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
-import { SlotItem } from '../slot-item';
-import { EmptyDayCard } from '../empty-day-card';
-import { RemainingTimeCard } from '../remaining-time-card';
+import { SlotItem } from '../../slot-item';
+import { EmptyDayCard } from '../../empty-day-card';
+import { RemainingTimeCard } from '../../remaining-time-card';
 import { ControllableScrollView } from './ControllableScrollView';
 import { colors, SlotItem as SlotItemType, fontSize } from '@project/shared';
 import { useTranslation } from '@project/i18n';
@@ -22,7 +22,7 @@ interface DayPageProps {
   lastShownByDateRef: React.MutableRefObject<Record<string, SlotItemType[]>>;
 }
 
-export const DayPage = ({
+const DayPageComponent = ({
   dayIndex,
   screenWidth,
   getSlotsForDate,
@@ -36,16 +36,25 @@ export const DayPage = ({
   lastShownByDateRef
 }: DayPageProps) => {
   const t = useTranslation();
+  const date = getDateFromIndex(dayIndex);
+  const fetchedSlots = getSlotsForDate(date);
+  
+  // Use cache if fetched slots are undefined or empty, but we have cached data
+  const daySlots = (fetchedSlots && fetchedSlots.length > 0) 
+    ? fetchedSlots 
+    : lastShownByDateRef.current[date] ?? fetchedSlots ?? null;
 
-  const renderContent = useCallback(() => {
-    const date = getDateFromIndex(dayIndex);
-    const daySlots = getSlotsForDate(date) ?? lastShownByDateRef.current[date] ?? null;
-
+  // Update cache in useEffect to avoid race conditions during render
+  useEffect(() => {
     if (daySlots?.length) {
       lastShownByDateRef.current[date] = daySlots;
     }
+  }, [date, daySlots, lastShownByDateRef]);
 
-    if (loading && date === selectedDate) {
+  // Render content directly - no useCallback to avoid stale closures
+  const renderContent = () => {
+    // Only show loading if we're loading AND have no cached data
+    if (loading && date === selectedDate && !daySlots) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size='large' />
@@ -102,21 +111,7 @@ export const DayPage = ({
         />
       )
     );
-  }, [
-    dayIndex,
-    getDateFromIndex,
-    getSlotsForDate,
-    lastShownByDateRef,
-    loading,
-    selectedDate,
-    t.loading,
-    handleEmptyDayCardPress,
-    createEnhancedSlotData,
-    onSlotPress,
-    handleRemainingTimeCardPress
-  ]);
-
-  const date = getDateFromIndex(dayIndex);
+  };
 
   return (
     <View style={[styles.dayContainer, { width: screenWidth }]}>
@@ -126,6 +121,10 @@ export const DayPage = ({
     </View>
   );
 };
+
+export const DayPage = memo(DayPageComponent);
+
+DayPage.displayName = 'DayPage';
 
 const styles = StyleSheet.create({
   dayContainer: {
@@ -143,3 +142,4 @@ const styles = StyleSheet.create({
     color: colors.typography.secondary,
   },
 });
+

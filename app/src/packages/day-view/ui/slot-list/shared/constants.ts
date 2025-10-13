@@ -1,0 +1,11 @@
+export const GESTURE_THRESHOLD = {
+  QUICK_TIME: 300,
+  MIN_DISTANCE: 0.1,
+  FORWARD_SNAP: 0.15,
+  BACKWARD_SNAP: 0.85,
+  SLOW_SNAP: 0.5,
+} as const;
+
+export const SCROLL_ANIMATION_TIMEOUT = 350;
+export const INITIAL_SCROLL_DELAY = 100;
+

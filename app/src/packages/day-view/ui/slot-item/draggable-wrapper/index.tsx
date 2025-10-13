@@ -1,9 +1,12 @@
 import { forwardRef, ReactNode, useEffect, useState } from 'react';
-import Animated from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { Portal } from 'react-native-teleport';
 import { useVerticalConstraint, useZoneDetection, useDragGesture } from './hooks';
+import { TimeHandler } from './TimeHandler';
+import { StyleSheet } from 'react-native';
+import { TIME_HANDLER_WIDTH, TIME_HANDLER_ANIMATION_DURATION } from './shared/constants';
 
 interface DraggableSlotWrapperProps {
   children: ReactNode;
@@ -33,6 +36,23 @@ export const DraggableSlotWrapper = forwardRef<Animated.View, DraggableSlotWrapp
   } = useDraggedSlotContext();
   
   const [panState, setPanState] = useState<'idle' | 'start' | 'end'>('idle');
+  const isDragging = index === draggedSlotIndexRN && portalEnabled && panState === 'start';
+  const [hasMargin, setHasMargin] = useState(false);
+
+  // Handle margin state with delay on drag end
+  useEffect(() => {
+    if (isDragging) {
+      // Add margin immediately when dragging starts
+      setHasMargin(true);
+    } else if (hasMargin) {
+      // Remove margin after TimeHandler fade out animation
+      const timer = setTimeout(() => {
+        setHasMargin(false);
+      }, TIME_HANDLER_ANIMATION_DURATION);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [isDragging, hasMargin]);
   
   // Hook for vertical constraint logic
   const { constrainVerticalOffset } = useVerticalConstraint();
@@ -69,10 +89,32 @@ export const DraggableSlotWrapper = forwardRef<Animated.View, DraggableSlotWrapp
 
   return (
     <Animated.View ref={slotRef}>
-      <Portal hostName={index === draggedSlotIndexRN && portalEnabled && panState === 'start' ? 'draggableLayer' : undefined}>
-        <GestureDetector gesture={gesture}>{children}</GestureDetector>
+      <Portal hostName={isDragging ? 'draggableLayer' : undefined}>
+        <GestureDetector gesture={gesture}>
+          <Animated.View style={styles.container}>
+            <TimeHandler isDragging={isDragging} />
+            <Animated.View layout={LinearTransition.duration(TIME_HANDLER_ANIMATION_DURATION)} style={[styles.slotWrapper, hasMargin && styles.slotWrapperDragging]}>
+              {children}
+            </Animated.View>
+          </Animated.View>
+        </GestureDetector>
       </Portal>
     </Animated.View>
   );
+});
+
+const TIME_HANDLER_MARGIN = 8;
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'relative',
+    width: '100%',
+  },
+  slotWrapper: {
+    width: '100%',
+  },
+  slotWrapperDragging: {
+    marginLeft: TIME_HANDLER_WIDTH + TIME_HANDLER_MARGIN,
+  },
 });
 

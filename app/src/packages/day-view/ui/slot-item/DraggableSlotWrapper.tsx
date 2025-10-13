@@ -8,6 +8,7 @@ import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { SlotPositioner } from './SlotPositioner';
 import { CALENDAR_CONSTANTS } from '@project/shared';
 import { Portal } from 'react-native-teleport';
+import { useVerticalConstraint } from '@project/draggable-layer/hooks';
 
 interface DraggableSlotWrapperProps {
   children: ReactNode;
@@ -18,7 +19,20 @@ interface DraggableSlotWrapperProps {
 
 export const DraggableSlotWrapper: FC<DraggableSlotWrapperProps> = ({ children, onPress, index, selectedDate }) => {
   const slotRef = useAnimatedRef<Animated.View>();
-  const { draggedSlotX, draggedSlotY, draggedSlotOffsetX, draggedSlotOffsetY, draggedSlotHeight, draggedSlotZone, draggedSlotHorizontalZone, draggedSlotIndex, setDraggedSlotIndexRN, draggedSlotIndexRN, portalEnabled } = useDraggedSlotContext();
+  const { 
+    draggedSlotX, 
+    draggedSlotY, 
+    draggedSlotOffsetX, 
+    draggedSlotOffsetY, 
+    draggedSlotHeight, 
+    draggedSlotZone, 
+    draggedSlotHorizontalZone, 
+    draggedSlotIndex, 
+    setDraggedSlotIndexRN, 
+    draggedSlotIndexRN, 
+    portalEnabled
+  } = useDraggedSlotContext();
+  const { constrainVerticalOffset, draggedSlotInitialOffsetY } = useVerticalConstraint();
   const [panState, setPanState] = useState<'idle' | 'start' | 'end'>('idle');
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const bottomSreenTresholdY = screenHeight * 0.85;
@@ -56,11 +70,15 @@ export const DraggableSlotWrapper: FC<DraggableSlotWrapperProps> = ({ children, 
     .activateAfterLongPress(500)
     .shouldCancelWhenOutside(false)
     .onStart(() => {
+      // Initialize constraint with starting position
+      draggedSlotInitialOffsetY.value = 0;
       scheduleOnRN(handlePanStart);
     })
     .onUpdate(e => {
       draggedSlotOffsetX.value = e.translationX;
-      draggedSlotOffsetY.value = e.translationY;
+      
+      // Apply vertical constraint
+      draggedSlotOffsetY.value = constrainVerticalOffset(e.translationY);
 
       // Vertical zone detection
       const touchY = e.absoluteY;

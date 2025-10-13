@@ -20,6 +20,8 @@ interface DraggedSlotContextType {
   setDraggedSlotIndexRN: (value: number | null) => void;
   portalEnabled: boolean;
   setPortalEnabled: (value: boolean) => void;
+  verticalConstraintEnabled: SharedValue<boolean>;
+  draggedSlotInitialOffsetY: SharedValue<number>;
 }
 
 const DraggedSlotContext = createContext<DraggedSlotContextType | null>(null);
@@ -55,6 +57,8 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
   const [draggedSlotIndexRN, setDraggedSlotIndexRN] = useState<number | null>(null);
   const [flatListScrollToIndex, setFlatListScrollToIndex] = useState<(targetIndex: number) => void>(() => () => {});
   const [portalEnabled, setPortalEnabled] = useState(false);
+  const verticalConstraintEnabled = useSharedValue(true);
+  const draggedSlotInitialOffsetY = useSharedValue(0);
 
   const contextValue = {
     draggedSlotX,
@@ -74,6 +78,8 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     setDraggedSlotIndexRN,
     portalEnabled,
     setPortalEnabled,
+    verticalConstraintEnabled,
+    draggedSlotInitialOffsetY,
   };
 
   return (

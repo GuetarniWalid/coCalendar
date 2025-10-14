@@ -73,6 +73,8 @@ const snapToOrigin = (
   draggedSlotOffsetY.value = withTiming(0, {
     duration: SNAP_BREAK_ANIMATION_DURATION,
   });
+  // Trigger medium haptic on re-snap (horizontal path)
+  scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Medium);
 };
 
 /**
@@ -103,20 +105,54 @@ const breakHorizontalSnap = (
   draggedSlotOffsetY.value = withTiming(0, {
     duration: SNAP_BREAK_ANIMATION_DURATION,
   });
+
+  scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Medium);
 };
 
 /**
- * Breaks snap vertically - no animation needed as finger is already moving
+ * Breaks snap vertically with a short transition to avoid jump
  */
 const breakVerticalSnap = (
   translationY: number,
   draggedSlotOffsetY: SharedValue<number>,
+  isSnapped: SharedValue<boolean>,
+  isBreakingSnap: SharedValue<boolean>,
   dragDirection: SharedValue<'vertical' | 'horizontal' | null>,
   constrainVerticalOffset: (translation: number) => number
 ) => {
   'worklet';
   dragDirection.value = 'vertical';
-  draggedSlotOffsetY.value = constrainVerticalOffset(translationY);
+  // mark as not snapped so subsequent updates use free vertical branch
+  isSnapped.value = false;
+  isBreakingSnap.value = true;
+  const targetY = constrainVerticalOffset(translationY);
+  draggedSlotOffsetY.value = withTiming(targetY, { duration: SNAP_BREAK_ANIMATION_DURATION }, () => {
+    isBreakingSnap.value = false;
+  });
+};
+
+/**
+ * If user returns near origin while in vertical mode, smoothly re-snap vertically.
+ * This re-enables the snapped branch so horizontal break can occur again.
+ */
+const resnapVerticalIfNearOrigin = (
+  translationY: number,
+  draggedSlotOffsetY: SharedValue<number>,
+  isSnapped: SharedValue<boolean>,
+  isBreakingSnap: SharedValue<boolean>,
+  dragDirection: SharedValue<'vertical' | 'horizontal' | null>
+) => {
+  'worklet';
+  const absOffsetY = Math.abs(translationY);
+  if (absOffsetY <= VERTICAL_SNAP_THRESHOLD && dragDirection.value === 'vertical' && !isBreakingSnap.value) {
+    isSnapped.value = true;
+    dragDirection.value = null;
+    draggedSlotOffsetY.value = withTiming(0, { duration: SNAP_BREAK_ANIMATION_DURATION });
+    // Trigger medium haptic on re-snap (vertical path)
+    scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Medium);
+    return true;
+  }
+  return false;
 };
 
 /**
@@ -127,6 +163,8 @@ const handleSnappedVerticalMovement = (
   translationY: number,
   draggedSlotOffsetY: SharedValue<number>,
   dragDirection: SharedValue<'vertical' | 'horizontal' | null>,
+  isSnapped: SharedValue<boolean>,
+  isBreakingSnap: SharedValue<boolean>,
   constrainVerticalOffset: (translation: number) => number
 ) => {
   'worklet';
@@ -138,7 +176,7 @@ const handleSnappedVerticalMovement = (
     draggedSlotOffsetY.value = withTiming(0, { duration: SNAP_BREAK_ANIMATION_DURATION });
     dragDirection.value = null;
   } else if (shouldLockVertical) {
-    breakVerticalSnap(translationY, draggedSlotOffsetY, dragDirection, constrainVerticalOffset);
+    breakVerticalSnap(translationY, draggedSlotOffsetY, isSnapped, isBreakingSnap, dragDirection, constrainVerticalOffset);
   } else {
     draggedSlotOffsetY.value = constrainVerticalOffset(translationY);
   }
@@ -278,7 +316,7 @@ export const useDragGesture = ({
       if (isSnapped.value) {
         if (dragDirection.value === 'vertical') {
           draggedSlotOffsetX.value = 0;
-          handleSnappedVerticalMovement(e.translationY, draggedSlotOffsetY, dragDirection, constrainVerticalOffset);
+          handleSnappedVerticalMovement(e.translationY, draggedSlotOffsetY, dragDirection, isSnapped, isBreakingSnap, constrainVerticalOffset);
         } else if (shouldBreakHorizontal) {
           breakHorizontalSnap(
             e.translationX,
@@ -291,20 +329,30 @@ export const useDragGesture = ({
           );
         } else {
           draggedSlotOffsetX.value = 0;
-          handleSnappedVerticalMovement(e.translationY, draggedSlotOffsetY, dragDirection, constrainVerticalOffset);
+          handleSnappedVerticalMovement(e.translationY, draggedSlotOffsetY, dragDirection, isSnapped, isBreakingSnap, constrainVerticalOffset);
         }
       } else if (!isBreakingSnap.value) {
-        handleLockedDirectionMovement(
-          e.translationX,
+        // If we're in vertical mode and near origin, re-snap vertically first
+        const didResnap = resnapVerticalIfNearOrigin(
           e.translationY,
-          draggedSlotOffsetX,
           draggedSlotOffsetY,
           isSnapped,
           isBreakingSnap,
-          dragDirection,
-          lockedOffsetY,
-          constrainVerticalOffset
+          dragDirection
         );
+        if (!didResnap) {
+          handleLockedDirectionMovement(
+            e.translationX,
+            e.translationY,
+            draggedSlotOffsetX,
+            draggedSlotOffsetY,
+            isSnapped,
+            isBreakingSnap,
+            dragDirection,
+            lockedOffsetY,
+            constrainVerticalOffset
+          );
+        }
       }
 
       updateZones(e.absoluteX, e.absoluteY);

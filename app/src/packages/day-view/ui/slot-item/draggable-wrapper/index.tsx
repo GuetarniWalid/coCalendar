@@ -6,12 +6,14 @@ import { Portal } from 'react-native-teleport';
 import { useVerticalConstraint, useZoneDetection, useDragGesture } from './hooks';
 import { TimeHandler } from './TimeHandler';
 import { StyleSheet } from 'react-native';
-import { TIME_HANDLER_WIDTH, TIME_HANDLER_ANIMATION_DURATION } from './shared/constants';
+import { TIME_HANDLER_WIDTH, TIME_HANDLER_ANIMATION_DURATION, TIME_HANDLER_MARGIN } from './shared/constants';
 
 interface DraggableSlotWrapperProps {
   children: ReactNode;
   onPress: () => void;
   index: number;
+  slotStartTime: string | null;
+  slotColor: string;
 }
 
 /**
@@ -19,7 +21,7 @@ interface DraggableSlotWrapperProps {
  * Orchestrates drag behavior, constraints, and zone detection
  */
 export const DraggableSlotWrapper = forwardRef<Animated.View, DraggableSlotWrapperProps>(
-  ({ children, onPress, index }, slotRef) => {
+  ({ children, onPress, index, slotStartTime, slotColor }, slotRef) => {
     const { 
     draggedSlotX, 
     draggedSlotY, 
@@ -36,27 +38,35 @@ export const DraggableSlotWrapper = forwardRef<Animated.View, DraggableSlotWrapp
     isSnapped,
     isBreakingSnap,
     dragDirection,
-    lockedOffsetY
+    lockedOffsetY,
+    setDraggedSlotData
   } = useDraggedSlotContext();
   
   const [panState, setPanState] = useState<'idle' | 'start' | 'end'>('idle');
   const isDragging = index === draggedSlotIndexRN && portalEnabled && panState === 'start';
   const [hasMargin, setHasMargin] = useState(false);
 
-  // Handle margin state with delay on drag end
+  // Handle margin state and slot data with delay on drag end
   useEffect(() => {
     if (isDragging) {
-      // Add margin immediately when dragging starts
+      // Add margin and set slot data immediately when dragging starts
       setHasMargin(true);
-    } else if (hasMargin) {
-      // Remove margin after TimeHandler fade out animation
+      setDraggedSlotData({ startTime: slotStartTime, color: slotColor });
+      return;
+    }
+
+    // When stopping dragging for this index, clear the draggedSlotData only if
+    // this slot was the one providing it, to avoid clearing while switching slots quickly
+    if (hasMargin) {
       const timer = setTimeout(() => {
         setHasMargin(false);
+        setDraggedSlotData(null);
       }, TIME_HANDLER_ANIMATION_DURATION);
       return () => clearTimeout(timer);
     }
+
     return undefined;
-  }, [isDragging, hasMargin]);
+  }, [isDragging, hasMargin, slotStartTime, slotColor, setDraggedSlotData]);
   
   // Hook for vertical constraint logic
   const { constrainVerticalOffset } = useVerticalConstraint();
@@ -111,7 +121,7 @@ export const DraggableSlotWrapper = forwardRef<Animated.View, DraggableSlotWrapp
   );
 });
 
-const TIME_HANDLER_MARGIN = 8;
+
 
 const styles = StyleSheet.create({
   container: {

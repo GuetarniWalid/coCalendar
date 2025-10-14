@@ -26,6 +26,8 @@ interface DraggedSlotContextType {
   isBreakingSnap: SharedValue<boolean>;
   dragDirection: SharedValue<'vertical' | 'horizontal' | null>;
   lockedOffsetY: SharedValue<number>;
+  draggedSlotData: { startTime: string | null; color: string } | null;
+  setDraggedSlotData: (data: { startTime: string | null; color: string } | null) => void;
 }
 
 const DraggedSlotContext = createContext<DraggedSlotContextType | null>(null);
@@ -69,6 +71,9 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
   const isBreakingSnap = useSharedValue(false); // Whether snap break animation is playing
   const dragDirection = useSharedValue<'vertical' | 'horizontal' | null>(null); // Locked drag direction
   const lockedOffsetY = useSharedValue(0); // Y position locked when dragging horizontally
+  
+  // Dragged slot data (startTime and color)
+  const [draggedSlotData, setDraggedSlotData] = useState<{ startTime: string | null; color: string } | null>(null);
 
   const contextValue = {
     draggedSlotX,
@@ -94,6 +99,8 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     isBreakingSnap,
     dragDirection,
     lockedOffsetY,
+    draggedSlotData,
+    setDraggedSlotData,
   };
 
   return (

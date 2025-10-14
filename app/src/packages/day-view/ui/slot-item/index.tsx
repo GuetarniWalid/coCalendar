@@ -65,29 +65,29 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
 
   return (
     <SlotPositioner ref={slotRef} index={index} selectedDate={selectedDate}>
-      <DraggableSlotWrapper ref={slotRef} onPress={() => onPress(slot)} index={index}>
+      <DraggableSlotWrapper ref={slotRef} onPress={() => onPress(slot)} index={index} slotStartTime={slot.startTime} slotColor={slot.color || colors.background.primary}>
         <View style={[styles.container, dynamicStyle]}>
-        <View style={styles.cardContainer} nativeID={cardNativeId}>
-          <CompletionCheckmark completed={slot.completed} endTime={slot.endTime} startTime={slot.startTime} index={index} />
-          <View style={styles.contentContainer}>
-            <Text style={styles.time}>{timeText}</Text>
-            <Text nativeID={titleNativeId} style={styles.title}>
-              {slot.title}
-            </Text>
-            <ProgressBar startTime={slot.startTime} endTime={slot.endTime} slotColor={slot.color} />
-            <View style={styles.indicatorsRow}>
-              <TaskCounter tasks={slot.tasks ?? undefined} />
-              <NoteIndicator description={slot.description} />
-              <VoiceIndicator voice_path={slot.voice_path} />
-            </View>
-            {slot.participants && slot.participants.length > 0 && (
-              <View style={styles.participantsRow}>
-                <ParticipantsIndicator participants={slot.participants} slotColor={slot.color as SlotColorName} />
+          <View style={styles.cardContainer} nativeID={cardNativeId}>
+            <CompletionCheckmark completed={slot.completed} endTime={slot.endTime} startTime={slot.startTime} index={index} />
+            <View style={styles.contentContainer}>
+              <Text style={styles.time}>{timeText}</Text>
+              <Text nativeID={titleNativeId} style={styles.title}>
+                {slot.title}
+              </Text>
+              <ProgressBar startTime={slot.startTime} endTime={slot.endTime} slotColor={slot.color} />
+              <View style={styles.indicatorsRow}>
+                <TaskCounter tasks={slot.tasks ?? undefined} />
+                <NoteIndicator description={slot.description} />
+                <VoiceIndicator voice_path={slot.voice_path} />
               </View>
-            )}
+              {slot.participants && slot.participants.length > 0 && (
+                <View style={styles.participantsRow}>
+                  <ParticipantsIndicator participants={slot.participants} slotColor={slot.color as SlotColorName} />
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-        {imageUri && <Image source={imageUri} style={styles.slotImage} contentFit='contain' cachePolicy='memory-disk' transition={0} pointerEvents='none' priority='normal' allowDownscaling={false} />}
+          {imageUri && <Image source={imageUri} style={styles.slotImage} contentFit='contain' cachePolicy='memory-disk' transition={0} pointerEvents='none' priority='normal' allowDownscaling={false} />}
         </View>
       </DraggableSlotWrapper>
     </SlotPositioner>
@@ -121,14 +121,14 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     // No overflow hidden here to allow image to extend outside
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.sm,
+    marginHorizontal: 12,
+    marginVertical: 12,
     borderRadius: 36,
     minHeight: 129,
   },
   cardContainer: {
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.xxxl,
+    paddingVertical: 20,
+    paddingHorizontal: 32,
     borderRadius: 36,
     position: 'relative',
     overflow: 'hidden', // Clip overflow for TaskChecked animation only

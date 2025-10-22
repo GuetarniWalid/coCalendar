@@ -1,6 +1,11 @@
 import { FC, useState, useEffect, useCallback } from 'react';
 import { StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { colors } from '@project/shared';
 import { TaskChecked } from '@project/icons';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
@@ -16,7 +21,7 @@ interface CompletionCheckmarkProps {
 // Helper function to check if the slot's day has passed
 const isDayPassed = (startTime: string | null): boolean => {
   if (!startTime) return false;
-  
+
   const slotDate = new Date(startTime);
   const today = new Date();
   // Set both to start of day for comparison
@@ -25,7 +30,12 @@ const isDayPassed = (startTime: string | null): boolean => {
   return slotDate < today;
 };
 
-export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, endTime, startTime, index }) => {
+export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({
+  completed,
+  endTime,
+  startTime,
+  index,
+}) => {
   // Calculate initial completion state once
   const [isCompleted, setIsCompleted] = useState<boolean>(() => {
     if (completed === true) return true;
@@ -56,14 +66,18 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ completed, e
   }, [slideAnimation]);
 
   const animateUncompletion = useCallback(() => {
-    slideAnimation.value = withTiming(-100, {
-      duration: 200,
-      easing: Easing.out(Easing.cubic),
-    }, (finished) => {
-      if (finished) {
-        scheduleOnRN(setShouldRender, false);
+    slideAnimation.value = withTiming(
+      -100,
+      {
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+      },
+      finished => {
+        if (finished) {
+          scheduleOnRN(setShouldRender, false);
+        }
       }
-    });
+    );
   }, [slideAnimation]);
 
   useEffect(() => {

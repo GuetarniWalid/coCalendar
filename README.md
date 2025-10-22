@@ -7,28 +7,33 @@ coCalendar is a premium mobile calendar application that prioritizes exceptional
 ## Key Features
 
 **🎨 Beautiful Design First**
+
 - Stunning visual interface with intuitive avatars for instant day overview
 - Premium UX/UI focused on simplicity and elegance
 - Color-coded slots for immediate visual recognition
 
 **👥 Smart Sharing**
+
 - Share specific time slots directly with anyone
 - Maintain privacy with personal slots while selectively sharing others
 - Perfect for coordinating with friends, family, or working together
 - Invite others to view your scheduled activities
 
 **⚡ Effortless Setup**
+
 - Quick and intuitive onboarding process
 - Seamless synchronization across devices
 - No complex configuration required
 
 **🤝 Collaborative Planning**
+
 - Share slots for better coordination and accountability
 - Read-only access for shared users ensures data integrity
 - Direct user-to-user invitations for specific time slots
 - Perfect transparency without compromising privacy
 
 **🔒 Privacy Control**
+
 - Personal slots remain completely private by default
 - Shared slots create transparency when needed
 - Perfect for family coordination (appointments, activities, events)
@@ -41,19 +46,22 @@ Whether you're coordinating family schedules, planning with friends, or managing
 coCalendar uses a **peer-to-peer sharing system** where all users have equal status:
 
 ### **How Sharing Works:**
+
 1. **Create slots** - All your slots are private by default
-2. **Invite specific users** - Send direct invitations for individual slots  
+2. **Invite specific users** - Send direct invitations for individual slots
 3. **Granular control** - Share only what you want, when you want
 4. **Read-only participants** - Shared slots are view-only for participants
 
 ### **Example Use Cases:**
+
 - **Family**: Share "Soccer Practice" with family members for coordination
-- **Social**: Share "Birthday Party" planning with friend group  
+- **Social**: Share "Birthday Party" planning with friend group
 - **Work**: Share "Team Meeting" with colleagues for transparency
 - **Professional**: Share appointment or work slots for accountability
 - **Healthcare**: Share medical appointments with caregivers
 
 ### **Privacy by Design:**
+
 - **No participants** = Private slot (owner only)
 - **Has participants** = Shared slot (owner + invited users)
 - **Owner always** has full edit control
@@ -127,11 +135,12 @@ The app uses a **workspace-based package architecture** with npm workspaces. Eac
 ## Data Model (Supabase) - Peer-to-Peer Architecture
 
 ### **Core Tables:**
+
 ```sql
 -- All users are equal (no roles)
 profiles(id, display_name, created_at)
 
--- Slots with owner-based permissions  
+-- Slots with owner-based permissions
 slots(id, owner_id, title, start_at, end_at, color, image, voice_*, completed, without_time, created_at)
 -- Index: (owner_id, start_at)
 
@@ -157,15 +166,17 @@ invites(id, inviter_id, invitee_id, slot_id, invitee_email, token, status, creat
 ```
 
 ### **Privacy Model:**
+
 ```sql
 -- Private slot (owner only)
 SELECT COUNT(*) FROM slot_participants WHERE slot_id = ? -- Returns: 0
 
--- Shared slot (has participants)  
+-- Shared slot (has participants)
 SELECT COUNT(*) FROM slot_participants WHERE slot_id = ? -- Returns: 1+
 ```
 
 ### **Access Control (RLS):**
+
 - **Slot Owner**: Full read/write access (`owner_id = auth.uid()`)
 - **Slot Participant**: Read-only access via `slot_participants` table
 - **Tasks & Reminders**: Owner manages, participants have read-only access
@@ -190,19 +201,23 @@ EXPO_PUBLIC_SUPABASE_KEY=your_supabase_key
 ```
 
 Set **Supabase Auth Redirect URLs** (Dashboard → Authentication → URL Configuration):
+
 - `cocalendar://auth/callback`
 - Your Expo dev redirect (generated dynamically by the app during dev)
 
 ### 2) Database Setup
 
 For **cloud Supabase** (recommended):
+
 ```bash
 cd supabase
 supabase db push
 ```
-*Note: This will apply the new peer-to-peer model migrations*
+
+_Note: This will apply the new peer-to-peer model migrations_
 
 For **local development**:
+
 ```bash
 cd supabase
 supabase start
@@ -225,7 +240,6 @@ npm install
 npm start
 ```
 
-
 ## Development
 
 ### Scripts
@@ -240,6 +254,7 @@ npm start
 ### Git Workflow
 
 The project uses **Conventional Commits** format:
+
 ```
 <type>(<scope>): <title>
 
@@ -247,6 +262,7 @@ The project uses **Conventional Commits** format:
 ```
 
 Example:
+
 ```
 feat(day-view): add slot drag and drop functionality
 
@@ -288,18 +304,21 @@ feat(day-view): add slot drag and drop functionality
 ## Roadmap
 
 ### Upcoming Features
+
 - **Group Calendars**: Multi-user collaborative calendars for teams and families
 - **Enhanced Sharing**: Bulk sharing and calendar templates
 - **Social Features**: Activity feeds and shared calendar discovery
 - **Advanced Notifications**: Smart scheduling suggestions and conflict detection
 
 ### Technical Enhancements
+
 - **Advanced Theming**: Dark mode and customizable color schemes
 - **Offline Support**: Local data caching and sync
 - **Performance**: Enhanced animations and faster load times
 - **Platform Features**: Deep iOS and Android integration
 
 ### Professional Features
+
 - **Time Tracking**: Optional time tracking for professional use cases
 - **Export Capabilities**: PDF reports, CSV exports for planning and billing
 - **Integration**: Connect with popular calendar and productivity systems

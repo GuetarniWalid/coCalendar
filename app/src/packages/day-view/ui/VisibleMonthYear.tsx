@@ -1,12 +1,16 @@
 import { FC } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fontSize, fontWeight, useCalendarStore } from '@project/shared';
+import {
+  colors,
+  fontSize,
+  fontWeight,
+  useCalendarStore,
+} from '@project/shared';
 import { formatMonthYear } from '@project/i18n';
 
 export const VisibleMonthYear: FC = () => {
   const [selectedDate] = useCalendarStore.selectedDate();
-  const visibleDate = selectedDate;
-  const { month, year } = formatMonthYear(visibleDate);
+  const { month, year } = formatMonthYear(selectedDate);
 
   return (
     <View style={styles.container}>
@@ -33,5 +37,3 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 });
-
-

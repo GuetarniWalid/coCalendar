@@ -15,4 +15,3 @@ export const hexToRgba = (hex: string, alpha: number) => {
   const { r, g, b } = hexToRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
-

@@ -1,8 +1,18 @@
 import { useEffect } from 'react';
-import { useSharedValue, useAnimatedReaction, withTiming, cancelAnimation, Easing, useAnimatedStyle } from 'react-native-reanimated';
+import {
+  useSharedValue,
+  useAnimatedReaction,
+  withTiming,
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { CALENDAR_CONSTANTS, colors } from '@project/shared';
-import { CONTINUOUS_SCROLL_DELAY, ZONE_WIDTH_START_MULTIPLIER } from '../shared/constants';
+import {
+  CONTINUOUS_SCROLL_DELAY,
+  ZONE_WIDTH_START_MULTIPLIER,
+} from '../shared/constants';
 import { hexToRgba } from '../shared/utils';
 
 /**
@@ -10,8 +20,9 @@ import { hexToRgba } from '../shared/utils';
  * (opacity and width animations)
  */
 export const useZoneVisualEffects = () => {
-  const { draggedSlotHorizontalZone, draggedSlotIndexRN } = useDraggedSlotContext();
-  
+  const { draggedSlotHorizontalZone, draggedSlotIndexRN } =
+    useDraggedSlotContext();
+
   const leftZoneOpacity = useSharedValue(0);
   const rightZoneOpacity = useSharedValue(0);
   const leftZoneWidthMultiplier = useSharedValue(ZONE_WIDTH_START_MULTIPLIER);
@@ -22,24 +33,28 @@ export const useZoneVisualEffects = () => {
     () => draggedSlotHorizontalZone.value,
     (zone, previousZone) => {
       // Update zone opacity
-      leftZoneOpacity.value = withTiming(zone === 'left' ? 1 : 0, { duration: 200 });
-      rightZoneOpacity.value = withTiming(zone === 'right' ? 1 : 0, { duration: 200 });
+      leftZoneOpacity.value = withTiming(zone === 'left' ? 1 : 0, {
+        duration: 200,
+      });
+      rightZoneOpacity.value = withTiming(zone === 'right' ? 1 : 0, {
+        duration: 200,
+      });
 
       // If entering left or right zone, animate width from 50% to 100%
       if (zone !== 'middle' && zone !== previousZone) {
         if (zone === 'left') {
           cancelAnimation(leftZoneWidthMultiplier);
           leftZoneWidthMultiplier.value = ZONE_WIDTH_START_MULTIPLIER;
-          leftZoneWidthMultiplier.value = withTiming(1, { 
-            duration: CONTINUOUS_SCROLL_DELAY, 
-            easing: Easing.linear 
+          leftZoneWidthMultiplier.value = withTiming(1, {
+            duration: CONTINUOUS_SCROLL_DELAY,
+            easing: Easing.linear,
           });
         } else if (zone === 'right') {
           cancelAnimation(rightZoneWidthMultiplier);
           rightZoneWidthMultiplier.value = ZONE_WIDTH_START_MULTIPLIER;
-          rightZoneWidthMultiplier.value = withTiming(1, { 
-            duration: CONTINUOUS_SCROLL_DELAY, 
-            easing: Easing.linear 
+          rightZoneWidthMultiplier.value = withTiming(1, {
+            duration: CONTINUOUS_SCROLL_DELAY,
+            easing: Easing.linear,
           });
         }
       }
@@ -48,8 +63,14 @@ export const useZoneVisualEffects = () => {
       if (zone === 'middle') {
         cancelAnimation(leftZoneWidthMultiplier);
         cancelAnimation(rightZoneWidthMultiplier);
-        leftZoneWidthMultiplier.value = withTiming(ZONE_WIDTH_START_MULTIPLIER, { duration: 200 });
-        rightZoneWidthMultiplier.value = withTiming(ZONE_WIDTH_START_MULTIPLIER, { duration: 200 });
+        leftZoneWidthMultiplier.value = withTiming(
+          ZONE_WIDTH_START_MULTIPLIER,
+          { duration: 200 }
+        );
+        rightZoneWidthMultiplier.value = withTiming(
+          ZONE_WIDTH_START_MULTIPLIER,
+          { duration: 200 }
+        );
       }
     }
   );
@@ -65,18 +86,25 @@ export const useZoneVisualEffects = () => {
   }, [draggedSlotIndexRN, leftZoneWidthMultiplier, rightZoneWidthMultiplier]);
 
   // Create background color with opacity
-  const zoneBackgroundColor = hexToRgba(colors.bottomNavigation.background, 0.3);
+  const zoneBackgroundColor = hexToRgba(
+    colors.bottomNavigation.background,
+    0.3
+  );
 
   // Animated styles for zones
   const leftZoneStyle = useAnimatedStyle(() => ({
     opacity: leftZoneOpacity.value,
-    width: CALENDAR_CONSTANTS.HORIZONTAL_SCROLL_ZONE_WIDTH * leftZoneWidthMultiplier.value,
+    width:
+      CALENDAR_CONSTANTS.HORIZONTAL_SCROLL_ZONE_WIDTH *
+      leftZoneWidthMultiplier.value,
     backgroundColor: zoneBackgroundColor,
   }));
 
   const rightZoneStyle = useAnimatedStyle(() => ({
     opacity: rightZoneOpacity.value,
-    width: CALENDAR_CONSTANTS.HORIZONTAL_SCROLL_ZONE_WIDTH * rightZoneWidthMultiplier.value,
+    width:
+      CALENDAR_CONSTANTS.HORIZONTAL_SCROLL_ZONE_WIDTH *
+      rightZoneWidthMultiplier.value,
     backgroundColor: zoneBackgroundColor,
   }));
 
@@ -85,4 +113,3 @@ export const useZoneVisualEffects = () => {
     rightZoneStyle,
   };
 };
-

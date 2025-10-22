@@ -5,7 +5,7 @@ interface SelectedSlotData {
   id: string | null;
   title?: string;
   startTime?: string; // ISO string
-  endTime?: string;   // ISO string
+  endTime?: string; // ISO string
   visibility?: 'private' | 'public';
   clientName?: string;
   description?: string;
@@ -22,4 +22,5 @@ const initialSlotFormState: SlotFormState = {
   selectedSlot: null,
 };
 
-export const { useStore: useSlotFormStore, getStore: getSlotFormStore } = createStore(initialSlotFormState);
+export const { useStore: useSlotFormStore, getStore: getSlotFormStore } =
+  createStore(initialSlotFormState);

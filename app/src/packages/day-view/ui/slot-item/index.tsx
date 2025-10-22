@@ -1,7 +1,13 @@
 import { FC, useMemo, memo } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
-import { SlotItem as SlotItemType, SlotColorName, formatTime, getAvatarPublicUrl, getSlotBackgroundColor } from '@project/shared';
+import {
+  SlotItem as SlotItemType,
+  SlotColorName,
+  formatTime,
+  getAvatarPublicUrl,
+  getSlotBackgroundColor,
+} from '@project/shared';
 import { colors, spacing, fontSize, fontWeight } from '@project/shared';
 import { Image } from 'expo-image';
 import { ProgressBar } from './ProgressBar';
@@ -21,7 +27,12 @@ interface SlotItemProps {
   selectedDate: string;
 }
 
-const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate }) => {
+const SlotItemBase: FC<SlotItemProps> = ({
+  slot,
+  index,
+  onPress,
+  selectedDate,
+}) => {
   const t = useTranslation();
   const slotRef = useAnimatedRef<Animated.View>();
 
@@ -32,7 +43,10 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
     [slot.color]
   );
 
-  const baseId = useMemo(() => (slot.id ?? 'default-slot').toString(), [slot.id]);
+  const baseId = useMemo(
+    () => (slot.id ?? 'default-slot').toString(),
+    [slot.id]
+  );
   const cardNativeId = useMemo(() => `slot-card-${baseId}`, [baseId]);
   const titleNativeId = useMemo(() => `slot-title-${baseId}`, [baseId]);
 
@@ -40,7 +54,8 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
     if (!slot.startTime && !slot.endTime) return t.timeToDo;
     if (slot.startTime && slot.withoutTime) return t.timeToday;
     if (slot.startTime && !slot.endTime) return formatTime(slot.startTime);
-    if (slot.startTime && slot.endTime) return `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`;
+    if (slot.startTime && slot.endTime)
+      return `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`;
     return t.timeToDo;
   }, [slot.startTime, slot.endTime, slot.withoutTime, t]);
 
@@ -65,16 +80,31 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
 
   return (
     <SlotPositioner ref={slotRef} index={index} selectedDate={selectedDate}>
-      <DraggableSlotWrapper ref={slotRef} onPress={() => onPress(slot)} index={index} slotStartTime={slot.startTime} slotColor={slot.color || colors.background.primary}>
+      <DraggableSlotWrapper
+        ref={slotRef}
+        onPress={() => onPress(slot)}
+        index={index}
+        slotStartTime={slot.startTime}
+        slotColor={slot.color || colors.background.primary}
+      >
         <View style={[styles.container, dynamicStyle]}>
           <View style={styles.cardContainer} nativeID={cardNativeId}>
-            <CompletionCheckmark completed={slot.completed} endTime={slot.endTime} startTime={slot.startTime} index={index} />
+            <CompletionCheckmark
+              completed={slot.completed}
+              endTime={slot.endTime}
+              startTime={slot.startTime}
+              index={index}
+            />
             <View style={styles.contentContainer}>
               <Text style={styles.time}>{timeText}</Text>
               <Text nativeID={titleNativeId} style={styles.title}>
                 {slot.title}
               </Text>
-              <ProgressBar startTime={slot.startTime} endTime={slot.endTime} slotColor={slot.color} />
+              <ProgressBar
+                startTime={slot.startTime}
+                endTime={slot.endTime}
+                slotColor={slot.color}
+              />
               <View style={styles.indicatorsRow}>
                 <TaskCounter tasks={slot.tasks ?? undefined} />
                 <NoteIndicator description={slot.description} />
@@ -82,12 +112,26 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, index, onPress, selectedDate })
               </View>
               {slot.participants && slot.participants.length > 0 && (
                 <View style={styles.participantsRow}>
-                  <ParticipantsIndicator participants={slot.participants} slotColor={slot.color as SlotColorName} />
+                  <ParticipantsIndicator
+                    participants={slot.participants}
+                    slotColor={slot.color as SlotColorName}
+                  />
                 </View>
               )}
             </View>
           </View>
-          {imageUri && <Image source={imageUri} style={styles.slotImage} contentFit='contain' cachePolicy='memory-disk' transition={0} pointerEvents='none' priority='normal' allowDownscaling={false} />}
+          {imageUri && (
+            <Image
+              source={imageUri}
+              style={styles.slotImage}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+              transition={0}
+              pointerEvents="none"
+              priority="normal"
+              allowDownscaling={false}
+            />
+          )}
         </View>
       </DraggableSlotWrapper>
     </SlotPositioner>
@@ -110,7 +154,8 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prev.voice_path === next.voice_path &&
     prev.image?.name === next.image?.name &&
     prev.tasks?.length === next.tasks?.length &&
-    prev.tasks?.filter(t => t.is_done).length === next.tasks?.filter(t => t.is_done).length &&
+    prev.tasks?.filter(t => t.is_done).length ===
+      next.tasks?.filter(t => t.is_done).length &&
     prev.participants?.length === next.participants?.length &&
     prevProps.selectedDate === nextProps.selectedDate &&
     prevProps.onPress === nextProps.onPress

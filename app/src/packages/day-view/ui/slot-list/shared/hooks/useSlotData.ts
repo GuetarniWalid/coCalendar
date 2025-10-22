@@ -16,7 +16,12 @@ export const useSlotData = (
     (nextActivityStartTime: string) => {
       const now = dayjs();
       const nextActivityStart = dayjs(nextActivityStartTime);
-      onSlotPress(createDefaultSlot(now.toISOString(), nextActivityStart.toISOString()) as any);
+      onSlotPress(
+        createDefaultSlot(
+          now.toISOString(),
+          nextActivityStart.toISOString()
+        ) as any
+      );
     },
     [onSlotPress]
   );
@@ -26,7 +31,9 @@ export const useSlotData = (
       const now = dayjs();
       const start = dayjs(`${date} ${now.format('HH:mm')}`);
       const end = start.add(1, 'hour');
-      onSlotPress(createDefaultSlot(start.toISOString(), end.toISOString()) as any);
+      onSlotPress(
+        createDefaultSlot(start.toISOString(), end.toISOString()) as any
+      );
     },
     [onSlotPress]
   );
@@ -51,8 +58,8 @@ export const useSlotData = (
           const currentReferenceTime = currentSlot.endTime
             ? dayjs(currentSlot.endTime)
             : currentSlot.startTime
-            ? dayjs(currentSlot.startTime)
-            : null;
+              ? dayjs(currentSlot.startTime)
+              : null;
 
           if (currentReferenceTime) {
             const nextStartTime = dayjs(nextSlot.startTime);
@@ -85,16 +92,19 @@ export const useSlotData = (
 
     const now = dayjs();
     const nextEndTime = todaySlots
-      .filter((slot) => slot.endTime)
-      .map((slot) => dayjs(slot.endTime!))
-      .filter((endTime) => now.isBefore(endTime))
+      .filter(slot => slot.endTime)
+      .map(slot => dayjs(slot.endTime!))
+      .filter(endTime => now.isBefore(endTime))
       .sort((a, b) => a.unix() - b.unix())[0];
 
     if (!nextEndTime) return;
 
-    const timeout = setTimeout(() => {
-      setRefreshTrigger((prev) => prev + 1);
-    }, nextEndTime.diff(now) + 100);
+    const timeout = setTimeout(
+      () => {
+        setRefreshTrigger(prev => prev + 1);
+      },
+      nextEndTime.diff(now) + 100
+    );
 
     return () => clearTimeout(timeout);
   }, [selectedDate, getSlotsForDate, refreshTrigger]);
@@ -106,4 +116,3 @@ export const useSlotData = (
     lastShownByDateRef,
   };
 };
-

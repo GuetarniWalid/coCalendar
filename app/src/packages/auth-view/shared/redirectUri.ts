@@ -6,11 +6,11 @@ import Constants from 'expo-constants';
  */
 const getAppScheme = (): string => {
   const scheme = Constants.expoConfig?.scheme;
-  
+
   if (typeof scheme === 'string' && scheme.length > 0) {
     return scheme;
   }
-  
+
   // Fallback to default scheme
   return 'cocalendar';
 };
@@ -27,11 +27,11 @@ export const getRedirectUri = (): string => {
       // In development (Expo Go), let expo-linking generate the correct dev URL
       // Example: exp://127.0.0.1:19000/--/auth/callback
       const devUrl = Linking.createURL('auth/callback');
-      
+
       if (!devUrl) {
         throw new Error('Failed to generate development redirect URI');
       }
-      
+
       return devUrl;
     } else {
       // In production, use the app scheme

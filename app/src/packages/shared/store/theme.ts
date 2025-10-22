@@ -8,7 +8,8 @@ const initialThemeState = {
 };
 
 // Create the theme store using correct Teaful pattern
-export const { useStore: useThemeStore, getStore: getThemeStore } = createStore(initialThemeState);
+export const { useStore: useThemeStore, getStore: getThemeStore } =
+  createStore(initialThemeState);
 
 // Theme actions
 export const setThemeMode = (mode: ThemeMode) => {

@@ -22,10 +22,12 @@ This directory contains all Rive animation files (`.riv`) for the coCalendar app
 The automation script (`scripts/copy-rive-assets.js`) handles copying all `.riv` files from this directory to `android/app/src/main/res/raw/` after prebuild operations.
 
 ### Manual Commands:
+
 - `npm run copy-rive-assets` - Copy all .riv files to Android resources
 - `npm run prebuild:clean` - Clean prebuild + automatically copy Rive assets
 
 ### Adding New Files:
+
 1. Add your `.riv` file to this directory
 2. Run `npm run copy-rive-assets` (or it will happen automatically on next prebuild)
 3. Use in your components with `<Rive resourceName="filename" />`
@@ -40,6 +42,7 @@ The automation script (`scripts/copy-rive-assets.js`) handles copying all `.riv`
 ## 📦 Bundle Size Optimization
 
 The build system is optimized to avoid duplicate files:
+
 - ✅ `.riv` files are **excluded** from the main app bundle (`assetBundlePatterns`)
 - ✅ Files are **only included** as Android native resources
 - ✅ **No duplication** = smaller APK size

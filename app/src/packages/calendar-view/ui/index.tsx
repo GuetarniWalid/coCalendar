@@ -4,11 +4,14 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import dayjs from 'dayjs';
 import { setCurrentScreen } from '@project/shared';
- 
+
 const CalendarScreen = () => {
   const navigation = useNavigation<any>();
 
-  const calendarMonthId = useMemo(() => dayjs().startOf('month').format('YYYY-MM-DD'), []);
+  const calendarMonthId = useMemo(
+    () => dayjs().startOf('month').format('YYYY-MM-DD'),
+    []
+  );
 
   // Track when this screen becomes active
   useFocusEffect(

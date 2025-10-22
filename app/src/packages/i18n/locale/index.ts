@@ -11,7 +11,7 @@ export const getDeviceLocale = (): SupportedLocale => {
       : NativeModules.I18nManager.localeIdentifier;
 
   const locale = deviceLanguage?.split(/[-_]/)[0] || 'en';
-  
+
   // Map to supported locales
   const supportedLocales: Record<string, SupportedLocale> = {
     en: 'en',

@@ -1,7 +1,19 @@
 import { FC, memo, useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, spacing, fontSize, fontWeight, getAvatarPublicUrl, useTimeTrackerStore } from '@project/shared';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import {
+  colors,
+  spacing,
+  fontSize,
+  fontWeight,
+  getAvatarPublicUrl,
+  useTimeTrackerStore,
+} from '@project/shared';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
@@ -11,9 +23,17 @@ type RemainingTimeCardProps = {
   onPress: () => void;
 };
 
-const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTime, onPress }) => {
+const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
+  nextActivityStartTime,
+  onPress,
+}) => {
   const t = useTranslation();
-  const uri = getAvatarPublicUrl({ persona: 'adult-female', activity: 'home_daily_life', name: 'coffee_break', extension: 'webp' });
+  const uri = getAvatarPublicUrl({
+    persona: 'adult-female',
+    activity: 'home_daily_life',
+    name: 'coffee_break',
+    extension: 'webp',
+  });
 
   // Use Teaful time tracker for currentTime instead of individual useState
   const [currentTime] = useTimeTrackerStore.currentTime();
@@ -70,7 +90,7 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTi
 
   // Handle smooth show/hide animations with reanimated
   const shouldShow = remainingTimeData !== null;
-  
+
   useEffect(() => {
     if (shouldShow && !hasShownRef.current) {
       // Animate in
@@ -105,20 +125,39 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({ nextActivityStartTi
   return (
     <Animated.View style={animatedStyle}>
       <TouchableOpacity style={styles.container} onPress={onPress}>
-        {!!uri && <Image source={uri} style={styles.bgImage} contentFit='contain' cachePolicy='memory-disk' transition={0} pointerEvents='none' recyclingKey='rest-avatar' priority='high' allowDownscaling={false} key='stable-avatar-image' blurRadius={0} />}
+        {!!uri && (
+          <Image
+            source={uri}
+            style={styles.bgImage}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+            transition={0}
+            pointerEvents="none"
+            recyclingKey="rest-avatar"
+            priority="high"
+            allowDownscaling={false}
+            key="stable-avatar-image"
+            blurRadius={0}
+          />
+        )}
         <View style={styles.content}>
           <Text style={styles.text}>{t.remainingTimeText}</Text>
-          <Text style={styles.time}>{remainingTimeData ? remainingTimeData.timeDisplay : '0s'}</Text>
+          <Text style={styles.time}>
+            {remainingTimeData ? remainingTimeData.timeDisplay : '0s'}
+          </Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-export const RemainingTimeCard = memo(RemainingTimeCardBase, (prevProps, nextProps) => {
-  // Only re-render if nextActivityStartTime changes
-  return prevProps.nextActivityStartTime === nextProps.nextActivityStartTime;
-});
+export const RemainingTimeCard = memo(
+  RemainingTimeCardBase,
+  (prevProps, nextProps) => {
+    // Only re-render if nextActivityStartTime changes
+    return prevProps.nextActivityStartTime === nextProps.nextActivityStartTime;
+  }
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -128,7 +167,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxxl,
     borderRadius: 36,
     minHeight: 129,
-    backgroundColor: colors.background.slot.default?.default || colors.background.secondary,
+    backgroundColor:
+      colors.background.slot.default?.default || colors.background.secondary,
   },
   content: {
     flex: 1,

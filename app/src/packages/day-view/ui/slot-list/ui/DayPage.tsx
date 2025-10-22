@@ -7,13 +7,16 @@ import { ControllableScrollView } from './ControllableScrollView';
 import { colors, SlotItem as SlotItemType, fontSize } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
+import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 
 interface DayPageProps {
   dayIndex: number;
   screenWidth: number;
   getSlotsForDate: (date: string) => SlotItemType[] | undefined;
   onSlotPress: (slot: SlotItemType) => void;
-  createEnhancedSlotData: (slots: SlotItemType[]) => Array<{ type: 'slot' | 'remaining-time'; data: any; id: string }>;
+  createEnhancedSlotData: (
+    slots: SlotItemType[]
+  ) => Array<{ type: 'slot' | 'remaining-time'; data: any; id: string }>;
   handleRemainingTimeCardPress: (nextActivityStartTime: string) => void;
   handleEmptyDayCardPress: (date: string) => void;
   getDateFromIndex: (index: number) => string;
@@ -35,21 +38,24 @@ const DayPageComponent = ({
   selectedDate,
   loading,
   lastShownByDateRef,
-  renderedJSXCacheRef
+  renderedJSXCacheRef,
 }: DayPageProps) => {
   const t = useTranslation();
   const date = getDateFromIndex(dayIndex);
-  
+  const { setCurrentDaySlots } = useDraggedSlotContext();
+  const isCurrentDay = date === selectedDate;
+
   // Check if we have cached JSX - return it IMMEDIATELY to prevent grey flash
   const cachedJSX = renderedJSXCacheRef.current[date];
-  
+
   const fetchedSlots = getSlotsForDate(date);
   const cachedSlots = lastShownByDateRef.current[date];
-  
+
   // Use cache if fetched slots are undefined or empty, but we have cached data
-  const daySlots = (fetchedSlots && fetchedSlots.length > 0) 
-    ? fetchedSlots 
-    : cachedSlots ?? fetchedSlots ?? null;
+  const daySlots =
+    fetchedSlots && fetchedSlots.length > 0
+      ? fetchedSlots
+      : (cachedSlots ?? fetchedSlots ?? null);
 
   // Update slot cache in useEffect to avoid race conditions during render
   useEffect(() => {
@@ -64,7 +70,7 @@ const DayPageComponent = ({
     if (loading && date === selectedDate && !daySlots && !cachedJSX) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size='large' />
+          <ActivityIndicator size="large" />
           <Text style={styles.loadingText}>{t.loading}</Text>
         </View>
       );
@@ -74,21 +80,22 @@ const DayPageComponent = ({
       // Don't cache empty state
       return <EmptyDayCard onPress={() => handleEmptyDayCardPress(date)} />;
     }
-    
+
     const sortedSlots = [...daySlots].sort((a, b) => {
       // Without time slots first
       if (a.withoutTime && b.withoutTime) return 0;
       if (a.withoutTime) return -1;
       if (b.withoutTime) return 1;
-      
+
       // No start date slots next
       if (!a.startTime && !b.startTime) return 0;
       if (!a.startTime) return -1;
       if (!b.startTime) return 1;
-      
+
       // Sort by start time
-      const startTimeDiff = dayjs(a.startTime).unix() - dayjs(b.startTime).unix();
-      
+      const startTimeDiff =
+        dayjs(a.startTime).unix() - dayjs(b.startTime).unix();
+
       // If same start time, prioritize no end time
       if (startTimeDiff === 0) {
         if (!a.endTime && !b.endTime) return 0;
@@ -96,20 +103,20 @@ const DayPageComponent = ({
         if (!b.endTime) return 1;
         return dayjs(a.endTime).unix() - dayjs(b.endTime).unix();
       }
-      
+
       return startTimeDiff;
     });
-    
+
     const enhancedData = createEnhancedSlotData(sortedSlots);
 
     const slotsJSX = (
       <>
-        {enhancedData.map((item, index) => 
+        {enhancedData.map((item, index) =>
           item.type === 'slot' ? (
-            <SlotItem 
-              key={item.id} 
+            <SlotItem
+              key={item.id}
               index={index}
-              slot={item.data} 
+              slot={item.data}
               onPress={onSlotPress}
               selectedDate={date}
             />
@@ -117,21 +124,30 @@ const DayPageComponent = ({
             <RemainingTimeCard
               key={item.id}
               nextActivityStartTime={item.data.nextActivityStartTime}
-              onPress={() => handleRemainingTimeCardPress(item.data.nextActivityStartTime)}
+              onPress={() =>
+                handleRemainingTimeCardPress(item.data.nextActivityStartTime)
+              }
             />
           )
         )}
       </>
     );
-    
+
     // Cache the built JSX for instant re-render on next mount
     renderedJSXCacheRef.current[date] = slotsJSX;
-    
+
     return slotsJSX;
   };
 
+  // update non dragged slots for current day
+  useEffect(() => {
+    if (isCurrentDay && daySlots) {
+      setCurrentDaySlots(daySlots);
+    }
+  }, [isCurrentDay, daySlots]);
+
   // If we have cached JSX and cached slots, return cached JSX immediately
-  const content = (cachedJSX && cachedSlots) ? cachedJSX : buildContent();
+  const content = cachedJSX && cachedSlots ? cachedJSX : buildContent();
 
   return (
     <View style={[styles.dayContainer, { width: screenWidth }]}>
@@ -163,4 +179,3 @@ const styles = StyleSheet.create({
     color: colors.typography.secondary,
   },
 });
-

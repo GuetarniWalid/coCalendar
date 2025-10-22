@@ -77,7 +77,10 @@ export default function HomeScreen() {
         <Text style={styles.title}>coCalendar</Text>
         <Text style={styles.subtitle}>Your shared agenda</Text>
         {user && (
-          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+          >
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
         )}
@@ -85,7 +88,7 @@ export default function HomeScreen() {
 
       <FlatList
         data={scenes}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.sceneCard}

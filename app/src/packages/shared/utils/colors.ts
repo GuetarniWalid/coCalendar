@@ -46,24 +46,31 @@ export const getAvailableSlotColorNames = (): SlotColorName[] => {
  * @param participantCount - Number of participants
  * @returns Array of colors for participants
  */
-export const getSlotParticipantColors = (slotColorName?: SlotColorName, participantCount: number = 1): string[] => {
+export const getSlotParticipantColors = (
+  slotColorName?: SlotColorName,
+  participantCount: number = 1
+): string[] => {
   if (!slotColorName || !colors.background.slot[slotColorName]?.participants) {
     return [colors.primary]; // Default color
   }
 
   const participantColors = colors.background.slot[slotColorName].participants;
-  
+
   if (!participantColors || participantColors.length === 0) {
     return [colors.primary]; // Fallback to primary
   }
-  
+
   if (participantCount === 1) {
     // Single participant gets the last color in the array
     return [participantColors[participantColors.length - 1]!];
   } else if (participantCount <= 3) {
     // 2-3 participants: reverse order (last, second-to-last, third-to-last)
     const result: string[] = [];
-    for (let i = 0; i < Math.min(participantCount, participantColors.length); i++) {
+    for (
+      let i = 0;
+      i < Math.min(participantCount, participantColors.length);
+      i++
+    ) {
       const color = participantColors[participantColors.length - 1 - i];
       if (color) result.push(color);
     }

@@ -29,7 +29,9 @@ export default function AuthScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <ActivityIndicator size="large" />
-          <Text style={[styles.subtitle, { marginTop: 16 }]}>Preparing app...</Text>
+          <Text style={[styles.subtitle, { marginTop: 16 }]}>
+            Preparing app...
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -59,39 +61,57 @@ export default function AuthScreen() {
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
       // Check if this is an OAuth callback
-      if (url.includes('access_token') || url.includes('error') || url.includes('code=')) {
+      if (
+        url.includes('access_token') ||
+        url.includes('error') ||
+        url.includes('code=')
+      ) {
         try {
           // If URL contains access_token, we need to handle it differently
           if (url.includes('access_token')) {
             // Extract the access token and create a session manually
             const urlObj = new URL(url);
-            const accessToken = urlObj.hash.split('access_token=')[1]?.split('&')[0];
-            
+            const accessToken = urlObj.hash
+              .split('access_token=')[1]
+              ?.split('&')[0];
+
             if (!accessToken) {
               throw new Error('No access token found in callback URL');
             }
-            
+
             // Set the session manually
             const { error } = await (supabase as any).auth.setSession({
               access_token: accessToken,
-              refresh_token: urlObj.hash.split('refresh_token=')[1]?.split('&')[0] || '',
+              refresh_token:
+                urlObj.hash.split('refresh_token=')[1]?.split('&')[0] || '',
             });
-            
+
             if (error) {
               console.error('Error setting session:', error);
-              Alert.alert('Authentication Error', 'Failed to complete authentication. Please try again.');
+              Alert.alert(
+                'Authentication Error',
+                'Failed to complete authentication. Please try again.'
+              );
             }
           } else {
             // Use exchangeCodeForSession for authorization code flow
-            const { error } = await (supabase as any).auth.exchangeCodeForSession(url);
+            const { error } = await (
+              supabase as any
+            ).auth.exchangeCodeForSession(url);
             if (error) {
               console.error('Error exchanging code for session:', error);
-              Alert.alert('Authentication Error', 'Failed to complete authentication. Please try again.');
+              Alert.alert(
+                'Authentication Error',
+                'Failed to complete authentication. Please try again.'
+              );
             }
           }
         } catch (error) {
           console.error('Error in OAuth callback handling:', error);
-          Alert.alert('Authentication Error', 'An unexpected error occurred during authentication.');
+          Alert.alert(
+            'Authentication Error',
+            'An unexpected error occurred during authentication.'
+          );
         }
       }
     };
@@ -113,7 +133,10 @@ export default function AuthScreen() {
     }
 
     if (!supabase) {
-      Alert.alert('Error', 'Authentication service not available. Please try again.');
+      Alert.alert(
+        'Error',
+        'Authentication service not available. Please try again.'
+      );
       return;
     }
 
@@ -121,7 +144,10 @@ export default function AuthScreen() {
     try {
       if (isSignUp) {
         await signUp(email, password);
-        Alert.alert('Success', 'Account created! Please check your email to verify your account.');
+        Alert.alert(
+          'Success',
+          'Account created! Please check your email to verify your account.'
+        );
       } else {
         await signIn(email, password);
       }
@@ -134,7 +160,10 @@ export default function AuthScreen() {
 
   const handleGoogleSignIn = async () => {
     if (!supabase) {
-      Alert.alert('Error', 'Authentication service not available. Please try again.');
+      Alert.alert(
+        'Error',
+        'Authentication service not available. Please try again.'
+      );
       return;
     }
 
@@ -142,10 +171,10 @@ export default function AuthScreen() {
     try {
       // Clear any existing session first
       await (supabase as any).auth.signOut();
-      
+
       // Use dynamic redirect URI for development
       const redirectUri = getRedirectUri();
-      
+
       const { data, error } = await (supabase as any).auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -157,9 +186,9 @@ export default function AuthScreen() {
           skipBrowserRedirect: false,
         },
       });
-      
+
       if (error) throw error;
-      
+
       if (data?.url) {
         // Open Google OAuth directly
         try {
@@ -169,7 +198,6 @@ export default function AuthScreen() {
           Alert.alert('Error', 'Could not open Google sign-in page');
         }
       }
-      
     } catch (error: any) {
       console.error('Google Sign-In error:', error);
       Alert.alert('Error', error.message);
@@ -227,7 +255,10 @@ export default function AuthScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
+            style={[
+              styles.googleButton,
+              googleLoading && styles.buttonDisabled,
+            ]}
             onPress={handleGoogleSignIn}
             disabled={googleLoading}
           >
@@ -236,7 +267,9 @@ export default function AuthScreen() {
             ) : (
               <>
                 <Text style={styles.googleIcon}>G</Text>
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
+                <Text style={styles.googleButtonText}>
+                  Continue with Google
+                </Text>
               </>
             )}
           </TouchableOpacity>
@@ -246,7 +279,9 @@ export default function AuthScreen() {
             onPress={() => setIsSignUp(!isSignUp)}
           >
             <Text style={styles.switchText}>
-              {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+              {isSignUp
+                ? 'Already have an account? Sign In'
+                : "Don't have an account? Sign Up"}
             </Text>
           </TouchableOpacity>
         </View>

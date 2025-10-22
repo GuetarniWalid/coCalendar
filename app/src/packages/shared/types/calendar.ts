@@ -46,5 +46,3 @@ export interface SlotTask {
   is_done: boolean;
   position: number;
 }
-
-

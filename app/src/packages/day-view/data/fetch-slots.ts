@@ -1,14 +1,17 @@
 import { SlotItem, SlotColorName } from '@project/shared';
 
 // Helper function to get slot IDs where user is a participant
-const getParticipantSlotIds = async (supabase: any, userId: string): Promise<string> => {
+const getParticipantSlotIds = async (
+  supabase: any,
+  userId: string
+): Promise<string> => {
   const { data, error } = await supabase
     .from('slot_participants')
     .select('slot_id')
     .eq('user_id', userId);
-  
+
   if (error || !data?.length) return '';
-  
+
   return data.map((p: any) => p.slot_id).join(',');
 };
 
@@ -41,8 +44,11 @@ const SLOT_SELECT_COLUMNS = `
 // Transform raw slot data into SlotItem format
 const transformSlotData = (slot: any): SlotItem => {
   let participants = undefined;
-  
-  if (Array.isArray(slot.slot_participants) && slot.slot_participants.length > 0) {
+
+  if (
+    Array.isArray(slot.slot_participants) &&
+    slot.slot_participants.length > 0
+  ) {
     participants = slot.slot_participants.map((p: any) => ({
       user_id: p.user_id,
       display_name: p.display_name,
@@ -57,12 +63,17 @@ const transformSlotData = (slot: any): SlotItem => {
     startTime: slot.start_at ?? null,
     endTime: slot.end_at ?? null,
     withoutTime: slot.without_time ?? false,
-    type: Array.isArray(slot.slot_participants) && slot.slot_participants.length > 0 ? 'shared' : 'private',
+    type:
+      Array.isArray(slot.slot_participants) && slot.slot_participants.length > 0
+        ? 'shared'
+        : 'private',
     description: slot.description ?? undefined,
     color: slot.color as SlotColorName | undefined,
     image: slot.image ?? undefined,
     completed: slot.completed ?? false,
-    tasks: Array.isArray(slot.slot_tasks) ? slot.slot_tasks.sort((a: any, b: any) => a.position - b.position) : undefined,
+    tasks: Array.isArray(slot.slot_tasks)
+      ? slot.slot_tasks.sort((a: any, b: any) => a.position - b.position)
+      : undefined,
     voice_path: slot.voice_path ?? undefined,
     voice_duration: slot.voice_duration ?? undefined,
     voice_mime: slot.voice_mime ?? undefined,
@@ -74,17 +85,15 @@ const transformSlotData = (slot: any): SlotItem => {
 
 // Core function to fetch slots with date filtering
 const fetchSlotsCore = async (
-  supabase: any, 
-  userId: string, 
-  startIso: string, 
+  supabase: any,
+  userId: string,
+  startIso: string,
   endIso: string,
   filterType: 'gte_lt' | 'gte_lte' = 'gte_lt'
 ): Promise<any[]> => {
   const participantSlotIds = await getParticipantSlotIds(supabase, userId);
-  
-  let query = supabase
-    .from('slots')
-    .select(SLOT_SELECT_COLUMNS);
+
+  let query = supabase.from('slots').select(SLOT_SELECT_COLUMNS);
 
   // Apply date filtering based on filter type
   if (filterType === 'gte_lt') {
@@ -106,21 +115,36 @@ const fetchSlotsCore = async (
   return data ?? [];
 };
 
-export const fetchSlotsForDate = async (supabase: any, userId: string, selectedDate: string): Promise<SlotItem[]> => {
+export const fetchSlotsForDate = async (
+  supabase: any,
+  userId: string,
+  selectedDate: string
+): Promise<SlotItem[]> => {
   const startIso = `${selectedDate}T00:00:00`;
   const endIso = `${selectedDate}T23:59:59`;
-  
+
   const data = await fetchSlotsCore(supabase, userId, startIso, endIso);
   return data.map(transformSlotData);
 };
 
 // Fetch slots for a date range [startDate, endDate] inclusive. Dates in YYYY-MM-DD.
-export const fetchSlotsInRange = async (supabase: any, userId: string, startDate: string, endDate: string): Promise<Record<string, SlotItem[]>> => {
+export const fetchSlotsInRange = async (
+  supabase: any,
+  userId: string,
+  startDate: string,
+  endDate: string
+): Promise<Record<string, SlotItem[]>> => {
   const startIso = `${startDate}T00:00:00`;
   const endIso = `${endDate}T23:59:59`;
 
-  const data = await fetchSlotsCore(supabase, userId, startIso, endIso, 'gte_lte');
-  
+  const data = await fetchSlotsCore(
+    supabase,
+    userId,
+    startIso,
+    endIso,
+    'gte_lte'
+  );
+
   // Transform slots and group by date
   const byDate: Record<string, SlotItem[]> = {};
   for (const rawSlot of data) {
@@ -128,15 +152,15 @@ export const fetchSlotsInRange = async (supabase: any, userId: string, startDate
     const slot = transformSlotData(rawSlot);
     (byDate[dateId] ||= []).push(slot);
   }
-  
+
   return byDate;
 };
 
 // Update slot time and/or date
 export const updateSlotTime = async (
-  supabase: any, 
-  slotId: string, 
-  newStartTime: string, 
+  supabase: any,
+  slotId: string,
+  newStartTime: string,
   newEndTime: string
 ): Promise<boolean> => {
   try {
@@ -144,15 +168,15 @@ export const updateSlotTime = async (
       .from('slots')
       .update({
         start_at: newStartTime,
-        end_at: newEndTime
+        end_at: newEndTime,
       })
       .eq('id', slotId);
-    
+
     if (error) {
       console.error('Error updating slot time:', error);
       return false;
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error updating slot time:', error);

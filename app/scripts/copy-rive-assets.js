@@ -26,9 +26,9 @@ try {
   }
 
   // Find all .riv files in the source directory
-  const riveFiles = fs.readdirSync(sourceDir).filter(file => 
-    file.toLowerCase().endsWith('.riv')
-  );
+  const riveFiles = fs
+    .readdirSync(sourceDir)
+    .filter(file => file.toLowerCase().endsWith('.riv'));
 
   if (riveFiles.length === 0) {
     console.log('⚠️  No .riv files found in:', sourceDir);
@@ -37,14 +37,14 @@ try {
   }
 
   console.log(`📋 Found ${riveFiles.length} Rive file(s):`);
-  
+
   let copiedCount = 0;
-  
+
   // Copy each .riv file
   for (const fileName of riveFiles) {
     const sourceFile = path.join(sourceDir, fileName);
     const targetFile = path.join(targetDir, fileName);
-    
+
     try {
       fs.copyFileSync(sourceFile, targetFile);
       console.log(`✅ Copied ${fileName}`);
@@ -58,10 +58,11 @@ try {
   if (copiedCount === riveFiles.length) {
     console.log(`🎉 Successfully copied all ${copiedCount} Rive asset(s)!`);
   } else {
-    console.log(`⚠️  Copied ${copiedCount}/${riveFiles.length} files. Some files failed.`);
+    console.log(
+      `⚠️  Copied ${copiedCount}/${riveFiles.length} files. Some files failed.`
+    );
     process.exit(1);
   }
-
 } catch (error) {
   console.error('❌ Error copying Rive assets:', error.message);
   process.exit(1);

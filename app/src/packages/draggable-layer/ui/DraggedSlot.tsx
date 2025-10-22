@@ -24,8 +24,7 @@ export const DraggedSlot = ({ animatedStyle }: DraggedSlotProps) => {
 
   return (
     <Animated.View style={[animatedStyle]}>
-      <PortalHost name='draggableLayer' />
+      <PortalHost name="draggableLayer" />
     </Animated.View>
   );
 };
-

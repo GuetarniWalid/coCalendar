@@ -1,5 +1,9 @@
 {
+  "scripts": {
+    "format": "prettier --write ."
+  },
   "devDependencies": {
-    "babel-preset-expo": "^54.0.2"
+    "babel-preset-expo": "^54.0.2",
+    "prettier": "^3.6.2"
   }
 }

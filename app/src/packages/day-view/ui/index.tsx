@@ -1,9 +1,17 @@
 import { View, StyleSheet } from 'react-native';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import {
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useDayView } from '../shared/hooks';
-import { useSlotFormStore, setCurrentScreen, startTimeTracking, stopTimeTracking } from '@project/shared';
-import { setCalendarSelectedDate } from '@project/shared/store/calendar';
+import {
+  useSlotFormStore,
+  setCurrentScreen,
+  startTimeTracking,
+  stopTimeTracking,
+} from '@project/shared';
 import { SlotList } from './slot-list';
 import { colors } from '@project/shared';
 import { VisibleMonthYear } from './VisibleMonthYear';
@@ -14,8 +22,7 @@ export const DayViewScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const date = route.params?.date as string;
-  const { slots, loading, selectedDate, getSlotsForDate } = useDayView(date);
-  if (selectedDate) setCalendarSelectedDate(selectedDate);
+  const { slots, loading, getSlotsForDate } = useDayView(date);
 
   // Track when this screen becomes active and manage time tracking
   useFocusEffect(
@@ -32,13 +39,10 @@ export const DayViewScreen = () => {
   );
 
   // Get setters from Teaful store
-  const [, setSelectedDate] = useSlotFormStore.selectedDate();
   const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
 
   const handleSlotPress = useCallback(
     (slot: any) => {
-      setSelectedDate(selectedDate);
-
       if (slot.id === 'default-slot') {
         // New slot creation
         setSelectedSlot({
@@ -63,17 +67,21 @@ export const DayViewScreen = () => {
 
       navigation.navigate('SlotForm');
     },
-    [selectedDate, setSelectedDate, setSelectedSlot, navigation]
+    [setSelectedSlot, navigation]
   );
 
   return (
     <>
       <View style={styles.headerRow}>
         <VisibleMonthYear />
-        <DayTasksProgress slots={loading ? [] : slots} selectedDate={selectedDate || ''} />
+        <DayTasksProgress slots={loading ? [] : slots} />
       </View>
       <DateSelector />
-      <SlotList onSlotPress={handleSlotPress} getSlotsForDate={getSlotsForDate} loading={loading} />
+      <SlotList
+        onSlotPress={handleSlotPress}
+        getSlotsForDate={getSlotsForDate}
+        loading={loading}
+      />
     </>
   );
 };

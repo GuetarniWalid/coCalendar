@@ -26,17 +26,17 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
-    
+
     // Unused variable detection
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    
+
     // Module resolution
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    
+
     // Output
     "declaration": true,
     "declarationMap": true,
@@ -44,16 +44,13 @@
     "removeComments": false,
     "importHelpers": true,
     "downlevelIteration": true,
-    
+
     // React specific
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "extends": "expo/tsconfig.base",
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": [
     "node_modules",
     "babel.config.js",

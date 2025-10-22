@@ -10,7 +10,10 @@ type ScrollZonesProps = {
 /**
  * Visual indicators for left and right scroll zones
  */
-export const ScrollZones = ({ leftZoneStyle, rightZoneStyle }: ScrollZonesProps) => {
+export const ScrollZones = ({
+  leftZoneStyle,
+  rightZoneStyle,
+}: ScrollZonesProps) => {
   return (
     <>
       <Animated.View style={[styles.leftZone, leftZoneStyle]} />
@@ -35,4 +38,3 @@ const styles = StyleSheet.create({
     width: CALENDAR_CONSTANTS.HORIZONTAL_SCROLL_ZONE_WIDTH,
   },
 });
-

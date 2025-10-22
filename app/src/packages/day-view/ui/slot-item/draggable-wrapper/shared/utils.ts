@@ -13,7 +13,7 @@ export const applyVerticalConstraint = (
   enabled: boolean
 ): number => {
   'worklet';
-  
+
   if (!enabled) {
     return translation;
   }
@@ -30,4 +30,3 @@ export const applyVerticalConstraint = (
 
   return translation;
 };
-

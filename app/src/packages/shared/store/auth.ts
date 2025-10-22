@@ -26,14 +26,18 @@ const initialAuthState = {
 };
 
 // Create the auth store using correct Teaful pattern
-export const { useStore: useAuthStore, getStore: getAuthStore } = createStore(initialAuthState);
+export const { useStore: useAuthStore, getStore: getAuthStore } =
+  createStore(initialAuthState);
 
 // Global setters for auth state updates
 let globalUserSetter: ((user: User | null) => void) | null = null;
 let globalLoadingSetter: ((loading: boolean) => void) | null = null;
 
 // Function to register global setters (called from components)
-export const registerAuthSetters = (userSetter: (user: User | null) => void, loadingSetter: (loading: boolean) => void) => {
+export const registerAuthSetters = (
+  userSetter: (user: User | null) => void,
+  loadingSetter: (loading: boolean) => void
+) => {
   globalUserSetter = userSetter;
   globalLoadingSetter = loadingSetter;
 };
@@ -64,11 +68,14 @@ export const initializeAuthClient = () => {
     setAuthState({ supabase: supabaseClient, envReady: true });
 
     // Initialize current session on app start
-    supabaseClient.auth.getSession().then(({ data }) => {
-      setAuthState({ user: data.session?.user ?? null, loading: false });
-    }).catch(() => {
-      setAuthState({ loading: false });
-    });
+    supabaseClient.auth
+      .getSession()
+      .then(({ data }) => {
+        setAuthState({ user: data.session?.user ?? null, loading: false });
+      })
+      .catch(() => {
+        setAuthState({ loading: false });
+      });
 
     // Subscribe to auth changes
     supabaseClient.auth.onAuthStateChange((_event, session) => {
@@ -101,7 +108,10 @@ export const signIn = async (email: string, password: string) => {
   setAuthState({ loading: true });
 
   try {
-    const { data, error } = await store[0].supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await store[0].supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) throw error;
 
     // Update user state
@@ -123,7 +133,10 @@ export const signUp = async (email: string, password: string) => {
   setAuthState({ loading: true });
 
   try {
-    const { data, error } = await store[0].supabase.auth.signUp({ email, password });
+    const { data, error } = await store[0].supabase.auth.signUp({
+      email,
+      password,
+    });
     if (error) throw error;
 
     // Update user state

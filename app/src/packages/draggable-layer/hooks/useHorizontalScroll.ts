@@ -9,15 +9,17 @@ import { CONTINUOUS_SCROLL_DELAY } from '../shared/constants';
  * Hook to manage horizontal scrolling when dragging to left or right zones
  */
 export const useHorizontalScroll = () => {
-  const { 
-    draggedSlotHorizontalZone, 
-    currentDayIndex, 
-    flatListScrollToIndex, 
-    draggedSlotIndexRN 
+  const {
+    draggedSlotHorizontalZone,
+    currentDayIndex,
+    flatListScrollToIndex,
+    draggedSlotIndexRN,
   } = useDraggedSlotContext();
-  
+
   const horizontalScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastHorizontalZone = useSharedValue<'left' | 'right' | 'middle'>('middle');
+  const lastHorizontalZone = useSharedValue<'left' | 'right' | 'middle'>(
+    'middle'
+  );
 
   // Clear timer helper for horizontal scroll
   const clearHorizontalTimer = useCallback(() => {
@@ -35,7 +37,10 @@ export const useHorizontalScroll = () => {
 
       if (zone === 'left' && currentIndex > 0) {
         targetIndex = currentIndex - 1;
-      } else if (zone === 'right' && currentIndex < CALENDAR_CONSTANTS.TOTAL_DAYS - 1) {
+      } else if (
+        zone === 'right' &&
+        currentIndex < CALENDAR_CONSTANTS.TOTAL_DAYS - 1
+      ) {
         targetIndex = currentIndex + 1;
       }
 
@@ -44,19 +49,30 @@ export const useHorizontalScroll = () => {
 
         // Schedule next scroll if still in the same zone
         horizontalScrollTimerRef.current = setTimeout(() => {
-          if (draggedSlotHorizontalZone.value === zone && draggedSlotIndexRN !== null) {
+          if (
+            draggedSlotHorizontalZone.value === zone &&
+            draggedSlotIndexRN !== null
+          ) {
             continuousHorizontalScroll(zone);
           }
         }, CONTINUOUS_SCROLL_DELAY);
       }
     },
-    [currentDayIndex, flatListScrollToIndex, draggedSlotHorizontalZone, draggedSlotIndexRN]
+    [
+      currentDayIndex,
+      flatListScrollToIndex,
+      draggedSlotHorizontalZone,
+      draggedSlotIndexRN,
+    ]
   );
 
   const horizontalScrollWithDelay = useCallback(
     (zone: 'left' | 'right') => {
       horizontalScrollTimerRef.current = setTimeout(() => {
-        if (draggedSlotHorizontalZone.value === zone && draggedSlotIndexRN !== null) {
+        if (
+          draggedSlotHorizontalZone.value === zone &&
+          draggedSlotIndexRN !== null
+        ) {
           continuousHorizontalScroll(zone);
         }
       }, CONTINUOUS_SCROLL_DELAY);
@@ -74,7 +90,7 @@ export const useHorizontalScroll = () => {
       // If entering left or right zone, start continuous scrolling
       if (zone !== 'middle' && zone !== previousZone) {
         lastHorizontalZone.value = zone;
-        
+
         // Add initial delay before first scroll
         scheduleOnRN(horizontalScrollWithDelay, zone);
       }
@@ -104,4 +120,3 @@ export const useHorizontalScroll = () => {
     lastHorizontalZone,
   };
 };
-

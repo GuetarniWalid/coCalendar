@@ -1,191 +1,186 @@
 import { useState, useEffect, useRef } from 'react';
 import dayjs from 'dayjs';
 import { useAuthStore } from '@project/shared';
-import { SlotItem, generateWeekDays } from '@project/shared';
+import { SlotItem } from '@project/shared';
 import { useCalendarStore } from '@project/shared';
-import { setCalendarSelectedDate } from '@project/shared/store/calendar';
 import { fetchSlotsForDate, fetchSlotsInRange } from '../data/fetch-slots';
 
-// Returns YYYY-MM-DD for the Monday of the week containing date
-const getMondayOfWeek = (date: string): string => {
-	const d = dayjs(date);
-	const dayOfWeek = d.day(); // 0 (Sun) .. 6 (Sat)
-	const daysFromMonday = (dayOfWeek + 6) % 7; // 0 when Monday
-	return d.subtract(daysFromMonday, 'day').format('YYYY-MM-DD');
-};
+export const useDayView = (_initialDate: string) => {
+  const [{ supabase, user }] = useAuthStore();
+  const [selectedDate] = useCalendarStore.selectedDate();
+  const [slots, setSlots] = useState<SlotItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dateRevisions, setDateRevisions] = useState<Record<string, number>>(
+    {}
+  ); // Track revisions per date
 
-// Checks if a date (YYYY-MM-DD) lies within the 7-day window starting at weekStart
-const isWithinWeek = (date: string, weekStart: string): boolean => {
-	const start = dayjs(weekStart);
-	const target = dayjs(date);
-	return target.isSame(start, 'day') || (target.isAfter(start, 'day') && target.diff(start, 'day') < 7);
-};
+  // In-memory cache for slots per date id
+  const slotsCacheRef = useRef<Record<string, SlotItem[]>>({});
+  // Track ongoing prefetch and ranges
+  const prefetchPromiseRef = useRef<Promise<void> | null>(null); // in-flight promise
+  const prefetchRangeRef = useRef<{ start: string; end: string } | null>(null); // in-flight range
+  const lastPrefetchedRangeRef = useRef<{ start: string; end: string } | null>(
+    null
+  ); // last completed range
 
-export const useDayView = (initialDate: string) => {
-	const [{ supabase, user }] = useAuthStore();
-	const [selectedDate] = useCalendarStore.selectedDate();
-	const [slots, setSlots] = useState<SlotItem[]>([]);
-	const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetchSlots();
+    if (user) prefetchSlidingWindow();
+  }, [selectedDate, user]);
 
-	// In-memory cache for slots per date id
-	const slotsCacheRef = useRef<Record<string, SlotItem[]>>({});
-	// Track ongoing prefetch and range it covers
-	const prefetchPromiseRef = useRef<Promise<void> | null>(null);
-	const prefetchRangeRef = useRef<{ start: string; end: string } | null>(null);
+  const fetchSlots = async () => {
+    if (!user) return;
+    // Serve from cache if available
+    const cached = slotsCacheRef.current[selectedDate];
+    if (cached) {
+      setSlots(cached);
+      setLoading(false);
+      return;
+    }
+    // If a prefetch is in-flight and this date is within its range, wait for it first
+    if (prefetchPromiseRef.current && prefetchRangeRef.current) {
+      const { start, end } = prefetchRangeRef.current;
+      if (selectedDate >= start && selectedDate <= end) {
+        try {
+          await prefetchPromiseRef.current;
+          const afterPrefetch = slotsCacheRef.current[selectedDate];
+          if (afterPrefetch) {
+            setSlots(afterPrefetch);
+            setLoading(false);
+            return;
+          }
+          // Covered by prefetch and no entry added => empty day
+          slotsCacheRef.current[selectedDate] = [];
+          setSlots([]);
+          setLoading(false);
+          return;
+        } catch {}
+      }
+    }
 
-	// Ensure week starts on Monday
-	const initialWeekStart = getMondayOfWeek(initialDate || selectedDate);
-	const [weekStart, setWeekStart] = useState(initialWeekStart);
-	const [daysList, setDaysList] = useState(
-		generateWeekDays(initialWeekStart).map((d) => ({ ...d, isSelected: d.date === (initialDate || selectedDate) }))
-	);
+    // True cache miss: show loader, fetch and cache
+    setLoading(true);
+    try {
+      const formattedSlots = await fetchSlotsForDate(
+        supabase,
+        user.id,
+        selectedDate
+      );
+      slotsCacheRef.current[selectedDate] = formattedSlots;
+      setSlots(formattedSlots);
+    } catch (error) {
+      console.error('Error fetching slots:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	// If a route-provided initialDate differs, sync it to global calendar once
-	if (initialDate && selectedDate !== initialDate) {
-		setCalendarSelectedDate(initialDate);
-	}
+  // Prefetch a sliding window around the selected date to minimize per-day loads
+  const prefetchSlidingWindow = async () => {
+    try {
+      if (!user) return;
+      const PREFETCH_BEFORE_DAYS = 21; // 3 weeks back
+      const PREFETCH_AFTER_DAYS = 21; // 3 weeks forward
+      const start = dayjs(selectedDate)
+        .subtract(PREFETCH_BEFORE_DAYS, 'day')
+        .format('YYYY-MM-DD');
+      const end = dayjs(selectedDate)
+        .add(PREFETCH_AFTER_DAYS, 'day')
+        .format('YYYY-MM-DD');
 
-	useEffect(() => {
-		fetchSlots();
-		// Prefetch surrounding days if user is present
-		if (user) prefetchAdjacentWeek();
-	}, [selectedDate, user, weekStart]);
+      // If an in-flight prefetch already covers this window, let it finish
+      if (prefetchPromiseRef.current && prefetchRangeRef.current) {
+        const r = prefetchRangeRef.current;
+        if (start >= r.start && end <= r.end) {
+          return;
+        }
+      }
 
-	const fetchSlots = async () => {
-		if (!user) return;
-		// Serve from cache if available
-		const cached = slotsCacheRef.current[selectedDate];
-		if (cached) {
-			setSlots(cached);
-			setLoading(false);
-			return;
-		}
-		// If a prefetch is in-flight and this date is within its range, wait for it first
-		if (prefetchPromiseRef.current && prefetchRangeRef.current) {
-			const { start, end } = prefetchRangeRef.current;
-			if (selectedDate >= start && selectedDate <= end) {
-				try {
-					await prefetchPromiseRef.current;
-					const afterPrefetch = slotsCacheRef.current[selectedDate];
-					if (afterPrefetch) {
-						setSlots(afterPrefetch);
-						setLoading(false);
-						return;
-					}
-					// Covered by prefetch and no entry added => empty day
-					slotsCacheRef.current[selectedDate] = [];
-					setSlots([]);
-					setLoading(false);
-					return;
-				} catch {}
-			}
-		}
-		// True cache miss: show loader, fetch and cache
-		setLoading(true);
-		try {
-			const formattedSlots = await fetchSlotsForDate(supabase, user.id, selectedDate);
-			slotsCacheRef.current[selectedDate] = formattedSlots;
-			setSlots(formattedSlots);
-		} catch (error) {
-			console.error('Error fetching slots:', error);
-		} finally {
-			setLoading(false);
-		}
-	};
+      // If the last completed prefetch covers this window, skip
+      if (lastPrefetchedRangeRef.current) {
+        const r = lastPrefetchedRangeRef.current;
+        if (start >= r.start && end <= r.end) {
+          return;
+        }
+      }
 
-	// Prefetch the whole current week plus the next and previous weeks
-	const prefetchAdjacentWeek = async () => {
-		try {
-			const weekDays = generateWeekDays(weekStart);
-			if (!weekDays || weekDays.length < 7) return;
-			const start = weekDays[0]?.date ?? weekStart;
-			const end = weekDays[6]?.date ?? weekStart;
-			const prevStart = dayjs(start).subtract(7, 'day').format('YYYY-MM-DD');
-			const nextEnd = dayjs(end).add(7, 'day').format('YYYY-MM-DD');
-			if (!user) return;
-			prefetchRangeRef.current = { start: prevStart, end: nextEnd };
-			const promise = fetchSlotsInRange(supabase, user.id, prevStart, nextEnd)
-				.then((result) => {
-					// Merge into cache
-					slotsCacheRef.current = { ...slotsCacheRef.current, ...result };
-					// Mark empty days explicitly in cache within the prefetched range
-					let cursor = dayjs(prevStart);
-					const last = dayjs(nextEnd);
-					while (cursor.isSame(last, 'day') || cursor.isBefore(last, 'day')) {
-						const dateId = cursor.format('YYYY-MM-DD');
-						if (!(dateId in slotsCacheRef.current)) {
-							slotsCacheRef.current[dateId] = [];
-						}
-						cursor = cursor.add(1, 'day');
-					}
-					// If current selection arrived via prefetch, use it immediately
-					const currentDateSlots = slotsCacheRef.current[selectedDate];
-					if (currentDateSlots !== undefined) {
-						setSlots(currentDateSlots);
-						setLoading(false);
-					}
-				})
-				.finally(() => {
-					prefetchPromiseRef.current = null;
-					prefetchRangeRef.current = null;
-				});
-			prefetchPromiseRef.current = promise;
-			await promise;
-		} catch (e) {
-			console.warn('Prefetch week failed', e);
-		}
-	};
+      prefetchRangeRef.current = { start, end };
+      const promise = fetchSlotsInRange(supabase, user.id, start, end)
+        .then(result => {
+          // Merge into cache
+          slotsCacheRef.current = { ...slotsCacheRef.current, ...result };
+          // Mark empty days explicitly in cache within the prefetched range
+          let cursor = dayjs(start);
+          const last = dayjs(end);
+          while (cursor.isSame(last, 'day') || cursor.isBefore(last, 'day')) {
+            const dateId = cursor.format('YYYY-MM-DD');
+            if (!(dateId in slotsCacheRef.current)) {
+              slotsCacheRef.current[dateId] = [];
+            }
+            cursor = cursor.add(1, 'day');
+          }
+          // If current selection arrived via prefetch, use it immediately
+          const currentDateSlots = slotsCacheRef.current[selectedDate];
+          if (currentDateSlots !== undefined) {
+            setSlots(currentDateSlots);
+            setLoading(false);
+          }
+          // Record completed prefetch window
+          lastPrefetchedRangeRef.current = { start, end };
+        })
+        .finally(() => {
+          prefetchPromiseRef.current = null;
+          prefetchRangeRef.current = null;
+        });
+      prefetchPromiseRef.current = promise;
+      await promise;
+    } catch (e) {
+      console.warn('Prefetch sliding window failed', e);
+    }
+  };
 
-	const onDayPress = (date: string) => {
-		setCalendarSelectedDate(date);
-		// If tapped day is outside the current week window, shift the window to that week
-		if (!isWithinWeek(date, weekStart)) {
-			const newWeekStart = getMondayOfWeek(date);
-			setWeekStart(newWeekStart);
-			setDaysList(generateWeekDays(newWeekStart).map((d) => ({ ...d, isSelected: d.date === date })));
-			return;
-		}
-		// Otherwise, only update selection within current week
-		setDaysList((prev) => prev.map((d) => ({ ...d, isSelected: d.date === date })));
-	};
+  // Method to update cache when a slot is moved between days
+  const updateSlotCache = (
+    slotId: string,
+    sourceDate: string,
+    targetDate: string,
+    updatedSlot: SlotItem | null
+  ) => {
+    // Remove slot from source date cache
+    if (slotsCacheRef.current[sourceDate]) {
+      slotsCacheRef.current[sourceDate] = slotsCacheRef.current[
+        sourceDate
+      ].filter(s => s.id !== slotId);
+    }
 
-	// When selectedDate changes externally (e.g., via DateSelector), align week window and selection
-	useEffect(() => {
-		if (!selectedDate) return;
-		if (!isWithinWeek(selectedDate, weekStart)) {
-			const newWeekStart = getMondayOfWeek(selectedDate);
-			setWeekStart(newWeekStart);
-			setDaysList(generateWeekDays(newWeekStart).map((d) => ({ ...d, isSelected: d.date === selectedDate })));
-		} else {
-			setDaysList((prev) => prev.map((d) => ({ ...d, isSelected: d.date === selectedDate })));
-		}
-	}, [selectedDate]);
+    // Add updated slot to target date cache if update was successful
+    if (updatedSlot && slotsCacheRef.current[targetDate]) {
+      // Check if slot already exists in target (shouldn't happen but be safe)
+      const existingIndex = slotsCacheRef.current[targetDate].findIndex(
+        s => s.id === updatedSlot.id
+      );
+      if (existingIndex >= 0) {
+        slotsCacheRef.current[targetDate][existingIndex] = updatedSlot;
+      } else {
+        slotsCacheRef.current[targetDate].push(updatedSlot);
+      }
+    }
 
-	const onWeekScroll = (direction: 'prev' | 'next') => {
-		const delta = direction === 'next' ? 7 : -7;
-		const newStart = dayjs(weekStart).add(delta, 'day').format('YYYY-MM-DD');
-		
-		// Preserve the same weekday by using the offset within the current week
-		const weekdayOffset = Math.max(0, Math.min(6, dayjs(selectedDate).diff(dayjs(weekStart), 'day')));
-		const newSelectedDate = dayjs(newStart).add(weekdayOffset, 'day').format('YYYY-MM-DD');
-		
-		setWeekStart(newStart);
-		setCalendarSelectedDate(newSelectedDate);
-		const newDays = generateWeekDays(newStart).map((d) => ({ ...d, isSelected: d.date === newSelectedDate }));
-		setDaysList(newDays);
-	};
+    // Increment revisions only for affected dates
+    setDateRevisions(prev => ({
+      ...prev,
+      [sourceDate]: (prev[sourceDate] || 0) + 1,
+      [targetDate]: (prev[targetDate] || 0) + 1,
+    }));
+  };
 
-	return {
-		selectedDate,
-		slots,
-		loading,
-		daysList,
-		weekStart,
-		onDayPress,
-		onWeekScroll,
-		getSlotsForDate: (date: string): SlotItem[] | undefined => {
-			return slotsCacheRef.current[date];
-		},
-		refetch: fetchSlots,
-	};
+  return {
+    slots,
+    loading,
+    dateRevisions,
+    getSlotsForDate: (date: string): SlotItem[] | undefined => {
+      return slotsCacheRef.current[date];
+    },
+    updateSlotCache,
+  };
 };

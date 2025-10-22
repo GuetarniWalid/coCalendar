@@ -13,7 +13,7 @@ export const TaskCounter: FC<TaskCounterProps> = ({ tasks }) => {
     if (!tasks || tasks.length === 0) {
       return { completedCount: 0, totalCount: 0 };
     }
-    
+
     const completed = tasks.filter(task => task.is_done).length;
     return { completedCount: completed, totalCount: tasks.length };
   }, [tasks]);

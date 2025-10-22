@@ -8,5 +8,9 @@ export { commonStyles, progressBarConfig } from './theme';
 // Re-export types
 export type { ColorPalette, ThemeMode, Theme } from './types';
 export type { SpacingToken } from './spacing';
-export type { FontFamilyToken, FontSizeToken, FontWeightToken } from './typography';
+export type {
+  FontFamilyToken,
+  FontSizeToken,
+  FontWeightToken,
+} from './typography';
 export type { BorderRadiusToken } from './borderRadius';

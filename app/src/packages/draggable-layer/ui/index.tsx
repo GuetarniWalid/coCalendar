@@ -12,16 +12,19 @@ import { DraggedSlot } from './DraggedSlot';
 export const DraggableLayer = () => {
   // Handle horizontal scrolling logic
   useHorizontalScroll();
-  
+
   // Handle visual effects for scroll zones
   const { leftZoneStyle, rightZoneStyle } = useZoneVisualEffects();
-  
+
   // Handle position animation for dragged slot
   const { animatedStyle } = useDraggedSlotPosition();
 
   return (
-    <View style={styles.container} pointerEvents='none'>
-      <ScrollZones leftZoneStyle={leftZoneStyle} rightZoneStyle={rightZoneStyle} />
+    <View style={styles.container} pointerEvents="none">
+      <ScrollZones
+        leftZoneStyle={leftZoneStyle}
+        rightZoneStyle={rightZoneStyle}
+      />
       <DraggedSlot animatedStyle={animatedStyle} />
     </View>
   );

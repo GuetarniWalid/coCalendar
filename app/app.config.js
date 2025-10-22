@@ -7,31 +7,25 @@ module.exports = {
     userInterfaceStyle: 'light',
     splash: {
       resizeMode: 'contain',
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
     },
-    assetBundlePatterns: [
-      '**/*',
-      '!assets/animations/*.riv'
-    ],
+    assetBundlePatterns: ['**/*', '!assets/animations/*.riv'],
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.walidg.cocalendar',
-      deploymentTarget: '14.0'
+      deploymentTarget: '14.0',
     },
     android: {
       package: 'com.walidg.cocalendar',
       adaptiveIcon: {
-        backgroundColor: '#ffffff'
-      }
+        backgroundColor: '#ffffff',
+      },
     },
     scheme: 'cocalendar',
     extra: {
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.EXPO_PUBLIC_SUPABASE_KEY
+      supabaseKey: process.env.EXPO_PUBLIC_SUPABASE_KEY,
     },
-    plugins: [
-      'expo-font',
-      'expo-notifications'
-    ]
-  }
+    plugins: ['expo-font', 'expo-notifications'],
+  },
 };

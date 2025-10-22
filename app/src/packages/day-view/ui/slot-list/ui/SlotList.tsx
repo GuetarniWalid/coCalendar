@@ -1,16 +1,25 @@
-import { useCallback, useRef, useMemo, useEffect, ReactElement } from 'react';
-import { FlatList, Dimensions, View, StyleSheet } from 'react-native';
-import { CALENDAR_CONSTANTS, colors } from '@project/shared';
+import {
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+  ReactElement,
+  useState,
+} from 'react';
+import {
+  FlatList,
+  Dimensions,
+  View,
+  StyleSheet,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
+import { CALENDAR_CONSTANTS, colors, useCalendarStore } from '@project/shared';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { DayPage } from './DayPage';
 import { SlotListProps } from '../shared/types';
-import { getDateFromIndex } from '../shared/utils';
-import {
-  useSlotData,
-  usePageSnap,
-  useScrollControl,
-  useDateNavigation,
-} from '../shared/hooks';
+import { getDateFromIndex, getIndexFromDate } from '../shared/utils';
+import { useSlotData } from '../shared/hooks';
 
 export const SlotList = ({
   onSlotPress,
@@ -20,7 +29,8 @@ export const SlotList = ({
   const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
   const { draggedSlotIndexRN } = useDraggedSlotContext();
-  
+  const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
+  const [isInitialized, setIsInitialized] = useState(false);
   // JSX cache for instant rendering
   const renderedJSXCacheRef = useRef<Record<string, ReactElement>>({});
 
@@ -29,15 +39,36 @@ export const SlotList = ({
     []
   );
 
-  // Page snap calculation
-  const { calculateTargetIndex, handleScrollBeginDrag } = usePageSnap(screenWidth);
-
   // Scroll control
-  const { isScrollEnabled, handleScrollEndDrag, handleMomentumScrollEnd, scrollToIndex, setOnScrollComplete } =
-    useScrollControl(flatListRef, screenWidth, calculateTargetIndex);
+  const handleMomentumScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const {
+        contentOffset: { x: offsetX },
+      } = event.nativeEvent;
+      const currentIndex = Math.round(offsetX / screenWidth);
+      const newDate = getDateFromIndex(currentIndex);
+      setSelectedDate(newDate);
+    },
+    [screenWidth]
+  );
 
-  // Date navigation (must be before useSlotData to get selectedDate)
-  const { selectedDate, handleScrollComplete } = useDateNavigation(scrollToIndex);
+  // Handle date changes from DateSelector
+  useEffect(() => {
+    const targetIndex = getIndexFromDate(selectedDate);
+
+    if (!isInitialized) {
+      setIsInitialized(true);
+      flatListRef.current?.scrollToIndex({
+        index: targetIndex,
+        animated: false,
+      });
+    } else {
+      flatListRef.current?.scrollToIndex({
+        index: targetIndex,
+        animated: true,
+      });
+    }
+  }, [isInitialized, selectedDate]);
 
   // Slot data management
   const {
@@ -46,22 +77,6 @@ export const SlotList = ({
     createEnhancedSlotData,
     lastShownByDateRef,
   } = useSlotData(onSlotPress, selectedDate, getSlotsForDate);
-
-
-  // Connect scroll complete handler
-  useEffect(() => {
-    setOnScrollComplete(handleScrollComplete);
-  }, [setOnScrollComplete, handleScrollComplete]);
-
-  // Cell renderer with forced background color to prevent grey flash
-  const CellRendererComponent = useCallback(
-    ({ children, style, ...props }: any) => (
-      <View style={[style, styles.cell]} {...props}>
-        {children}
-      </View>
-    ),
-    []
-  );
 
   const renderDayPage = useCallback(
     ({ item: dayIndex }: { item: number }) => {
@@ -100,15 +115,10 @@ export const SlotList = ({
       <FlatList
         ref={flatListRef}
         data={dayIndices}
-        keyExtractor={(item) => `day-${item}`}
         horizontal
-        pagingEnabled={false}
-        scrollEnabled={isScrollEnabled}
+        pagingEnabled={true}
         showsHorizontalScrollIndicator={false}
         renderItem={renderDayPage}
-        CellRendererComponent={CellRendererComponent}
-        onScrollBeginDrag={handleScrollBeginDrag}
-        onScrollEndDrag={handleScrollEndDrag}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         getItemLayout={(_, index) => ({
           length: screenWidth,
@@ -119,8 +129,6 @@ export const SlotList = ({
         maxToRenderPerBatch={3}
         windowSize={7}
         removeClippedSubviews={draggedSlotIndexRN === null}
-        updateCellsBatchingPeriod={100}
-        decelerationRate={0}
       />
     </View>
   );

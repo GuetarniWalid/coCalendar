@@ -1,21 +1,25 @@
 import { FC, useEffect, useRef, useState, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Rive, { AutoBind, RiveRef } from 'rive-react-native';
-import { SlotItem, calculateTaskCompletion } from '@project/shared';
+import {
+  SlotItem,
+  calculateTaskCompletion,
+  useCalendarStore,
+} from '@project/shared';
 import dayjs from 'dayjs';
 
 interface DayTasksProgressProps {
   slots: SlotItem[];
-  selectedDate: string;
 }
 
 const stateMachineName = 'State Machine Progression';
 const resourceName = 'progression';
 const artboardName = 'progression';
 
-export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDate }) => {
+export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots }) => {
   const riveRef = useRef<RiveRef>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedDate] = useCalendarStore.selectedDate();
 
   // Calculate progress based on real-time data
   const percent = useMemo(() => {
@@ -23,12 +27,12 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
     if (!slots) {
       return 0;
     }
-    
+
     // If slots are loaded but empty array, return -1 for "no work" state
     if (slots.length === 0) {
       return -1;
     }
-    
+
     const progressData = calculateTaskCompletion(slots, selectedDate);
     return progressData.percentage;
   }, [slots, selectedDate, currentTime]);
@@ -37,7 +41,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
   useEffect(() => {
     const now = new Date();
     const currentDate = dayjs().format('YYYY-MM-DD');
-    
+
     // Only track if viewing today's slots and slots are loaded
     if (selectedDate !== currentDate || !slots || slots.length === 0) {
       return;
@@ -61,8 +65,9 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
       return slotEndTime < earliestEndTime ? slot : earliest;
     });
 
-    const timeUntilEnd = new Date(nextSlotToEnd.endTime!).getTime() - now.getTime();
-    
+    const timeUntilEnd =
+      new Date(nextSlotToEnd.endTime!).getTime() - now.getTime();
+
     if (timeUntilEnd > 0) {
       const timeout = setTimeout(() => {
         setCurrentTime(new Date());
@@ -70,16 +75,16 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, selectedDat
 
       return () => clearTimeout(timeout);
     }
-    
+
     return undefined;
   }, [slots, selectedDate, currentTime]);
-  
+
   useEffect(() => {
     const rive = riveRef.current;
     if (!rive) return;
-    rive.play()
-    rive.setNumber('percent', percent)
-  }, [percent])
+    rive.play();
+    rive.setNumber('percent', percent);
+  }, [percent]);
 
   return (
     <View>

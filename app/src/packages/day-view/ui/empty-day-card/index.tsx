@@ -1,6 +1,12 @@
 import { FC, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, spacing, fontSize, fontWeight, getAvatarPublicUrl } from '@project/shared';
+import {
+  colors,
+  spacing,
+  fontSize,
+  fontWeight,
+  getAvatarPublicUrl,
+} from '@project/shared';
 import { Image } from 'expo-image';
 import { useTranslation } from '@project/i18n';
 
@@ -10,7 +16,12 @@ type EmptyDayCardProps = {
 
 const EmptyDayCardBase: FC<EmptyDayCardProps> = ({ onPress }) => {
   const t = useTranslation();
-  const uri = getAvatarPublicUrl({ persona: 'adult-female', activity: 'health_wellbeing', name: 'rest', extension: 'webp' });
+  const uri = getAvatarPublicUrl({
+    persona: 'adult-female',
+    activity: 'health_wellbeing',
+    name: 'rest',
+    extension: 'webp',
+  });
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
@@ -50,7 +61,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxxl,
     borderRadius: 36,
     minHeight: 129,
-    backgroundColor: colors.background.slot.default?.default || colors.background.secondary,
+    backgroundColor:
+      colors.background.slot.default?.default || colors.background.secondary,
   },
   content: {
     flex: 1,
@@ -74,5 +86,3 @@ const styles = StyleSheet.create({
     height: 150,
   } as const,
 });
-
-

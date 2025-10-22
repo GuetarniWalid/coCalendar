@@ -9,7 +9,7 @@ config.resolver.alias = {
   '@project/day-view': './src/packages/day-view',
   '@project/shared': './src/packages/shared',
   '@project/icons': './src/packages/icons',
-  '@project/i18n': './src/packages/i18n'
+  '@project/i18n': './src/packages/i18n',
 };
 
 // Standard resolver configuration
@@ -17,8 +17,6 @@ config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
 config.resolver.platforms = ['ios', 'android', 'native', 'web'];
 
 // Watch additional folders for monorepo
-config.watchFolders = [
-  path.resolve(__dirname, 'src/packages'),
-];
+config.watchFolders = [path.resolve(__dirname, 'src/packages')];
 
 module.exports = config;

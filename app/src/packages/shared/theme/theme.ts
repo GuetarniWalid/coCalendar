@@ -8,15 +8,17 @@ import { borderRadius } from './borderRadius';
 export const progressBarConfig = {
   // Progress bar track height
   trackHeight: 10,
-  
+
   // Text configuration
   textFontSize: fontSize.sm, // 14px
   textLineHeight: 1.2, // Standard line height multiplier
   textPadding: spacing.md, // Bottom padding for text
-  
+
   // Calculated text container height (font size * line height + padding)
   get textContainerHeight() {
-    return Math.ceil(this.textFontSize * this.textLineHeight) + this.textPadding;
+    return (
+      Math.ceil(this.textFontSize * this.textLineHeight) + this.textPadding
+    );
   },
 } as const;
 
@@ -31,35 +33,35 @@ export const commonStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   loadingText: {
     color: colors.typography.secondary,
     marginTop: spacing.md,
     fontSize: fontSize.base,
   },
-  
+
   // Scroll
   scrollView: {
     flex: 1,
   },
-  
+
   scrollContent: {
     padding: spacing.xl,
   },
-  
+
   // Empty states
   emptyContainer: {
     alignItems: 'center',
     marginTop: 50,
   },
-  
+
   empty: {
     textAlign: 'center',
     color: colors.typography.secondary,
     fontSize: fontSize.base,
     marginBottom: spacing.md,
   },
-  
+
   emptySubtext: {
     textAlign: 'center',
     color: colors.typography.secondary,

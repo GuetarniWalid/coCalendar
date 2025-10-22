@@ -1,7 +1,14 @@
 import { StyleSheet } from 'react-native';
 import { useEffect, useState } from 'react';
 import { colors } from '@project/shared';
-import Animated, { useAnimatedRef, useSharedValue, useAnimatedStyle, withTiming, cancelAnimation, useAnimatedReaction } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedRef,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  cancelAnimation,
+  useAnimatedReaction,
+} from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useCalendarStore } from '@project/shared';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -13,52 +20,65 @@ interface ControllableScrollViewProps {
 
 const SCROLL_SPEED = 500; // Pixels per second
 
-export const ControllableScrollView = ({ children, selectedDate }: ControllableScrollViewProps) => {
+export const ControllableScrollView = ({
+  children,
+  selectedDate,
+}: ControllableScrollViewProps) => {
   const [currentSelectedDate] = useCalendarStore.selectedDate();
   const isCurrentDay = selectedDate === currentSelectedDate;
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
-  const { dayPageScrollY, draggedSlotZone, draggedSlotIndexRN } = useDraggedSlotContext();
-  const [targetScrollPosition, setTargetScrollPosition] = useState<number | null>(null);
+  const { draggedSlotZone, draggedSlotIndexRN, controllableScrollTranslateY } =
+    useDraggedSlotContext();
+  const [targetScrollPosition, setTargetScrollPosition] = useState<
+    number | null
+  >(null);
   const contentHeight = useSharedValue(0);
   const scrollViewHeight = useSharedValue(0);
-  const translateY = useSharedValue(0);
+  const dayPageScrollY = useSharedValue(0);
 
   // Handle vertical zone changes during drag
   useAnimatedReaction(
     () => draggedSlotZone.value,
-    (zone) => {
+    zone => {
       if (!isCurrentDay || draggedSlotIndexRN === null) return;
 
       // Cancel any ongoing animation
-      cancelAnimation(translateY);
+      cancelAnimation(controllableScrollTranslateY);
 
       if (zone === 'middle') {
         // Middle zone - stop at current position
         return;
       }
 
-      const maxScrollY = Math.max(0, contentHeight.value - scrollViewHeight.value);
+      const maxScrollY = Math.max(
+        0,
+        contentHeight.value - scrollViewHeight.value
+      );
       const currentScroll = dayPageScrollY.value;
-      const currentTranslation = translateY.value;
+      const currentTranslation = controllableScrollTranslateY.value;
 
       if (zone === 'bottom') {
         // Calculate distance to scroll down from current position
         const effectiveScroll = currentScroll - currentTranslation;
         const distanceToBottom = maxScrollY - effectiveScroll;
         const duration = (distanceToBottom / SCROLL_SPEED) * 1000;
-        
-        // Animate translateY smoothly downward
+
+        // Animate translate y smoothly downward
         const targetTranslation = currentTranslation - distanceToBottom;
-        translateY.value = withTiming(targetTranslation, { duration });
+        controllableScrollTranslateY.value = withTiming(targetTranslation, {
+          duration,
+        });
       } else if (zone === 'top') {
         // Calculate distance to scroll up from current position
         const effectiveScroll = currentScroll - currentTranslation;
         const distanceToTop = effectiveScroll;
         const duration = (distanceToTop / SCROLL_SPEED) * 1000;
-        
-        // Animate translateY smoothly upward
+
+        // Animate controllableScrollTranslateY smoothly upward
         const targetTranslation = currentTranslation + distanceToTop;
-        translateY.value = withTiming(targetTranslation, { duration });
+        controllableScrollTranslateY.value = withTiming(targetTranslation, {
+          duration,
+        });
       }
     }
   );
@@ -68,37 +88,49 @@ export const ControllableScrollView = ({ children, selectedDate }: ControllableS
     () => draggedSlotIndexRN !== null,
     (isSlotTeleported, previousIsSlotTeleported) => {
       if (!isCurrentDay) return;
-      
+
       // Drag ended
       if (previousIsSlotTeleported && !isSlotTeleported) {
-        cancelAnimation(translateY);
-        
+        cancelAnimation(controllableScrollTranslateY);
+
         // Calculate final scroll position
-        const finalScrollY = Math.max(0, Math.min(
-          dayPageScrollY.value - translateY.value,
-          Math.max(0, contentHeight.value - scrollViewHeight.value)
-        ));
-        
+        const finalScrollY = Math.max(
+          0,
+          Math.min(
+            dayPageScrollY.value - controllableScrollTranslateY.value,
+            Math.max(0, contentHeight.value - scrollViewHeight.value)
+          )
+        );
+
         scheduleOnRN(setTargetScrollPosition, finalScrollY);
       }
     }
   );
 
   // Apply scroll position after drag ends
-  
+
   useEffect(() => {
     if (targetScrollPosition !== null && isCurrentDay && animatedRef.current) {
-      animatedRef.current.scrollTo({ y: targetScrollPosition, animated: false });
+      animatedRef.current.scrollTo({
+        y: targetScrollPosition,
+        animated: false,
+      });
       dayPageScrollY.value = targetScrollPosition;
-      translateY.value = 0;
+      controllableScrollTranslateY.value = 0;
       setTargetScrollPosition(null);
     }
-  }, [targetScrollPosition, isCurrentDay, animatedRef, dayPageScrollY, translateY]);
+  }, [
+    targetScrollPosition,
+    isCurrentDay,
+    animatedRef,
+    dayPageScrollY,
+    controllableScrollTranslateY,
+  ]);
 
   const contentAnimatedStyle = useAnimatedStyle(() => {
     if (!isCurrentDay) return {};
     return {
-      transform: [{ translateY: translateY.value }],
+      transform: [{ translateY: controllableScrollTranslateY.value }],
     };
   });
 
@@ -140,4 +172,3 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
 });
-

@@ -1,6 +1,10 @@
 import { FC, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { SlotParticipant, SlotColorName, getSlotParticipantColors } from '@project/shared';
+import {
+  SlotParticipant,
+  SlotColorName,
+  getSlotParticipantColors,
+} from '@project/shared';
 import { colors, fontSize, fontWeight } from '@project/shared';
 
 interface ParticipantsIndicatorProps {
@@ -22,50 +26,66 @@ const generateInitials = (participant: SlotParticipant): string => {
 
   // Try display_name first
   if (participant.display_name?.trim()) {
-    const nameParts = participant.display_name.trim().split(/\s+/).filter(Boolean);
+    const nameParts = participant.display_name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
     const initials = getInitialsFromParts(nameParts);
     if (initials) return initials;
   }
-  
+
   // Fallback to email
   if (participant.email) {
-    const emailParts = participant.email.split('@')[0]?.split('.').filter(Boolean) || [];
+    const emailParts =
+      participant.email.split('@')[0]?.split('.').filter(Boolean) || [];
     const initials = getInitialsFromParts(emailParts);
     if (initials) return initials;
   }
-  
+
   // Final fallback - use user_id
   if (participant.user_id?.length >= 2) {
     return participant.user_id.substring(0, 2).toUpperCase();
   }
-  
+
   return '??';
 };
 
 const MAX_VISIBLE_PARTICIPANTS = 3;
 const PARTICIPANT_OVERLAP = -9;
 
-export const ParticipantsIndicator: FC<ParticipantsIndicatorProps> = ({ participants, slotColor }) => {
+export const ParticipantsIndicator: FC<ParticipantsIndicatorProps> = ({
+  participants,
+  slotColor,
+}) => {
   const participantData = useMemo(() => {
-    if (!participants?.length) return { items: [], showOverflow: false, overflowCount: 0 };
-    
+    if (!participants?.length)
+      return { items: [], showOverflow: false, overflowCount: 0 };
+
     // Sort participants by created_at (oldest first) for consistent ordering
     const sortedParticipants = [...participants].sort((a, b) => {
       if (!a.created_at || !b.created_at) return 0;
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return (
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
     });
-    
-    const participantColors = getSlotParticipantColors(slotColor, sortedParticipants.length);
+
+    const participantColors = getSlotParticipantColors(
+      slotColor,
+      sortedParticipants.length
+    );
     const showOverflow = sortedParticipants.length > MAX_VISIBLE_PARTICIPANTS;
-    const visibleParticipants = sortedParticipants.slice(0, MAX_VISIBLE_PARTICIPANTS);
-    
+    const visibleParticipants = sortedParticipants.slice(
+      0,
+      MAX_VISIBLE_PARTICIPANTS
+    );
+
     const items = visibleParticipants.map((participant, index) => ({
       id: participant.user_id,
       initials: generateInitials(participant),
       color: participantColors[index] || colors.primary,
       zIndex: visibleParticipants.length - index, // Stack order: first participant on top
     }));
-    
+
     return {
       items,
       showOverflow,
@@ -86,11 +106,14 @@ export const ParticipantsIndicator: FC<ParticipantsIndicatorProps> = ({ particip
             styles.overflowCircle,
             {
               zIndex: 999, // Above all participants
-              marginLeft: participantData.items.length > 0 ? PARTICIPANT_OVERLAP : 0,
+              marginLeft:
+                participantData.items.length > 0 ? PARTICIPANT_OVERLAP : 0,
             },
           ]}
         >
-          <Text style={styles.overflowText}>+{participantData.overflowCount}</Text>
+          <Text style={styles.overflowText}>
+            +{participantData.overflowCount}
+          </Text>
         </View>
       )}
       {participantData.items.map((participant, index) => (
@@ -101,7 +124,10 @@ export const ParticipantsIndicator: FC<ParticipantsIndicatorProps> = ({ particip
             {
               backgroundColor: participant.color,
               zIndex: participant.zIndex,
-              marginLeft: participantData.showOverflow || index > 0 ? PARTICIPANT_OVERLAP : 0,
+              marginLeft:
+                participantData.showOverflow || index > 0
+                  ? PARTICIPANT_OVERLAP
+                  : 0,
             },
           ]}
         >

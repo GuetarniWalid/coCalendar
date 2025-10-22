@@ -1,8 +1,13 @@
-export type AvatarPersona = 'adult-male' | 'adult-female' | 'child-male' | 'child-female' | (string & {});
+export type AvatarPersona =
+  | 'adult-male'
+  | 'adult-female'
+  | 'child-male'
+  | 'child-female'
+  | (string & {});
 
 export interface BuildAvatarPathOptions {
   version?: string; // optional, if omitted it's not included in the path
-  series?: string;  // optional, if omitted it's not included in the path
+  series?: string; // optional, if omitted it's not included in the path
   persona: AvatarPersona;
   activity: string;
   subActivity?: string;
@@ -37,8 +42,14 @@ export const buildAvatarPath = (options: BuildAvatarPathOptions): string => {
     parts.push(safe(subActivity));
   }
 
-  const base = name ? safe(name) : subActivity ? safe(subActivity) : safe(activity);
-  const fileName = variant ? `${base}-${safe(variant)}.${extension}` : `${base}.${extension}`;
+  const base = name
+    ? safe(name)
+    : subActivity
+      ? safe(subActivity)
+      : safe(activity);
+  const fileName = variant
+    ? `${base}-${safe(variant)}.${extension}`
+    : `${base}.${extension}`;
 
   return `${parts.join('/')}/${fileName}`;
 };
@@ -53,7 +64,10 @@ if (__DEV__) {
   try {
     // Allow external override before module load (e.g., globalThis.__COCAL_DEV_IMG_CB__)
     const preset = (globalThis as any)?.__COCAL_DEV_IMG_CB__;
-    DEV_IMAGE_CB = typeof preset === 'string' && preset.length > 0 ? preset : String(Date.now());
+    DEV_IMAGE_CB =
+      typeof preset === 'string' && preset.length > 0
+        ? preset
+        : String(Date.now());
   } catch {
     DEV_IMAGE_CB = String(Date.now());
   }
@@ -83,8 +97,6 @@ export interface AvatarDescriptor extends BuildAvatarUrlOptions {}
 
 export const buildAvatarUrls = (avatars: AvatarDescriptor[]): string[] => {
   return avatars
-    .map((a) => getAvatarPublicUrl(a))
+    .map(a => getAvatarPublicUrl(a))
     .filter((u): u is string => Boolean(u));
 };
-
-

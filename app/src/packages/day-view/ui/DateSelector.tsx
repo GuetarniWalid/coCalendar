@@ -1,39 +1,76 @@
 import { FC, useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  Dimensions,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+} from 'react-native';
 import dayjs from 'dayjs';
 import { DayItem } from '@project/shared';
-import { colors, spacing, fontSize, fontWeight, useCalendarStore } from '@project/shared';
+import {
+  colors,
+  spacing,
+  fontSize,
+  fontWeight,
+  useCalendarStore,
+} from '@project/shared';
+const screenWidth = Dimensions.get('window').width;
 
 export const DateSelector: FC = () => {
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
-  
-  // Memoized handler to avoid creating new functions on each render
-  const handleDatePress = useCallback((date: string) => {
-    setSelectedDate(date);
-  }, [setSelectedDate]);
+  const flatListRef = useRef<FlatList>(null);
+  const isTransitioningRef = useRef<boolean>(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Memoized day item component to optimize performance
-  const renderDayItem = useCallback((d: DayItem) => (
-    <TouchableOpacity 
-      key={d.date} 
-      style={[styles.dayCell, d.isSelected && styles.dayCellHighlight]} 
-      onPress={() => handleDatePress(d.date)}
-    >
-      <Text style={[styles.dateName, d.isSelected && styles.highlightDateName]}>
-        {d.day}
-      </Text>
-      <Text style={[styles.dateNumber, d.isSelected && styles.highlightDateNumber]}>
-        {dayjs(d.date).format('D')}
-      </Text>
-      {d.isToday && (
-        <View style={[
-          styles.todayDot,
-          { backgroundColor: d.isSelected ? colors.action.typography.primary : colors.typography.secondary }
-        ]} />
-      )}
-    </TouchableOpacity>
-  ), [handleDatePress]);
-  // Build current week's days from selectedDate
+  const handleDatePress = useCallback(
+    (date: string) => {
+      setSelectedDate(date);
+    },
+    [setSelectedDate]
+  );
+
+  const renderDayItem = useCallback(
+    (d: DayItem) => (
+      <Pressable
+        key={d.date}
+        style={[styles.dayCell, d.isSelected && styles.dayCellHighlight]}
+        onPress={() => handleDatePress(d.date)}
+      >
+        <Text
+          style={[styles.dateName, d.isSelected && styles.highlightDateName]}
+        >
+          {d.day}
+        </Text>
+        <Text
+          style={[
+            styles.dateNumber,
+            d.isSelected && styles.highlightDateNumber,
+          ]}
+        >
+          {dayjs(d.date).format('D')}
+        </Text>
+        {d.isToday && (
+          <View
+            style={[
+              styles.todayDot,
+              {
+                backgroundColor: d.isSelected
+                  ? colors.action.typography.primary
+                  : colors.typography.secondary,
+              },
+            ]}
+          />
+        )}
+      </Pressable>
+    ),
+    [handleDatePress]
+  );
+
   const startOfWeek = useMemo(() => {
     const d = dayjs(selectedDate);
     const dayOfWeek = d.day();
@@ -53,27 +90,26 @@ export const DateSelector: FC = () => {
       } as DayItem;
     });
   }, [startOfWeek, selectedDate]);
-  const flatListRef = useRef<FlatList>(null);
-  const isTransitioningRef = useRef<boolean>(false);
-  const [scrollEnabled, setScrollEnabled] = useState(true);
+
   const visibleWeekStartRef = useRef<string>(
     daysList[0]?.date ?? dayjs().startOf('week').format('YYYY-MM-DD')
   );
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const screenWidth = Dimensions.get('window').width;
 
   const currentWeekStart = useMemo(() => {
     return daysList[0]?.date ?? dayjs().startOf('week').format('YYYY-MM-DD');
   }, [daysList]);
 
-  const [overrideCenterWeek, setOverrideCenterWeek] = useState<DayItem[] | null>(null);
+  const [overrideCenterWeek, setOverrideCenterWeek] = useState<
+    DayItem[] | null
+  >(null);
 
   const buildWeek = (startDate: string, base?: DayItem[]): DayItem[] => {
     const start = dayjs(startDate);
     return Array.from({ length: 7 }).map((_, i) => {
       const date = start.add(i, 'day');
       const id = date.format('YYYY-MM-DD');
-      const original = base?.find((d) => d.date === id) ?? daysList.find((d) => d.date === id);
+      const original =
+        base?.find(d => d.date === id) ?? daysList.find(d => d.date === id);
       return (
         original ?? {
           date: id,
@@ -92,9 +128,15 @@ export const DateSelector: FC = () => {
       return [effectiveCenterWeek, effectiveCenterWeek, effectiveCenterWeek];
     }
     const centerStart = effectiveCenterWeek[0]?.date ?? currentWeekStart;
-    const prevStart = dayjs(centerStart).subtract(7, 'day').format('YYYY-MM-DD');
+    const prevStart = dayjs(centerStart)
+      .subtract(7, 'day')
+      .format('YYYY-MM-DD');
     const nextStart = dayjs(centerStart).add(7, 'day').format('YYYY-MM-DD');
-    return [buildWeek(prevStart, effectiveCenterWeek), effectiveCenterWeek, buildWeek(nextStart, effectiveCenterWeek)];
+    return [
+      buildWeek(prevStart, effectiveCenterWeek),
+      effectiveCenterWeek,
+      buildWeek(nextStart, effectiveCenterWeek),
+    ];
   }, [effectiveCenterWeek, currentWeekStart, isTransitioning]);
 
   const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -104,14 +146,22 @@ export const DateSelector: FC = () => {
       isTransitioningRef.current = true;
       setIsTransitioning(true);
       setScrollEnabled(false);
-      const selectedIndexBase = effectiveCenterWeek.findIndex((d) => d.isSelected);
+      const selectedIndexBase = effectiveCenterWeek.findIndex(
+        d => d.isSelected
+      );
       const selectedIndex = selectedIndexBase >= 0 ? selectedIndexBase : 0;
-      const prevStart = dayjs(visibleWeekStartRef.current).subtract(7, 'day').format('YYYY-MM-DD');
-      const prevWeek = buildWeek(prevStart, effectiveCenterWeek).map((d, i) => ({
-        ...d,
-        isSelected: i === selectedIndex,
-      }));
-      const targetSelectedDate = dayjs(prevStart).add(selectedIndex, 'day').format('YYYY-MM-DD');
+      const prevStart = dayjs(visibleWeekStartRef.current)
+        .subtract(7, 'day')
+        .format('YYYY-MM-DD');
+      const prevWeek = buildWeek(prevStart, effectiveCenterWeek).map(
+        (d, i) => ({
+          ...d,
+          isSelected: i === selectedIndex,
+        })
+      );
+      const targetSelectedDate = dayjs(prevStart)
+        .add(selectedIndex, 'day')
+        .format('YYYY-MM-DD');
       setOverrideCenterWeek(prevWeek);
       visibleWeekStartRef.current = prevStart;
       requestAnimationFrame(() => {
@@ -122,14 +172,22 @@ export const DateSelector: FC = () => {
       isTransitioningRef.current = true;
       setIsTransitioning(true);
       setScrollEnabled(false);
-      const selectedIndexBase = effectiveCenterWeek.findIndex((d) => d.isSelected);
+      const selectedIndexBase = effectiveCenterWeek.findIndex(
+        d => d.isSelected
+      );
       const selectedIndex = selectedIndexBase >= 0 ? selectedIndexBase : 0;
-      const nextStart = dayjs(visibleWeekStartRef.current).add(7, 'day').format('YYYY-MM-DD');
-      const nextWeek = buildWeek(nextStart, effectiveCenterWeek).map((d, i) => ({
-        ...d,
-        isSelected: i === selectedIndex,
-      }));
-      const targetSelectedDate = dayjs(nextStart).add(selectedIndex, 'day').format('YYYY-MM-DD');
+      const nextStart = dayjs(visibleWeekStartRef.current)
+        .add(7, 'day')
+        .format('YYYY-MM-DD');
+      const nextWeek = buildWeek(nextStart, effectiveCenterWeek).map(
+        (d, i) => ({
+          ...d,
+          isSelected: i === selectedIndex,
+        })
+      );
+      const targetSelectedDate = dayjs(nextStart)
+        .add(selectedIndex, 'day')
+        .format('YYYY-MM-DD');
       setOverrideCenterWeek(nextWeek);
       visibleWeekStartRef.current = nextStart;
       requestAnimationFrame(() => {
@@ -143,7 +201,10 @@ export const DateSelector: FC = () => {
     if (daysList[0]?.date) {
       visibleWeekStartRef.current = daysList[0].date;
     }
-    if (overrideCenterWeek && overrideCenterWeek[0]?.date === daysList[0]?.date) {
+    if (
+      overrideCenterWeek &&
+      overrideCenterWeek[0]?.date === daysList[0]?.date
+    ) {
       setOverrideCenterWeek(null);
     }
     isTransitioningRef.current = false;
@@ -168,7 +229,11 @@ export const DateSelector: FC = () => {
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
         decelerationRate="fast"
-        getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+        getItemLayout={(_, index) => ({
+          length: screenWidth,
+          offset: screenWidth * index,
+          index,
+        })}
         onMomentumScrollEnd={handleMomentumEnd}
         renderItem={({ item }: { item: DayItem[] }) => (
           <View style={[styles.weekRow, { width: screenWidth }]}>
@@ -233,5 +298,3 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 });
-
-

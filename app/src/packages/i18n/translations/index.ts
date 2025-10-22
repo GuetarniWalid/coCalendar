@@ -6,8 +6,8 @@ export interface Translations {
   noSlotsForDay: string;
   tapToAddSlot: string;
   emptyDayTitle: string; // Title for empty day card
-  emptyDayText: string;  // Subtitle/text for empty day card
-  
+  emptyDayText: string; // Subtitle/text for empty day card
+
   // Common
   loading: string;
   error: string;
@@ -18,23 +18,23 @@ export interface Translations {
   saving: string;
   newSlot: string;
   editSlot: string;
-  
+
   // Navigation
   today: string;
   calendar: string;
   profile: string;
-  
+
   // Time
   startTime: string;
   endTime: string;
   timeToday: string; // For slots with date but no specific time
   timeToDo: string; // For slots without any date
-  
+
   // Progress time remaining
   remainingPrefix: string; // "Encore" / "Still" / etc.
   minutesSingular: string; // "minute"
   minutesPlural: string; // "minutes" / "min"
-  secondsSingular: string; // "seconde" 
+  secondsSingular: string; // "seconde"
   secondsPlural: string; // "secondes"
 
   // Remaining time card
@@ -51,7 +51,6 @@ export interface Translations {
   slotColorLabel: string;
   descriptionOptionalLabel: string;
   addMessage?: string;
-  
 }
 
 export const translations: Record<SupportedLocale, Translations> = {
@@ -62,7 +61,7 @@ export const translations: Record<SupportedLocale, Translations> = {
     tapToAddSlot: 'Tap the + button to add a new slot',
     emptyDayTitle: 'Rest',
     emptyDayText: 'No activity',
-    
+
     // Common
     loading: 'Loading...',
     error: 'Error',
@@ -73,18 +72,18 @@ export const translations: Record<SupportedLocale, Translations> = {
     saving: 'Saving...',
     newSlot: 'New Slot',
     editSlot: 'Edit Slot',
-    
+
     // Navigation
     today: 'Today',
     calendar: 'Calendar',
     profile: 'Profile',
-    
+
     // Time
     startTime: 'Start Time',
     endTime: 'End Time',
     timeToday: 'Today',
     timeToDo: 'To do',
-    
+
     // Progress time remaining
     remainingPrefix: 'Still',
     minutesSingular: 'minute',
@@ -94,7 +93,7 @@ export const translations: Record<SupportedLocale, Translations> = {
 
     // Remaining time card
     remainingTimeText: 'Take a break',
-    
+
     // Slot form labels
     titleLabel: 'Title',
     timeLabel: 'Time',
@@ -106,7 +105,6 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Slot color',
     descriptionOptionalLabel: 'Description (Optional)',
     addMessage: 'Add a message',
-    
   },
   fr: {
     // Day View
@@ -115,7 +113,7 @@ export const translations: Record<SupportedLocale, Translations> = {
     tapToAddSlot: 'Appuyez sur le bouton + pour ajouter un nouveau créneau',
     emptyDayTitle: 'Repos',
     emptyDayText: 'Pas d’activitée',
-    
+
     // Common
     loading: 'Chargement...',
     error: 'Erreur',
@@ -126,18 +124,18 @@ export const translations: Record<SupportedLocale, Translations> = {
     saving: 'Enregistrement...',
     newSlot: 'Nouveau créneau',
     editSlot: 'Modifier le créneau',
-    
+
     // Navigation
-    today: 'Aujourd\'hui',
+    today: "Aujourd'hui",
     calendar: 'Calendrier',
     profile: 'Profil',
-    
+
     // Time
     startTime: 'Heure de début',
     endTime: 'Heure de fin',
-    timeToday: 'Aujourd\'hui',
+    timeToday: "Aujourd'hui",
     timeToDo: 'À faire',
-    
+
     // Progress time remaining
     remainingPrefix: 'Encore',
     minutesSingular: 'minute',
@@ -147,7 +145,7 @@ export const translations: Record<SupportedLocale, Translations> = {
 
     // Remaining time card
     remainingTimeText: 'Prenez une pause',
-    
+
     // Slot form labels
     titleLabel: 'Titre',
     timeLabel: 'Heure',
@@ -159,7 +157,6 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Couleur du créneau',
     descriptionOptionalLabel: 'Description (Optionnel)',
     addMessage: 'Ajouter un message',
-    
   },
   es: {
     // Day View
@@ -168,7 +165,7 @@ export const translations: Record<SupportedLocale, Translations> = {
     tapToAddSlot: 'Toca el botón + para agregar un nuevo espacio',
     emptyDayTitle: 'Descanso',
     emptyDayText: 'Sin actividad',
-    
+
     // Common
     loading: 'Cargando...',
     error: 'Error',
@@ -179,18 +176,18 @@ export const translations: Record<SupportedLocale, Translations> = {
     saving: 'Guardando...',
     newSlot: 'Nuevo espacio',
     editSlot: 'Editar espacio',
-    
+
     // Navigation
     today: 'Hoy',
     calendar: 'Calendario',
     profile: 'Perfil',
-    
+
     // Time
     startTime: 'Hora de inicio',
     endTime: 'Hora de fin',
     timeToday: 'Hoy',
     timeToDo: 'Por hacer',
-    
+
     // Progress time remaining
     remainingPrefix: 'Quedan',
     minutesSingular: 'minuto',
@@ -200,7 +197,7 @@ export const translations: Record<SupportedLocale, Translations> = {
 
     // Remaining time card
     remainingTimeText: 'Tómese un descanso',
-    
+
     // Slot form labels
     titleLabel: 'Título',
     timeLabel: 'Hora',
@@ -212,16 +209,16 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Color del espacio',
     descriptionOptionalLabel: 'Descripción (Opcional)',
     addMessage: 'Añadir un mensaje',
-    
   },
   de: {
     // Day View
     addTask: 'Eine Sache hinzufügen',
     noSlotsForDay: 'Keine Termine für diesen Tag',
-    tapToAddSlot: 'Tippen Sie auf die + Schaltfläche, um einen neuen Termin hinzuzufügen',
+    tapToAddSlot:
+      'Tippen Sie auf die + Schaltfläche, um einen neuen Termin hinzuzufügen',
     emptyDayTitle: 'Ruhe',
     emptyDayText: 'Keine Aktivität',
-    
+
     // Common
     loading: 'Laden...',
     error: 'Fehler',
@@ -232,18 +229,18 @@ export const translations: Record<SupportedLocale, Translations> = {
     saving: 'Speichern...',
     newSlot: 'Neuer Termin',
     editSlot: 'Termin bearbeiten',
-    
+
     // Navigation
     today: 'Heute',
     calendar: 'Kalender',
     profile: 'Profil',
-    
+
     // Time
     startTime: 'Startzeit',
     endTime: 'Endzeit',
     timeToday: 'Heute',
     timeToDo: 'Zu erledigen',
-    
+
     // Progress time remaining
     remainingPrefix: 'Noch',
     minutesSingular: 'Minute',
@@ -253,7 +250,7 @@ export const translations: Record<SupportedLocale, Translations> = {
 
     // Remaining time card
     remainingTimeText: 'Machen Sie eine Pause',
-    
+
     // Slot form labels
     titleLabel: 'Titel',
     timeLabel: 'Zeit',
@@ -265,6 +262,5 @@ export const translations: Record<SupportedLocale, Translations> = {
     slotColorLabel: 'Terminfarbe',
     descriptionOptionalLabel: 'Beschreibung (Optional)',
     addMessage: 'Nachricht hinzufügen',
-    
   },
 };

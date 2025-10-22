@@ -48,7 +48,8 @@ export const calculateTaskCompletion = (
     }
   }
 
-  const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const percentage =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return {
     completedTasks,
@@ -107,7 +108,7 @@ export const formatTime = (isoTimeString: string | null): string => {
   if (!isoTimeString) {
     return '--:--';
   }
-  
+
   try {
     return dayjs(isoTimeString).format('HH:mm');
   } catch {
@@ -121,7 +122,7 @@ export const formatTime = (isoTimeString: string | null): string => {
  */
 export const hasSpecificTime = (isoTimeString: string | null): boolean => {
   if (!isoTimeString) return false;
-  
+
   try {
     const date = dayjs(isoTimeString);
     // Check if the time component is at midnight (00:00:00)
@@ -138,10 +139,18 @@ export const hasSpecificTime = (isoTimeString: string | null): boolean => {
  * Returns percentage of time that has passed (0% at start, 100% at end)
  * Returns null if slot is not currently active or doesn't have specific times
  */
-export const calculateSlotProgress = (startTime: string | null, endTime: string | null): { percentage: number; isCompleted: boolean } | null => {
+export const calculateSlotProgress = (
+  startTime: string | null,
+  endTime: string | null
+): { percentage: number; isCompleted: boolean } | null => {
   try {
     // Check if this slot has specific times
-    if (!startTime || !endTime || !hasSpecificTime(startTime) || !hasSpecificTime(endTime)) {
+    if (
+      !startTime ||
+      !endTime ||
+      !hasSpecificTime(startTime) ||
+      !hasSpecificTime(endTime)
+    ) {
       return null;
     }
 
@@ -149,26 +158,26 @@ export const calculateSlotProgress = (startTime: string | null, endTime: string 
     const now = dayjs();
     const start = dayjs(startTime);
     const end = dayjs(endTime);
-    
+
     // Check if current time is before the slot starts
     if (now.isBefore(start)) {
       return null;
     }
-    
+
     // If the slot has ended, return 100% (completed)
     if (now.isAfter(end)) {
       return { percentage: 100, isCompleted: true };
     }
-    
+
     const totalDuration = end.diff(start);
     const elapsedDuration = now.diff(start);
-    
+
     // Calculate elapsed percentage (how much time has passed)
     const elapsedPercentage = (elapsedDuration / totalDuration) * 100;
-    
-    return { 
-      percentage: Math.max(0, Math.min(100, elapsedPercentage)), 
-      isCompleted: false 
+
+    return {
+      percentage: Math.max(0, Math.min(100, elapsedPercentage)),
+      isCompleted: false,
     };
   } catch {
     return null;
@@ -180,34 +189,38 @@ export const calculateSlotProgress = (startTime: string | null, endTime: string 
  * Returns formatted string like "45 min", "1h 30min", "38 secondes", etc.
  * Uses internationalization for proper language support
  */
-export const formatRemainingTime = (startTime: string | null, endTime: string | null, translations?: {
-  remainingPrefix: string;
-  minutesSingular: string;
-  minutesPlural: string;
-  secondsSingular: string;
-  secondsPlural: string;
-}): string | null => {
+export const formatRemainingTime = (
+  startTime: string | null,
+  endTime: string | null,
+  translations?: {
+    remainingPrefix: string;
+    minutesSingular: string;
+    minutesPlural: string;
+    secondsSingular: string;
+    secondsPlural: string;
+  }
+): string | null => {
   try {
     if (!startTime || !endTime) return null;
-    
+
     // Always use fresh current time for maximum precision
     const now = dayjs();
     const end = dayjs(endTime);
-    
+
     // Check if we're within the time range or the event has ended
     const start = dayjs(startTime);
     if (now.isBefore(start)) {
       return null; // Event hasn't started yet
     }
-    
+
     // Calculate remaining duration in milliseconds
     const remainingMs = end.diff(now);
-    
+
     // If time is up or past end time, return null (no text shown)
     if (remainingMs <= 0) {
       return null;
     }
-    
+
     // Use default English if translations not provided
     const t = translations || {
       remainingPrefix: 'Still',
@@ -216,31 +229,31 @@ export const formatRemainingTime = (startTime: string | null, endTime: string | 
       secondsSingular: 'second',
       secondsPlural: 'seconds',
     };
-    
+
     const totalSeconds = Math.floor(remainingMs / 1000);
-    
+
     // If less than 1 minute, show seconds
     if (totalSeconds < 60) {
       const unit = totalSeconds === 1 ? t.secondsSingular : t.secondsPlural;
       return `${t.remainingPrefix} ${totalSeconds} ${unit}`;
     }
-    
+
     const remainingMinutes = Math.ceil(remainingMs / (1000 * 60));
-    
+
     // If less than 1 hour, show minutes
     if (remainingMinutes < 60) {
       const unit = remainingMinutes === 1 ? t.minutesSingular : t.minutesPlural;
       return `${t.remainingPrefix} ${remainingMinutes} ${unit}`;
     }
-    
+
     // Show hours and minutes
     const hours = Math.floor(remainingMinutes / 60);
     const minutes = remainingMinutes % 60;
-    
+
     if (minutes === 0) {
       return `${t.remainingPrefix} ${hours}h`;
     }
-    
+
     return `${t.remainingPrefix} ${hours}h ${minutes}${t.minutesPlural}`;
   } catch {
     return null;

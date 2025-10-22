@@ -1,5 +1,9 @@
 import { ReactNode, forwardRef } from 'react';
-import Animated, { AnimatedRef, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, {
+  AnimatedRef,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useCalendarStore } from '@project/shared';
 import { useSlotReordering } from './hooks';
@@ -21,7 +25,11 @@ export const SlotPositioner = forwardRef<Animated.View, SlotPositionerProps>(
     const { draggedSlotIndex } = useDraggedSlotContext();
 
     // Hook for reordering logic
-    const { offsetY } = useSlotReordering(ref as AnimatedRef<Animated.View>, index, isCurrentDay);
+    const { offsetY } = useSlotReordering(
+      ref as AnimatedRef<Animated.View>,
+      index,
+      isCurrentDay
+    );
 
     const animatedSlotStyle = useAnimatedStyle(() => {
       if (!isCurrentDay) return {};
@@ -46,4 +54,3 @@ export const SlotPositioner = forwardRef<Animated.View, SlotPositionerProps>(
     );
   }
 );
-

@@ -13,9 +13,17 @@ import ProfileScreen from './src/packages/profile-view/ui';
 import StatisticsScreen from './src/packages/statistics-view/ui';
 import TasksScreen from './src/packages/tasks-view/ui';
 import { BottomNavigation } from './src/packages/bottom-navigation/ui';
-import { useAuthStore, initializeAuthClient, registerAuthSetters, colors } from '@project/shared';
-import { PortalProvider } from "react-native-teleport";
-import { DraggedSlotProvider, useDraggedSlotContext } from '@project/shared/store/dragged-slot';
+import {
+  useAuthStore,
+  initializeAuthClient,
+  registerAuthSetters,
+  colors,
+} from '@project/shared';
+import { PortalProvider } from 'react-native-teleport';
+import {
+  DraggedSlotProvider,
+  useDraggedSlotContext,
+} from '@project/shared/store/dragged-slot';
 import { DraggableLayer } from '@project/draggable-layer';
 
 const Stack = createNativeStackNavigator();
@@ -53,19 +61,39 @@ const AppContent = () => {
               }}
             >
               <SafeAreaView style={styles.container} edges={['top']}>
-                <Stack.Navigator key={user ? 'app' : 'auth'} screenOptions={{ headerShown: false }}>
+                <Stack.Navigator
+                  key={user ? 'app' : 'auth'}
+                  screenOptions={{ headerShown: false }}
+                >
                   {user ? (
                     <>
                       <Stack.Screen
                         name="Day"
                         component={DayViewScreen as any}
-                        initialParams={{ date: new Date().toISOString().slice(0, 10) }}
+                        initialParams={{
+                          date: new Date().toISOString().slice(0, 10),
+                        }}
                       />
-                      <Stack.Screen name="Calendar" component={CalendarScreen as any} />
-                      <Stack.Screen name="Profile" component={ProfileScreen as any} />
-                      <Stack.Screen name="SlotForm" component={SlotFormScreen as any} />
-                      <Stack.Screen name="Statistics" component={StatisticsScreen as any} />
-                      <Stack.Screen name="Tasks" component={TasksScreen as any} />
+                      <Stack.Screen
+                        name="Calendar"
+                        component={CalendarScreen as any}
+                      />
+                      <Stack.Screen
+                        name="Profile"
+                        component={ProfileScreen as any}
+                      />
+                      <Stack.Screen
+                        name="SlotForm"
+                        component={SlotFormScreen as any}
+                      />
+                      <Stack.Screen
+                        name="Statistics"
+                        component={StatisticsScreen as any}
+                      />
+                      <Stack.Screen
+                        name="Tasks"
+                        component={TasksScreen as any}
+                      />
                     </>
                   ) : (
                     <Stack.Screen name="Auth" component={AuthScreen as any} />

@@ -2,7 +2,11 @@ import { FC, useEffect, useRef } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Rive, { AutoBind, Fit, RiveRef } from 'rive-react-native';
-import { colors, useCalendarStore, handleFirstButtonPress } from '@project/shared';
+import {
+  colors,
+  useCalendarStore,
+  handleFirstButtonPress,
+} from '@project/shared';
 import { BottomNavigationProps } from '../shared/types';
 import dayjs from 'dayjs';
 import { useNavigation } from '@react-navigation/native';
@@ -12,9 +16,9 @@ const resourceName = 'bottom_navigation';
 const artboardName = 'Artboard';
 const NAV_HEIGHT = 90;
 
-export const BottomNavigation: FC<BottomNavigationProps> = ({ 
+export const BottomNavigation: FC<BottomNavigationProps> = ({
   activeTab: _activeTab = 1,
-  onTabPress 
+  onTabPress,
 }) => {
   const riveRef = useRef<RiveRef>(null);
   const [selectedDate] = useCalendarStore.selectedDate();
@@ -31,27 +35,42 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
     rive.setString('day', currentDay);
   }, [currentDay]);
 
+  const getCurrentRouteName = (): string | undefined => {
+    const state = navigation.getState?.();
+    // Top-level route name
+    // @ts-ignore - navigation state shape
+    return state?.routes?.[state.index]?.name as string | undefined;
+  };
+
   const handlePressablePress = (index: number) => {
     const rive = riveRef.current;
     if (!rive) return;
-    
+
     // Trigger animation immediately for instant feedback
     rive.play();
     rive.setNumber('item selected', index + 1);
-    
+
     // Defer navigation to next frame to avoid blocking animation
     requestAnimationFrame(() => {
+      const currentRoute = getCurrentRouteName();
+
       if (onTabPress) {
         onTabPress(index);
       } else {
         // Special handling for index 0 - smart Day/Calendar navigation
         if (index === 0) {
           const targetScreen = handleFirstButtonPress();
-          navigation.navigate(targetScreen);
+          if (currentRoute === targetScreen) return; // already focused
+          // Reset stack to prevent stacking multiple Day/Calendar screens
+          navigation.reset({
+            index: 0,
+            routes: [{ name: targetScreen }],
+          });
         } else {
           // Navigate using index to screen mapping for other indices
           const screenName = screenMap[index];
           if (screenName) {
+            if (currentRoute === screenName) return; // already focused
             navigation.navigate(screenName);
           }
         }
@@ -77,9 +96,12 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
             rive.setColor('background', colors.bottomNavigation.background);
             rive.setColor('selector', colors.bottomNavigation.selector);
             rive.setColor('primary', colors.typography.primary);
-            rive.setColor('selector contrast', colors.bottomNavigation.selectorContrast);
-          }}  
-          onError={(error) => {
+            rive.setColor(
+              'selector contrast',
+              colors.bottomNavigation.selectorContrast
+            );
+          }}
+          onError={error => {
             console.log('Error loading Rive animation', error);
           }}
         />

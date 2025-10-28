@@ -1,28 +1,27 @@
 import { View, StyleSheet } from 'react-native';
 import {
-  useNavigation,
-  useRoute,
   useFocusEffect,
 } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useDayView } from '../shared/hooks';
 import {
-  useSlotFormStore,
   setCurrentScreen,
   startTimeTracking,
   stopTimeTracking,
+  useAuthStore,
+  SlotItem,
+  retryWithBackoff,
 } from '@project/shared';
 import { SlotList } from './slot-list';
 import { colors } from '@project/shared';
 import { VisibleMonthYear } from './VisibleMonthYear';
 import { DayTasksProgress } from './DayTasksProgress';
 import { DateSelector } from './DateSelector';
+import { updateSlotDate } from '../data/update-slot';
 
 export const DayViewScreen = () => {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
-  const date = route.params?.date as string;
-  const { slots, loading, getSlotsForDate } = useDayView(date);
+  const { slots, loading, updateSlotCache, slotsCacheRef } = useDayView();
+  const [{ supabase, user }] = useAuthStore();;
 
   // Track when this screen becomes active and manage time tracking
   useFocusEffect(
@@ -38,36 +37,33 @@ export const DayViewScreen = () => {
     }, [])
   );
 
-  // Get setters from Teaful store
-  const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
+  // Handle slot drop to another day
+  const handleSlotDropped = useCallback(
+    async (slot: SlotItem, sourceDate: string, targetDate: string) => {
+      if (!user || !supabase) return;
 
-  const handleSlotPress = useCallback(
-    (slot: any) => {
-      if (slot.id === 'default-slot') {
-        // New slot creation
-        setSelectedSlot({
-          id: null,
-          title: '',
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          visibility: 'private',
-        });
-      } else {
-        // Edit existing slot
-        setSelectedSlot({
-          id: slot.id,
-          title: slot.title,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          visibility: slot.type === 'shared' ? 'public' : 'private',
-          ...(slot.description && { description: slot.description }),
-          ...(slot.color && { color: slot.color }),
-        });
+      // Update database in background with retry logic
+      try {
+        const dbUpdatedSlot = await retryWithBackoff(
+          () => updateSlotDate(supabase, user.id, slot.id, targetDate),
+          3, // max retries
+          1000 // initial delay of 1 second
+        );
+
+        if (!dbUpdatedSlot) {
+          // If database update fails after retries, rollback UI
+          console.error(
+            'Failed to update slot in database after retries, rolling back'
+          );
+          updateSlotCache(slot.id, targetDate, sourceDate, slot);
+        }
+      } catch (error) {
+        console.error('Error updating slot after retries:', error);
+        // Rollback on error
+        updateSlotCache(slot.id, targetDate, sourceDate, slot);
       }
-
-      navigation.navigate('SlotForm');
     },
-    [setSelectedSlot, navigation]
+    [user, supabase, updateSlotCache]
   );
 
   return (
@@ -78,9 +74,10 @@ export const DayViewScreen = () => {
       </View>
       <DateSelector />
       <SlotList
-        onSlotPress={handleSlotPress}
-        getSlotsForDate={getSlotsForDate}
         loading={loading}
+        handleSlotDropped={handleSlotDropped}
+        updateSlotCache={updateSlotCache}
+        slotsCacheRef={slotsCacheRef}
       />
     </>
   );

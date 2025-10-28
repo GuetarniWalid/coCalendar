@@ -1,93 +1,57 @@
-import { forwardRef, ReactNode, useEffect, useState } from 'react';
-import Animated from 'react-native-reanimated';
+import { FC, ReactNode, useMemo, useRef } from 'react';
 import { GestureDetector } from 'react-native-gesture-handler';
+import { useDragSlotGesture } from './hooks';
+import { SlotItem as SlotItemType } from '@project/shared';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
-import { Portal } from 'react-native-teleport';
-import { useZoneDetection, useDragGesture } from './hooks';
-import { StyleSheet } from 'react-native';
+import Animated, {
+  AnimatedRef,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
+import { View } from 'react-native';
 
 interface DraggableSlotWrapperProps {
   children: ReactNode;
   onPress: () => void;
-  index: number;
-  slotStartTime: string | null;
-  slotColor: string;
+  slot: SlotItemType;
+  slotListPanRef: AnimatedRef<Animated.View>;
 }
 
 /**
  * Wrapper component that makes a slot draggable with gesture handling
  * Orchestrates drag behavior, constraints, and zone detection
  */
-export const DraggableSlotWrapper = forwardRef<
-  Animated.View,
-  DraggableSlotWrapperProps
->(({ children, onPress, index, slotStartTime, slotColor }, slotRef) => {
-  const {
-    draggedSlotZone,
-    draggedSlotHorizontalZone,
-    setDraggedSlotIndexRN,
-    draggedSlotIndexRN,
-    portalEnabled,
-    draggedSlotInitialOffsetY,
-    setDraggedSlotData,
-  } = useDraggedSlotContext();
-
-  const [panState, setPanState] = useState<'idle' | 'start' | 'end'>('idle');
-  const isDragging =
-    index === draggedSlotIndexRN && portalEnabled && panState === 'start';
-
-  // Handle slot data on drag start
-  useEffect(() => {
-    if (isDragging) {
-      // set slot data immediately when dragging starts
-      setDraggedSlotData({ startTime: slotStartTime, color: slotColor });
-      return;
-    }
-    return undefined;
-  }, [isDragging, slotStartTime, slotColor, setDraggedSlotData]);
-
-  // Hook for zone detection logic
-  const { updateZones } = useZoneDetection(
-    draggedSlotZone,
-    draggedSlotHorizontalZone
-  );
-
+export const DraggableSlotWrapper: FC<DraggableSlotWrapperProps> = ({
+  children,
+  onPress,
+  slot,
+  slotListPanRef,
+}) => {
+  const ref = useRef<View>(null);
+  const { draggedSlot, draggedSlotOpacity } = useDraggedSlotContext();
   // Hook for drag gesture handling
-  const { gesture } = useDragGesture({
-    slotRef: slotRef as any,
-    index,
+  const { gesture } = useDragSlotGesture({
+    slotRef: ref,
     onPress,
-    draggedSlotInitialOffsetY,
-    setPanState,
-    updateZones,
+    slot,
+    slotListPanRef,
   });
 
-  useEffect(() => {
-    if (index !== draggedSlotIndexRN) return;
-    if (panState !== 'end') return;
-    setDraggedSlotIndexRN(null);
-    setPanState('idle');
-  }, [panState, index, setDraggedSlotIndexRN, draggedSlotIndexRN]);
+  const isSlotDragged = useMemo(() => {
+    return draggedSlot?.id === slot.id;
+  }, [draggedSlot, slot]);
+
+  const animatedOpacityStyle = useAnimatedStyle(() => {
+    return {
+      opacity: 1 - draggedSlotOpacity.value,
+    };
+  });
 
   return (
-    <Animated.View ref={slotRef}>
-      <Portal hostName={isDragging ? 'draggableLayer' : undefined}>
-        <GestureDetector gesture={gesture}>
-          <Animated.View style={styles.container}>
-            <Animated.View style={styles.slotWrapper}>{children}</Animated.View>
-          </Animated.View>
-        </GestureDetector>
-      </Portal>
+    <Animated.View
+      ref={ref}
+      style={isSlotDragged ? animatedOpacityStyle : {}}
+    >
+      <GestureDetector gesture={gesture}>{children}</GestureDetector>
     </Animated.View>
   );
-});
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    width: '100%',
-  },
-  slotWrapper: {
-    width: '100%',
-  },
-});
+};

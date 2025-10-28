@@ -1,30 +1,63 @@
-import { useEffect } from 'react';
-import { ViewStyle } from 'react-native';
-import Animated, { AnimatedStyle } from 'react-native-reanimated';
-import { PortalHost } from 'react-native-teleport';
+import { useRef, useEffect, useCallback } from 'react';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
+import { Slot } from '@project/day-view';
+import { useDraggedSlotPosition } from '../hooks/useDraggedSlotPosition';
 
 type DraggedSlotProps = {
-  animatedStyle: AnimatedStyle<ViewStyle>;
+  padding: number;
 };
 
-/**
- * Portal host for the dragged slot element
- */
-export const DraggedSlot = ({ animatedStyle }: DraggedSlotProps) => {
-  const { setPortalEnabled } = useDraggedSlotContext();
+const IMAGE_LOAD_TIMEOUT = 300;
 
-  // Enable portal on mount, disable on unmount
+export const DraggedSlot = ({ padding }: DraggedSlotProps) => {
+  const { draggedSlot, draggedSlotOpacity } = useDraggedSlotContext();
+  const imageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { animatedStyle } = useDraggedSlotPosition({ padding });
+
+  const clearImageTimeout = useCallback(() => {
+    if (imageTimeoutRef.current) {
+      clearTimeout(imageTimeoutRef.current);
+      imageTimeoutRef.current = null;
+    }
+  }, []);
+
+  const showSlot = useCallback(() => {
+    clearImageTimeout();
+    draggedSlotOpacity.value = 1;
+  }, [clearImageTimeout]);
+
+  const hideSlot = useCallback(() => {
+    clearImageTimeout();
+    draggedSlotOpacity.value = 0;
+  }, [clearImageTimeout]);
+
+  // Handle slot changes
   useEffect(() => {
-    setPortalEnabled(true);
-    return () => {
-      setPortalEnabled(false);
-    };
-  }, [setPortalEnabled]);
+    if (draggedSlot) {
+      hideSlot();
+      imageTimeoutRef.current = setTimeout(showSlot, IMAGE_LOAD_TIMEOUT);
+    } else {
+      hideSlot();
+    }
+  }, [draggedSlot, showSlot, hideSlot]);
+
+  // Cleanup on unmount
+  useEffect(() => clearImageTimeout, [clearImageTimeout]);
+
+  const handleImageLoad = useCallback(() => {
+    showSlot();
+  }, [showSlot]);
+
+  const animatedOpacityStyle = useAnimatedStyle(() => ({
+    opacity: draggedSlotOpacity.value,
+  }));
+
+  if (!draggedSlot) return null;
 
   return (
-    <Animated.View style={[animatedStyle]}>
-      <PortalHost name="draggableLayer" />
+    <Animated.View style={[animatedStyle, animatedOpacityStyle]}>
+      <Slot slot={draggedSlot} onImageLoad={handleImageLoad} />
     </Animated.View>
   );
 };

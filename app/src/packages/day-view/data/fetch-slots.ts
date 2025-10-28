@@ -1,4 +1,5 @@
 import { SlotItem, SlotColorName } from '@project/shared';
+import dayjs from 'dayjs';
 
 // Helper function to get slot IDs where user is a participant
 const getParticipantSlotIds = async (
@@ -120,8 +121,12 @@ export const fetchSlotsForDate = async (
   userId: string,
   selectedDate: string
 ): Promise<SlotItem[]> => {
-  const startIso = `${selectedDate}T00:00:00`;
-  const endIso = `${selectedDate}T23:59:59`;
+  // Create timezone-aware date range for the selected date
+  const startOfDay = dayjs(selectedDate).startOf('day');
+  const endOfDay = dayjs(selectedDate).endOf('day');
+  
+  const startIso = startOfDay.toISOString();
+  const endIso = endOfDay.toISOString();
 
   const data = await fetchSlotsCore(supabase, userId, startIso, endIso);
   return data.map(transformSlotData);
@@ -134,8 +139,12 @@ export const fetchSlotsInRange = async (
   startDate: string,
   endDate: string
 ): Promise<Record<string, SlotItem[]>> => {
-  const startIso = `${startDate}T00:00:00`;
-  const endIso = `${endDate}T23:59:59`;
+  // Create timezone-aware date range
+  const startOfDay = dayjs(startDate).startOf('day');
+  const endOfDay = dayjs(endDate).endOf('day');
+  
+  const startIso = startOfDay.toISOString();
+  const endIso = endOfDay.toISOString();
 
   const data = await fetchSlotsCore(
     supabase,
@@ -145,10 +154,11 @@ export const fetchSlotsInRange = async (
     'gte_lte'
   );
 
-  // Transform slots and group by date
+  // Transform slots and group by date using timezone-aware date extraction
   const byDate: Record<string, SlotItem[]> = {};
   for (const rawSlot of data) {
-    const dateId = String(rawSlot.start_at).slice(0, 10);
+    // Use dayjs to extract the local date from the UTC timestamp
+    const dateId = dayjs(rawSlot.start_at).format('YYYY-MM-DD');
     const slot = transformSlotData(rawSlot);
     (byDate[dateId] ||= []).push(slot);
   }

@@ -1,19 +1,15 @@
-import { StyleSheet, ViewStyle } from 'react-native';
-import Animated, { AnimatedStyle } from 'react-native-reanimated';
+import { StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { CALENDAR_CONSTANTS } from '@project/shared';
-
-type ScrollZonesProps = {
-  leftZoneStyle: AnimatedStyle<ViewStyle>;
-  rightZoneStyle: AnimatedStyle<ViewStyle>;
-};
+import { useZoneVisualEffects } from '../hooks/useZoneVisualEffects';
 
 /**
  * Visual indicators for left and right scroll zones
  */
-export const ScrollZones = ({
-  leftZoneStyle,
-  rightZoneStyle,
-}: ScrollZonesProps) => {
+export const ScrollZones = () => {
+  // Handle visual effects for scroll zones
+  const { leftZoneStyle, rightZoneStyle } = useZoneVisualEffects();
+
   return (
     <>
       <Animated.View style={[styles.leftZone, leftZoneStyle]} />

@@ -6,16 +6,13 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { colors } from '@project/shared';
+import { colors, SlotItem } from '@project/shared';
 import { TaskChecked } from '@project/icons';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { scheduleOnRN } from 'react-native-worklets';
 
 interface CompletionCheckmarkProps {
-  completed: boolean | undefined;
-  endTime: string | null;
-  startTime: string | null;
-  index: number;
+  slot: SlotItem;
 }
 
 // Helper function to check if the slot's day has passed
@@ -30,29 +27,24 @@ const isDayPassed = (startTime: string | null): boolean => {
   return slotDate < today;
 };
 
-export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({
-  completed,
-  endTime,
-  startTime,
-  index,
-}) => {
+export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ slot }) => {
   // Calculate initial completion state once
   const [isCompleted, setIsCompleted] = useState<boolean>(() => {
-    if (completed === true) return true;
+    if (slot.completed === true) return true;
 
     // If no end time, check if the day has passed
-    if (!endTime) {
-      return isDayPassed(startTime);
+    if (!slot.endTime) {
+      return isDayPassed(slot.startTime);
     }
 
     // Check if current time is after end time
-    const endTimeDate = new Date(endTime);
+    const endTimeDate = new Date(slot.endTime);
     const now = new Date();
     return now > endTimeDate;
   });
   const [shouldRender, setShouldRender] = useState<boolean>(isCompleted);
-  const { draggedSlotIndexRN } = useDraggedSlotContext();
-  const isDragged = draggedSlotIndexRN === index;
+  const { draggedSlot } = useDraggedSlotContext();
+  const isDragged = draggedSlot?.id === slot.id;
 
   // Animation for TaskChecked slide-in from left
   const slideAnimation = useSharedValue(isCompleted ? 0 : -100);
@@ -87,14 +79,14 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({
     }
 
     // If manually completed, show checkmark immediately
-    if (completed === true && !isCompleted) {
+    if (slot.completed === true && !isCompleted) {
       setIsCompleted(true);
       return;
     }
 
     // If no end time, check if the day has passed
-    if (!endTime) {
-      if (isDayPassed(startTime) && !isCompleted) {
+    if (!slot.endTime) {
+      if (isDayPassed(slot.startTime) && !isCompleted) {
         setIsCompleted(true);
       }
       return;
@@ -104,7 +96,7 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({
     if (isCompleted) return;
 
     // Calculate time remaining until end time
-    const endTimeDate = new Date(endTime);
+    const endTimeDate = new Date(slot.endTime);
     const now = new Date();
     const timeRemaining = endTimeDate.getTime() - now.getTime();
 
@@ -121,7 +113,7 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({
 
     // Cleanup timeout on unmount or when dependencies change
     return () => clearTimeout(timeoutId);
-  }, [completed, endTime, startTime, isCompleted, isDragged]);
+  }, [slot.completed, slot.endTime, slot.startTime, isCompleted, isDragged]);
 
   useEffect(() => {
     if (isCompleted) animateCompletion();

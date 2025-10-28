@@ -1,5 +1,5 @@
-import { FC, memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { memo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import {
   colors,
   spacing,
@@ -9,13 +9,11 @@ import {
 } from '@project/shared';
 import { Image } from 'expo-image';
 import { useTranslation } from '@project/i18n';
+import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 
-type EmptyDayCardProps = {
-  onPress: () => void;
-};
-
-const EmptyDayCardBase: FC<EmptyDayCardProps> = ({ onPress }) => {
+const EmptyDayCardBase = () => {
   const t = useTranslation();
+  const { draggedSlot } = useDraggedSlotContext();
   const uri = getAvatarPublicUrl({
     persona: 'adult-female',
     activity: 'health_wellbeing',
@@ -23,8 +21,12 @@ const EmptyDayCardBase: FC<EmptyDayCardProps> = ({ onPress }) => {
     extension: 'webp',
   });
 
+  if (draggedSlot) {
+    return null;
+  }
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <View style={styles.container}>
       {!!uri && (
         <Image
           source={uri}
@@ -44,7 +46,7 @@ const EmptyDayCardBase: FC<EmptyDayCardProps> = ({ onPress }) => {
         <Text style={styles.text}>{t.emptyDayText}</Text>
         <Text style={styles.title}>{t.emptyDayTitle}</Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 

@@ -7,3 +7,4 @@ export * from './utils/calendar';
 export * from './utils/avatars';
 export * from './utils/colors';
 export * from './ui/AvatarImage';
+export * from './utils/retry';

@@ -1,2 +1,2 @@
-export * from './useDragGesture';
+export * from './useDragSlotGesture';
 export * from './useZoneDetection';

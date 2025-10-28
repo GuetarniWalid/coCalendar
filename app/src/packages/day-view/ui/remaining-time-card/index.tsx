@@ -1,5 +1,5 @@
 import { FC, memo, useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
   colors,
   spacing,
@@ -13,6 +13,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   Easing,
+  LinearTransition,
 } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { useTranslation } from '@project/i18n';
@@ -20,12 +21,10 @@ import dayjs from 'dayjs';
 
 type RemainingTimeCardProps = {
   nextActivityStartTime: string;
-  onPress: () => void;
 };
 
 const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
   nextActivityStartTime,
-  onPress,
 }) => {
   const t = useTranslation();
   const uri = getAvatarPublicUrl({
@@ -123,8 +122,8 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
   }
 
   return (
-    <Animated.View style={animatedStyle}>
-      <TouchableOpacity style={styles.container} onPress={onPress}>
+    <Animated.View style={animatedStyle} layout={LinearTransition}>
+      <Pressable style={styles.container}>
         {!!uri && (
           <Image
             source={uri}
@@ -146,7 +145,7 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
             {remainingTimeData ? remainingTimeData.timeDisplay : '0s'}
           </Text>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 };

@@ -8,7 +8,7 @@ import {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
-import { CALENDAR_CONSTANTS, colors } from '@project/shared';
+import { CALENDAR_CONSTANTS, getSlotBackgroundColor } from '@project/shared';
 import {
   CONTINUOUS_SCROLL_DELAY,
   ZONE_WIDTH_START_MULTIPLIER,
@@ -20,7 +20,7 @@ import { hexToRgba } from '../shared/utils';
  * (opacity and width animations)
  */
 export const useZoneVisualEffects = () => {
-  const { draggedSlotHorizontalZone, draggedSlotIndexRN } =
+  const { draggedSlotHorizontalZone, draggedSlot } =
     useDraggedSlotContext();
 
   const leftZoneOpacity = useSharedValue(0);
@@ -77,17 +77,17 @@ export const useZoneVisualEffects = () => {
 
   // Reset animations when drag ends
   useEffect(() => {
-    if (draggedSlotIndexRN === null) {
+    if (draggedSlot === null) {
       cancelAnimation(leftZoneWidthMultiplier);
       cancelAnimation(rightZoneWidthMultiplier);
       leftZoneWidthMultiplier.value = ZONE_WIDTH_START_MULTIPLIER;
       rightZoneWidthMultiplier.value = ZONE_WIDTH_START_MULTIPLIER;
     }
-  }, [draggedSlotIndexRN, leftZoneWidthMultiplier, rightZoneWidthMultiplier]);
+  }, [draggedSlot, leftZoneWidthMultiplier, rightZoneWidthMultiplier]);
 
   // Create background color with opacity
   const zoneBackgroundColor = hexToRgba(
-    colors.bottomNavigation.background,
+     getSlotBackgroundColor(draggedSlot?.color),
     0.3
   );
 

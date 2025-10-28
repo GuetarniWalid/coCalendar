@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useRef,
-  useMemo,
-  useEffect,
-  ReactElement,
-  useState,
-} from 'react';
+import { useCallback, useRef, useMemo, useEffect, useState } from 'react';
 import {
   FlatList,
   Dimensions,
@@ -14,32 +7,38 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { CALENDAR_CONSTANTS, colors, useCalendarStore } from '@project/shared';
-import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
+import {
+  CALENDAR_CONSTANTS,
+  colors,
+  useCalendarStore,
+} from '@project/shared';
 import { DayPage } from './DayPage';
 import { SlotListProps } from '../shared/types';
 import { getDateFromIndex, getIndexFromDate } from '../shared/utils';
-import { useSlotData } from '../shared/hooks';
+import { useDragSlotListGesture } from '../hook/useDragSlotListGesture';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 
 export const SlotList = ({
-  onSlotPress,
-  getSlotsForDate,
   loading = false,
+  handleSlotDropped,
+  updateSlotCache,
+  slotsCacheRef,
 }: SlotListProps) => {
-  const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
-  const { draggedSlotIndexRN } = useDraggedSlotContext();
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
+  const [previousSelectedDate] = useCalendarStore.previousSelectedDate();
+  const [changeAskedBy, setChangeAskedBy] = useCalendarStore.changeAskedBy();
   const [isInitialized, setIsInitialized] = useState(false);
-  // JSX cache for instant rendering
-  const renderedJSXCacheRef = useRef<Record<string, ReactElement>>({});
+  const flatListRef = useRef<FlatList>(null);
+  const { draggedSlot } = useDraggedSlotContext();
 
   const dayIndices = useMemo(
     () => Array.from({ length: CALENDAR_CONSTANTS.TOTAL_DAYS }, (_, i) => i),
     []
   );
 
-  // Scroll control
+  // End scroll
   const handleMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const {
@@ -47,9 +46,10 @@ export const SlotList = ({
       } = event.nativeEvent;
       const currentIndex = Math.round(offsetX / screenWidth);
       const newDate = getDateFromIndex(currentIndex);
+      setChangeAskedBy('slotList');
       setSelectedDate(newDate);
     },
-    [screenWidth]
+    [screenWidth, setChangeAskedBy, setSelectedDate]
   );
 
   // Handle date changes from DateSelector
@@ -63,6 +63,7 @@ export const SlotList = ({
         animated: false,
       });
     } else {
+      if (changeAskedBy === 'slotList') return;
       flatListRef.current?.scrollToIndex({
         index: targetIndex,
         animated: true,
@@ -70,13 +71,10 @@ export const SlotList = ({
     }
   }, [isInitialized, selectedDate]);
 
-  // Slot data management
-  const {
-    handleRemainingTimeCardPress,
-    handleEmptyDayCardPress,
-    createEnhancedSlotData,
-    lastShownByDateRef,
-  } = useSlotData(onSlotPress, selectedDate, getSlotsForDate);
+  // Keep track of slot gesture
+  const { gesture, slotListPanRef } = useDragSlotListGesture({
+    handleSlotDropped,
+  });
 
   const renderDayPage = useCallback(
     ({ item: dayIndex }: { item: number }) => {
@@ -84,52 +82,41 @@ export const SlotList = ({
         <DayPage
           dayIndex={dayIndex}
           screenWidth={screenWidth}
-          getSlotsForDate={getSlotsForDate}
-          onSlotPress={onSlotPress}
-          createEnhancedSlotData={createEnhancedSlotData}
-          handleRemainingTimeCardPress={handleRemainingTimeCardPress}
-          handleEmptyDayCardPress={handleEmptyDayCardPress}
-          getDateFromIndex={getDateFromIndex}
-          selectedDate={selectedDate}
           loading={loading}
-          lastShownByDateRef={lastShownByDateRef}
-          renderedJSXCacheRef={renderedJSXCacheRef}
+          slotListPanRef={slotListPanRef as any}
+          updateSlotCache={updateSlotCache}
+          slotsCacheRef={slotsCacheRef}
+          selectedDate={selectedDate}
+          previousSelectedDate={previousSelectedDate}
+          draggedSlot={draggedSlot}
         />
       );
     },
-    [
-      screenWidth,
-      selectedDate,
-      loading,
-      getSlotsForDate,
-      onSlotPress,
-      createEnhancedSlotData,
-      handleRemainingTimeCardPress,
-      handleEmptyDayCardPress,
-      lastShownByDateRef,
-    ]
+    [screenWidth, loading, previousSelectedDate, selectedDate, draggedSlot]
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        ref={flatListRef}
-        data={dayIndices}
-        horizontal
-        pagingEnabled={true}
-        showsHorizontalScrollIndicator={false}
-        renderItem={renderDayPage}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        getItemLayout={(_, index) => ({
-          length: screenWidth,
-          offset: screenWidth * index,
-          index,
-        })}
-        initialNumToRender={3}
-        maxToRenderPerBatch={3}
-        windowSize={7}
-        removeClippedSubviews={draggedSlotIndexRN === null}
-      />
+      <GestureDetector gesture={gesture}>
+        <FlatList
+          ref={flatListRef}
+          data={dayIndices}
+          horizontal
+          pagingEnabled={true}
+          showsHorizontalScrollIndicator={false}
+          renderItem={renderDayPage}
+          onMomentumScrollEnd={handleMomentumScrollEnd}
+          getItemLayout={(_, index) => ({
+            length: screenWidth,
+            offset: screenWidth * index,
+            index,
+          })}
+          initialNumToRender={3}
+          maxToRenderPerBatch={3}
+          windowSize={7}
+          removeClippedSubviews={false}
+        />
+      </GestureDetector>
     </View>
   );
 };

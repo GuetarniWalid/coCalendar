@@ -1,138 +1,33 @@
-import { FC, useMemo, memo } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedRef } from 'react-native-reanimated';
-import {
-  SlotItem as SlotItemType,
-  SlotColorName,
-  formatTime,
-  getAvatarPublicUrl,
-  getSlotBackgroundColor,
-} from '@project/shared';
-import { colors, spacing, fontSize, fontWeight } from '@project/shared';
-import { Image } from 'expo-image';
-import { ProgressBar } from './ProgressBar';
-import { TaskCounter } from './TaskCounter';
-import { NoteIndicator } from './NoteIndicator';
-import { VoiceIndicator } from './VoiceIndicator';
-import { ParticipantsIndicator } from './ParticipantsIndicator';
-import { CompletionCheckmark } from './CompletionCheckmark';
-import { useTranslation } from '@project/i18n';
+import { FC, memo, useCallback } from 'react';
+import { SlotItem as SlotItemType, useSlotFormStore } from '@project/shared';
 import { DraggableSlotWrapper } from './draggable-wrapper';
-import { SlotPositioner } from './slot-positioner';
+import { SlotPositioner } from './SlotPositioner';
+import { Slot } from './Slot';
+import { useNavigation } from '@react-navigation/native';
 
 interface SlotItemProps {
   slot: SlotItemType;
-  index: number;
-  onPress: (slot: SlotItemType) => void;
-  selectedDate: string;
+  date: string;
+  slotListPanRef: any;
 }
 
-const SlotItemBase: FC<SlotItemProps> = ({
-  slot,
-  index,
-  onPress,
-  selectedDate,
-}) => {
-  const t = useTranslation();
-  const slotRef = useAnimatedRef<Animated.View>();
+const SlotItemBase: FC<SlotItemProps> = ({ slot, date, slotListPanRef }) => {
+  const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
+  const navigation = useNavigation<any>();
 
-  const dynamicStyle = useMemo(
-    () => ({
-      backgroundColor: getSlotBackgroundColor(slot.color),
-    }),
-    [slot.color]
-  );
-
-  const baseId = useMemo(
-    () => (slot.id ?? 'default-slot').toString(),
-    [slot.id]
-  );
-  const cardNativeId = useMemo(() => `slot-card-${baseId}`, [baseId]);
-  const titleNativeId = useMemo(() => `slot-title-${baseId}`, [baseId]);
-
-  const timeText = useMemo(() => {
-    if (!slot.startTime && !slot.endTime) return t.timeToDo;
-    if (slot.startTime && slot.withoutTime) return t.timeToday;
-    if (slot.startTime && !slot.endTime) return formatTime(slot.startTime);
-    if (slot.startTime && slot.endTime)
-      return `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`;
-    return t.timeToDo;
-  }, [slot.startTime, slot.endTime, slot.withoutTime, t]);
-
-  // Generate image URI - use slot image if provided, otherwise default
-  const imageUri = useMemo(() => {
-    const imageConfig = slot.image || {
-      persona: 'adult-female' as const,
-      activity: 'job_study',
-      name: 'working_desktop',
-      extension: 'webp' as const,
-    };
-
-    const uri = getAvatarPublicUrl({
-      persona: imageConfig.persona,
-      activity: imageConfig.activity,
-      name: imageConfig.name,
-      extension: imageConfig.extension,
-    });
-
-    return uri;
-  }, [slot.image]);
+  const handleSlotPress = useCallback(() => {
+    setSelectedSlot(slot);
+    navigation.navigate('SlotForm');
+  }, [setSelectedSlot, navigation]);
 
   return (
-    <SlotPositioner ref={slotRef} index={index} selectedDate={selectedDate}>
+    <SlotPositioner slot={slot} date={date}>
       <DraggableSlotWrapper
-        ref={slotRef}
-        onPress={() => onPress(slot)}
-        index={index}
-        slotStartTime={slot.startTime}
-        slotColor={slot.color || colors.background.primary}
+        onPress={handleSlotPress}
+        slot={slot}
+        slotListPanRef={slotListPanRef}
       >
-        <View style={[styles.container, dynamicStyle]}>
-          <View style={styles.cardContainer} nativeID={cardNativeId}>
-            <CompletionCheckmark
-              completed={slot.completed}
-              endTime={slot.endTime}
-              startTime={slot.startTime}
-              index={index}
-            />
-            <View style={styles.contentContainer}>
-              <Text style={styles.time}>{timeText}</Text>
-              <Text nativeID={titleNativeId} style={styles.title}>
-                {slot.title}
-              </Text>
-              <ProgressBar
-                startTime={slot.startTime}
-                endTime={slot.endTime}
-                slotColor={slot.color}
-              />
-              <View style={styles.indicatorsRow}>
-                <TaskCounter tasks={slot.tasks ?? undefined} />
-                <NoteIndicator description={slot.description} />
-                <VoiceIndicator voice_path={slot.voice_path} />
-              </View>
-              {slot.participants && slot.participants.length > 0 && (
-                <View style={styles.participantsRow}>
-                  <ParticipantsIndicator
-                    participants={slot.participants}
-                    slotColor={slot.color as SlotColorName}
-                  />
-                </View>
-              )}
-            </View>
-          </View>
-          {imageUri && (
-            <Image
-              source={imageUri}
-              style={styles.slotImage}
-              contentFit="contain"
-              cachePolicy="memory-disk"
-              transition={0}
-              pointerEvents="none"
-              priority="normal"
-              allowDownscaling={false}
-            />
-          )}
-        </View>
+        <Slot slot={slot} />
       </DraggableSlotWrapper>
     </SlotPositioner>
   );
@@ -157,60 +52,6 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prev.tasks?.filter(t => t.is_done).length ===
       next.tasks?.filter(t => t.is_done).length &&
     prev.participants?.length === next.participants?.length &&
-    prevProps.selectedDate === nextProps.selectedDate &&
-    prevProps.onPress === nextProps.onPress
+    prevProps.date === nextProps.date
   );
-});
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    // No overflow hidden here to allow image to extend outside
-    marginHorizontal: 12,
-    marginVertical: 12,
-    borderRadius: 36,
-    minHeight: 129,
-  },
-  cardContainer: {
-    paddingVertical: 20,
-    paddingHorizontal: 32,
-    borderRadius: 36,
-    position: 'relative',
-    overflow: 'hidden', // Clip overflow for TaskChecked animation only
-    flex: 1,
-  },
-  contentContainer: {
-    // Container for text content - limit width to 3/5 to not go under image
-    width: '60%',
-  },
-  indicatorsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingLeft: 6,
-  },
-  participantsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 20,
-  },
-  slotImage: {
-    position: 'absolute',
-    top: -30,
-    right: 15,
-    width: 150,
-    height: 150,
-    zIndex: 2,
-  },
-  time: {
-    fontSize: fontSize.xs,
-    color: colors.typography.primary,
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-    marginBottom: spacing.xs,
-    color: colors.typography.primary,
-  },
 });

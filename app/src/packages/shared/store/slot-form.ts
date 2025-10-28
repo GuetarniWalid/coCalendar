@@ -1,24 +1,11 @@
 import createStore from 'teaful';
-import type { SlotColorName } from '../utils/colors';
-
-interface SelectedSlotData {
-  id: string | null;
-  title?: string;
-  startTime?: string; // ISO string
-  endTime?: string; // ISO string
-  visibility?: 'private' | 'public';
-  clientName?: string;
-  description?: string;
-  color?: SlotColorName | undefined;
-}
+import type { SlotItem } from '../types/calendar';
 
 interface SlotFormState {
-  selectedDate: string | null;
-  selectedSlot: SelectedSlotData | null;
+  selectedSlot: SlotItem | null;
 }
 
 const initialSlotFormState: SlotFormState = {
-  selectedDate: null,
   selectedSlot: null,
 };
 

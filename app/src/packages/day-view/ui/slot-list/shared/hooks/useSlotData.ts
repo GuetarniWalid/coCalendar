@@ -1,42 +1,17 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { SlotItem } from '@project/shared';
 import { EnhancedSlotItem } from '../types';
-import { createDefaultSlot } from '../utils';
 
 export const useSlotData = (
-  onSlotPress: (slot: SlotItem) => void,
   selectedDate: string,
-  getSlotsForDate: (date: string) => SlotItem[] | undefined
+  slotsCacheRef: React.RefObject<Record<string, SlotItem[]>>,
 ) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const lastShownByDateRef = useRef<Record<string, SlotItem[]>>({});
 
-  const handleRemainingTimeCardPress = useCallback(
-    (nextActivityStartTime: string) => {
-      const now = dayjs();
-      const nextActivityStart = dayjs(nextActivityStartTime);
-      onSlotPress(
-        createDefaultSlot(
-          now.toISOString(),
-          nextActivityStart.toISOString()
-        ) as any
-      );
-    },
-    [onSlotPress]
-  );
-
-  const handleEmptyDayCardPress = useCallback(
-    (date: string) => {
-      const now = dayjs();
-      const start = dayjs(`${date} ${now.format('HH:mm')}`);
-      const end = start.add(1, 'hour');
-      onSlotPress(
-        createDefaultSlot(start.toISOString(), end.toISOString()) as any
-      );
-    },
-    [onSlotPress]
-  );
+  const getSlotsForDate = useCallback((date: string): SlotItem[] | undefined => {
+    return slotsCacheRef.current[date];
+  }, [slotsCacheRef]);
 
   const createEnhancedSlotData = useCallback(
     (slots: SlotItem[]): EnhancedSlotItem[] => {
@@ -110,9 +85,7 @@ export const useSlotData = (
   }, [selectedDate, getSlotsForDate, refreshTrigger]);
 
   return {
-    handleRemainingTimeCardPress,
-    handleEmptyDayCardPress,
     createEnhancedSlotData,
-    lastShownByDateRef,
+    getSlotsForDate,
   };
 };

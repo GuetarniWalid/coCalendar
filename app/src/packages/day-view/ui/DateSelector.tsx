@@ -22,6 +22,7 @@ const screenWidth = Dimensions.get('window').width;
 
 export const DateSelector: FC = () => {
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
+  const [, setChangeAskedBy] = useCalendarStore.changeAskedBy();
   const flatListRef = useRef<FlatList>(null);
   const isTransitioningRef = useRef<boolean>(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -30,8 +31,9 @@ export const DateSelector: FC = () => {
   const handleDatePress = useCallback(
     (date: string) => {
       setSelectedDate(date);
+      setChangeAskedBy('dateSelector');
     },
-    [setSelectedDate]
+    [setSelectedDate, setChangeAskedBy]
   );
 
   const renderDayItem = useCallback(
@@ -162,11 +164,15 @@ export const DateSelector: FC = () => {
       const targetSelectedDate = dayjs(prevStart)
         .add(selectedIndex, 'day')
         .format('YYYY-MM-DD');
+
       setOverrideCenterWeek(prevWeek);
       visibleWeekStartRef.current = prevStart;
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToIndex({ index: 1, animated: false });
-        setTimeout(() => setSelectedDate(targetSelectedDate), 0);
+        setTimeout(() => {
+          setSelectedDate(targetSelectedDate)
+          setChangeAskedBy('dateSelector');
+        }, 0);
       });
     } else if (pageIndex === 2 && !isTransitioningRef.current) {
       isTransitioningRef.current = true;
@@ -192,7 +198,10 @@ export const DateSelector: FC = () => {
       visibleWeekStartRef.current = nextStart;
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToIndex({ index: 1, animated: false });
-        setTimeout(() => setSelectedDate(targetSelectedDate), 0);
+        setTimeout(() => {
+          setSelectedDate(targetSelectedDate)
+          setChangeAskedBy('dateSelector');
+        }, 0);
       });
     }
   };

@@ -2,82 +2,70 @@ import { useRef, useCallback, useEffect } from 'react';
 import { useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
-import { CALENDAR_CONSTANTS } from '@project/shared';
 import { CONTINUOUS_SCROLL_DELAY } from '../shared/constants';
+import { useCalendarStore } from '@project/shared/store/calendar';
+import dayjs from 'dayjs';
 
 /**
  * Hook to manage horizontal scrolling when dragging to left or right zones
  */
 export const useHorizontalScroll = () => {
-  const {
-    draggedSlotHorizontalZone,
-    currentDayIndex,
-    flatListScrollToIndex,
-    draggedSlotIndexRN,
-  } = useDraggedSlotContext();
-
+  const { draggedSlotHorizontalZone, draggedSlot } = useDraggedSlotContext();
+  const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
+  const [, setChangeAskedBy] = useCalendarStore.changeAskedBy();
   const horizontalScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastHorizontalZone = useSharedValue<'left' | 'right' | 'middle'>(
     'middle'
   );
 
+  // Reference to the selected date to avoid re-rendering
+  const selectedDateRef = useRef(selectedDate);
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+  }, [selectedDate]);
+
   // Clear timer helper for horizontal scroll
   const clearHorizontalTimer = useCallback(() => {
     if (horizontalScrollTimerRef.current) {
+
       clearTimeout(horizontalScrollTimerRef.current);
       horizontalScrollTimerRef.current = null;
     }
   }, []);
 
   // Continuous horizontal scroll function
-  const continuousHorizontalScroll = useCallback(
-    (zone: 'left' | 'right') => {
-      const currentIndex = currentDayIndex.value;
-      let targetIndex = currentIndex;
+  const continuousHorizontalScroll = useCallback((zone: 'left' | 'right') => {
+    let nextDate: string;
+    if (zone === 'left') {
+      nextDate = dayjs(selectedDateRef.current)
+        .subtract(1, 'day')
+        .format('YYYY-MM-DD');
+    } else {
+      nextDate = dayjs(selectedDateRef.current)
+        .add(1, 'day')
+        .format('YYYY-MM-DD');
+    }
+    setChangeAskedBy(null);
+    setSelectedDate(nextDate);
+    selectedDateRef.current = nextDate;
 
-      if (zone === 'left' && currentIndex > 0) {
-        targetIndex = currentIndex - 1;
-      } else if (
-        zone === 'right' &&
-        currentIndex < CALENDAR_CONSTANTS.TOTAL_DAYS - 1
-      ) {
-        targetIndex = currentIndex + 1;
+    // Schedule next scroll if still in the same zone
+    horizontalScrollTimerRef.current = setTimeout(() => {
+      if (draggedSlotHorizontalZone.value === zone) {
+        continuousHorizontalScroll(zone);
       }
-
-      if (targetIndex !== currentIndex && flatListScrollToIndex) {
-        flatListScrollToIndex(targetIndex);
-
-        // Schedule next scroll if still in the same zone
-        horizontalScrollTimerRef.current = setTimeout(() => {
-          if (
-            draggedSlotHorizontalZone.value === zone &&
-            draggedSlotIndexRN !== null
-          ) {
-            continuousHorizontalScroll(zone);
-          }
-        }, CONTINUOUS_SCROLL_DELAY);
-      }
-    },
-    [
-      currentDayIndex,
-      flatListScrollToIndex,
-      draggedSlotHorizontalZone,
-      draggedSlotIndexRN,
-    ]
-  );
+    }, CONTINUOUS_SCROLL_DELAY);
+  }, []);
 
   const horizontalScrollWithDelay = useCallback(
     (zone: 'left' | 'right') => {
       horizontalScrollTimerRef.current = setTimeout(() => {
-        if (
-          draggedSlotHorizontalZone.value === zone &&
-          draggedSlotIndexRN !== null
-        ) {
+        if (draggedSlotHorizontalZone.value === zone && draggedSlot !== null) {
           continuousHorizontalScroll(zone);
         }
       }, CONTINUOUS_SCROLL_DELAY);
     },
-    [draggedSlotHorizontalZone, draggedSlotIndexRN, continuousHorizontalScroll]
+    [draggedSlotHorizontalZone, draggedSlot, continuousHorizontalScroll]
   );
 
   // Handle horizontal zone scrolling - continuous while in zone
@@ -104,10 +92,10 @@ export const useHorizontalScroll = () => {
 
   // Cleanup timer when drag ends
   useEffect(() => {
-    if (draggedSlotIndexRN === null) {
+    if (draggedSlot === null) {
       clearHorizontalTimer();
     }
-  }, [draggedSlotIndexRN, clearHorizontalTimer]);
+  }, [draggedSlot, clearHorizontalTimer]);
 
   // Cleanup on unmount
   useEffect(() => {

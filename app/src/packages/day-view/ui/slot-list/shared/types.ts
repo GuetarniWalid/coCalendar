@@ -1,9 +1,10 @@
 import { SlotItem } from '@project/shared';
 
 export interface SlotListProps {
-  onSlotPress: (slot: SlotItem) => void;
-  getSlotsForDate: (date: string) => SlotItem[] | undefined;
   loading?: boolean;
+  handleSlotDropped: (slot: SlotItem, sourceDate: string, targetDate: string) => Promise<void>
+  updateSlotCache: (slotId: string, sourceDate: string, targetDate: string, updatedSlot: SlotItem) => void;
+  slotsCacheRef: React.RefObject<Record<string, SlotItem[]>>;
 }
 
 export interface GestureState {

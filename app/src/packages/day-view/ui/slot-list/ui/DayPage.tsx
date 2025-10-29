@@ -1,8 +1,8 @@
 import { memo, useEffect, useState } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { SlotItem } from '../../slot-item';
-import { EmptyDayCard } from '../../empty-day-card';
-import { RemainingTimeCard } from '../../remaining-time-card';
+import { EmptyDayCard } from '../../EmptyDayCard';
+import { RemainingTimeCard } from '../../RemainingTimeCard';
 import { ControllableScrollView } from './ControllableScrollView';
 import {
   colors,

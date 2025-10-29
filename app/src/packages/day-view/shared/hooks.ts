@@ -10,6 +10,7 @@ export const useDayView = () => {
   const [selectedDate] = useCalendarStore.selectedDate();
   const [slots, setSlots] = useState<SlotItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cacheVersion, setCacheVersion] = useState(0);
 
   // In-memory cache for slots per date id
   const slotsCacheRef = useRef<Record<string, SlotItem[]>>({});
@@ -69,6 +70,7 @@ export const useDayView = () => {
       slotsCacheRef.current[selectedDate] = formattedSlots;
       fetchedDatesRef.current.add(selectedDate);
       setSlots(formattedSlots);
+      setCacheVersion(v => v + 1);
     } catch (error) {
       console.error('Error fetching slots:', error);
     } finally {
@@ -126,11 +128,14 @@ export const useDayView = () => {
       prefetchRangeRef.current = { start, end };
       const promise = fetchSlotsInRange(supabase, user.id, start, end)
         .then(result => {
+          let cacheUpdated = false;
+          
           // Merge into cache, but NEVER overwrite existing entries
           Object.keys(result).forEach(dateId => {
             if (slotsCacheRef.current[dateId] === undefined && result[dateId]) {
               slotsCacheRef.current[dateId] = result[dateId];
               fetchedDatesRef.current.add(dateId);
+              cacheUpdated = true;
             }
           });
 
@@ -142,8 +147,14 @@ export const useDayView = () => {
             if (slotsCacheRef.current[dateId] === undefined) {
               slotsCacheRef.current[dateId] = [];
               fetchedDatesRef.current.add(dateId);
+              cacheUpdated = true;
             }
             cursor = cursor.add(1, 'day');
+          }
+
+          // Increment cache version if we added new data
+          if (cacheUpdated) {
+            setCacheVersion(v => v + 1);
           }
 
           // If current selection arrived via prefetch, use it immediately
@@ -192,6 +203,8 @@ export const useDayView = () => {
         slotsCacheRef.current[targetDate].push(updatedSlot);
       }
     }
+    
+    setCacheVersion(v => v + 1);
   };
 
   // Method to invalidate cache for specific dates (to refetch fresh data from DB)
@@ -200,6 +213,7 @@ export const useDayView = () => {
       delete slotsCacheRef.current[date];
       fetchedDatesRef.current.delete(date);
     });
+    setCacheVersion(v => v + 1);
   };
 
   return {
@@ -208,5 +222,6 @@ export const useDayView = () => {
     updateSlotCache,
     invalidateCache,
     slotsCacheRef,
+    cacheVersion,
   };
 };

@@ -1,18 +1,9 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback } from 'react';
 import dayjs from 'dayjs';
 import { SlotItem } from '@project/shared';
 import { EnhancedSlotItem } from '../types';
 
-export const useSlotData = (
-  selectedDate: string,
-  slotsCacheRef: React.RefObject<Record<string, SlotItem[]>>,
-) => {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const getSlotsForDate = useCallback((date: string): SlotItem[] | undefined => {
-    return slotsCacheRef.current[date];
-  }, [slotsCacheRef]);
-
+export const useSlotData = () => {
   const createEnhancedSlotData = useCallback(
     (slots: SlotItem[]): EnhancedSlotItem[] => {
       if (!slots?.length) return [];
@@ -60,32 +51,7 @@ export const useSlotData = (
     []
   );
 
-  // Auto-refresh effect for remaining time cards
-  useEffect(() => {
-    const todaySlots = getSlotsForDate(selectedDate);
-    if (!todaySlots?.length) return;
-
-    const now = dayjs();
-    const nextEndTime = todaySlots
-      .filter(slot => slot.endTime)
-      .map(slot => dayjs(slot.endTime!))
-      .filter(endTime => now.isBefore(endTime))
-      .sort((a, b) => a.unix() - b.unix())[0];
-
-    if (!nextEndTime) return;
-
-    const timeout = setTimeout(
-      () => {
-        setRefreshTrigger(prev => prev + 1);
-      },
-      nextEndTime.diff(now) + 100
-    );
-
-    return () => clearTimeout(timeout);
-  }, [selectedDate, getSlotsForDate, refreshTrigger]);
-
   return {
     createEnhancedSlotData,
-    getSlotsForDate,
   };
 };

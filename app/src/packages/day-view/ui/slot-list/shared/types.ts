@@ -5,6 +5,7 @@ export interface SlotListProps {
   handleSlotDropped: (slot: SlotItem, sourceDate: string, targetDate: string) => Promise<void>
   updateSlotCache: (slotId: string, sourceDate: string, targetDate: string, updatedSlot: SlotItem) => void;
   slotsCacheRef: React.RefObject<Record<string, SlotItem[]>>;
+  cacheVersion: number;
 }
 
 export interface GestureState {

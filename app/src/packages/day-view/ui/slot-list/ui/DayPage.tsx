@@ -25,10 +25,10 @@ interface DayPageProps {
     targetDate: string,
     updatedSlot: SlotItemType
   ) => void;
-  slotsCacheRef: React.RefObject<Record<string, SlotItemType[]>>;
   selectedDate: string;
   previousSelectedDate: string | null;
   draggedSlot: SlotItemType | null;
+  cachedSlotsForDate?: SlotItemType[] | undefined;
 }
 
 const DayPageComponent = ({
@@ -37,22 +37,20 @@ const DayPageComponent = ({
   loading,
   slotListPanRef,
   updateSlotCache,
-  slotsCacheRef,
   selectedDate,
   previousSelectedDate,
   draggedSlot,
+  cachedSlotsForDate,
 }: DayPageProps) => {
   const t = useTranslation();
   const date = getDateFromIndex(dayIndex);
   const [showSpaceForDraggedSlot, setShowSpaceForDraggedSlot] = useState(false);
   const isCurrentDay = date === selectedDate;
-  const { createEnhancedSlotData, getSlotsForDate } = useSlotData(selectedDate, slotsCacheRef);
-  const fetchedSlots = getSlotsForDate(date);
+  const { createEnhancedSlotData } = useSlotData();
   const [, setRebuild] = useState(0);
 
-  // Use cache if fetched slots are undefined or empty, but we have cached data
-  const daySlots =
-    fetchedSlots && fetchedSlots.length > 0 ? fetchedSlots : null;
+  // Use the passed cached slots directly (single source of truth)
+  const daySlots = cachedSlotsForDate && cachedSlotsForDate.length > 0 ? cachedSlotsForDate : null;
 
   // Set up timers to rebuild when slot start/end times are reached
   useEffect(() => {
@@ -198,12 +196,18 @@ const DayPageComponent = ({
   );
 };
 
-export const DayPage = memo(DayPageComponent, (_, nextProps) => {
+export const DayPage = memo(DayPageComponent, (prevProps, nextProps) => {
   const nextDate = getDateFromIndex(nextProps.dayIndex);
   const isCurrentDayNext = nextDate === nextProps.selectedDate;
   const isPreviousDayNext = nextDate === nextProps.previousSelectedDate;
   
+  // Always re-render if this is the current or previous day for drag and drop
   if (isCurrentDayNext || isPreviousDayNext) {
+    return false;
+  }
+
+  // Re-render if cached slots changed for this date
+  if (prevProps.cachedSlotsForDate !== nextProps.cachedSlotsForDate) {
     return false;
   }
 

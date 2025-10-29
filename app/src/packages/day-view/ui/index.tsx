@@ -14,7 +14,7 @@ import { DateSelector } from './DateSelector';
 import { updateSlotDate } from '../data/update-slot';
 
 export const DayViewScreen = () => {
-  const { slots, loading, updateSlotCache, slotsCacheRef } = useDayView();
+  const { slots, loading, updateSlotCache, slotsCacheRef, cacheVersion } = useDayView();
   const [{ supabase, user }] = useAuthStore();
 
   // Handle slot drop to another day
@@ -58,6 +58,7 @@ export const DayViewScreen = () => {
         handleSlotDropped={handleSlotDropped}
         updateSlotCache={updateSlotCache}
         slotsCacheRef={slotsCacheRef}
+        cacheVersion={cacheVersion}
       />
     </>
   );

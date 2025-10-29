@@ -24,6 +24,7 @@ export const SlotList = ({
   handleSlotDropped,
   updateSlotCache,
   slotsCacheRef,
+  cacheVersion,
 }: SlotListProps) => {
   const screenWidth = Dimensions.get('window').width;
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
@@ -78,6 +79,9 @@ export const SlotList = ({
 
   const renderDayPage = useCallback(
     ({ item: dayIndex }: { item: number }) => {
+      const date = getDateFromIndex(dayIndex);
+      const cachedSlots = slotsCacheRef.current?.[date] ?? undefined;
+      
       return (
         <DayPage
           dayIndex={dayIndex}
@@ -85,14 +89,14 @@ export const SlotList = ({
           loading={loading}
           slotListPanRef={slotListPanRef as any}
           updateSlotCache={updateSlotCache}
-          slotsCacheRef={slotsCacheRef}
           selectedDate={selectedDate}
           previousSelectedDate={previousSelectedDate}
           draggedSlot={draggedSlot}
+          cachedSlotsForDate={cachedSlots}
         />
       );
     },
-    [screenWidth, loading, previousSelectedDate, selectedDate, draggedSlot]
+    [screenWidth, loading, previousSelectedDate, selectedDate, draggedSlot, slotsCacheRef, cacheVersion, updateSlotCache]
   );
 
   return (

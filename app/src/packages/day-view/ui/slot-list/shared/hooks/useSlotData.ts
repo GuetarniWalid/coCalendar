@@ -42,7 +42,7 @@ export const useSlotData = (
             const showRemainingCard =
               gapMs > 0 &&
               now.isAfter(currentReferenceTime) &&
-              now.isBefore(nextStartTime.add(1, 'second'));
+              now.isBefore(nextStartTime);
 
             if (showRemainingCard) {
               enhancedData.push({

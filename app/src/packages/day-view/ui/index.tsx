@@ -1,13 +1,7 @@
 import { View, StyleSheet } from 'react-native';
-import {
-  useFocusEffect,
-} from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useDayView } from '../shared/hooks';
 import {
-  setCurrentScreen,
-  startTimeTracking,
-  stopTimeTracking,
   useAuthStore,
   SlotItem,
   retryWithBackoff,
@@ -21,21 +15,7 @@ import { updateSlotDate } from '../data/update-slot';
 
 export const DayViewScreen = () => {
   const { slots, loading, updateSlotCache, slotsCacheRef } = useDayView();
-  const [{ supabase, user }] = useAuthStore();;
-
-  // Track when this screen becomes active and manage time tracking
-  useFocusEffect(
-    useCallback(() => {
-      setCurrentScreen('Day');
-      // Start real-time tracking when day view is focused
-      startTimeTracking();
-
-      return () => {
-        // Stop real-time tracking when day view is unfocused
-        stopTimeTracking();
-      };
-    }, [])
-  );
+  const [{ supabase, user }] = useAuthStore();
 
   // Handle slot drop to another day
   const handleSlotDropped = useCallback(

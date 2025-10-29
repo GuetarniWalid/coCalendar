@@ -1,4 +1,4 @@
-import { FC, memo, useEffect, useMemo, useRef } from 'react';
+import { FC, memo, useMemo, useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
   colors,
@@ -6,15 +6,7 @@ import {
   fontSize,
   fontWeight,
   getAvatarPublicUrl,
-  useTimeTrackerStore,
 } from '@project/shared';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-  LinearTransition,
-} from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
@@ -34,95 +26,83 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
     extension: 'webp',
   });
 
-  // Use Teaful time tracker for currentTime instead of individual useState
-  const [currentTime] = useTimeTrackerStore.currentTime();
-  const heightAnimation = useSharedValue(0);
-  const hasShownRef = useRef(false);
+  const [tick, setTick] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate remaining time to next activity
-  const remainingTimeData = useMemo(() => {
-    const now = dayjs(currentTime);
+  const timeDisplay = useMemo(() => {
+    const now = dayjs();
     const nextActivity = dayjs(nextActivityStartTime);
-
-    // If the next activity has already started, don't show card
-    if (now.isAfter(nextActivity)) {
-      return null;
-    }
-
     const remainingMs = nextActivity.diff(now);
     const totalSeconds = Math.floor(remainingMs / 1000);
 
-    // If less than 1 second, don't show card
-    if (totalSeconds <= 0) {
-      return null;
-    }
-
     // Format time based on duration
-    let timeDisplay: string;
-    let shouldUpdate: boolean;
-
-    if (totalSeconds <= 59) {
-      // 59 seconds or less - show seconds only
-      timeDisplay = `${totalSeconds}s`;
-      shouldUpdate = true; // Update every second
+    if (totalSeconds <= 60) {
+      // 60 seconds or less - show seconds only
+      return `${totalSeconds}s`;
     } else {
       const totalMinutes = Math.ceil(totalSeconds / 60);
 
       if (totalMinutes < 60) {
         // Less than 1 hour - show minutes only
-        timeDisplay = `${totalMinutes}min`;
-        shouldUpdate = totalSeconds <= 120; // Update every second when 2 minutes or less
+        return `${totalMinutes}min`;
       } else {
         // 1 hour or more - show hours and minutes
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
-        timeDisplay = minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
-        shouldUpdate = false; // Update every minute
+        return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+      }
+    }
+  }, [nextActivityStartTime, tick]);
+
+  // Set up timer to update display at appropriate interval
+  useEffect(() => {
+    // Clean up any existing timers
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    const now = dayjs();
+    const nextActivity = dayjs(nextActivityStartTime);
+    const remainingMs = nextActivity.diff(now);
+    const totalSeconds = Math.floor(remainingMs / 1000);
+
+    if (totalSeconds <= 60) {
+      // Update every second when 1 minute or less
+      intervalRef.current = setInterval(() => {
+        setTick(prev => prev + 1);
+      }, 1000);
+    } else {
+      // For minute-based updates, sync to minute boundaries
+      const secondsIntoMinute = totalSeconds % 60;
+      const msUntilNextMinute = secondsIntoMinute * 1000;
+
+      if (msUntilNextMinute > 0) {
+        // First timer: wait until the next minute boundary
+        timeoutRef.current = setTimeout(() => {
+          setTick(prev => prev + 1);
+          
+          // Then set up interval for subsequent minute updates
+          intervalRef.current = setInterval(() => {
+            setTick(prev => prev + 1);
+          }, 60000);
+        }, msUntilNextMinute);
+      } else {
+        // Already at a minute boundary, start interval immediately
+        intervalRef.current = setInterval(() => {
+          setTick(prev => prev + 1);
+        }, 60000);
       }
     }
 
-    return {
-      timeDisplay,
-      shouldUpdate,
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [currentTime, nextActivityStartTime]);
-
-  // Handle smooth show/hide animations with reanimated
-  const shouldShow = remainingTimeData !== null;
-
-  useEffect(() => {
-    if (shouldShow && !hasShownRef.current) {
-      // Animate in
-      heightAnimation.value = withTiming(1, {
-        duration: 300,
-        easing: Easing.out(Easing.quad),
-      });
-      hasShownRef.current = true;
-    } else if (!shouldShow && hasShownRef.current) {
-      // Animate out
-      heightAnimation.value = withTiming(0, {
-        duration: 300,
-        easing: Easing.in(Easing.quad),
-      });
-      hasShownRef.current = false;
-    }
-  }, [shouldShow, heightAnimation]);
-
-  // Animated style using reanimated
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      height: heightAnimation.value * (129 + spacing.sm * 2), // minHeight + margins
-      opacity: heightAnimation.value,
-    };
-  });
-
-  // Only return null if never shown and not supposed to show
-  if (!remainingTimeData && !hasShownRef.current) {
-    return null;
-  }
+  }, [nextActivityStartTime, tick]);
 
   return (
-    <Animated.View style={animatedStyle} layout={LinearTransition}>
+    <View>
       <Pressable style={styles.container}>
         {!!uri && (
           <Image
@@ -141,12 +121,10 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
         )}
         <View style={styles.content}>
           <Text style={styles.text}>{t.remainingTimeText}</Text>
-          <Text style={styles.time}>
-            {remainingTimeData ? remainingTimeData.timeDisplay : '0s'}
-          </Text>
+          <Text style={styles.time}>{timeDisplay}</Text>
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 };
 

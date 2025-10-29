@@ -48,6 +48,52 @@ const DayPageComponent = ({
   const isCurrentDay = date === selectedDate;
   const { createEnhancedSlotData, getSlotsForDate } = useSlotData(selectedDate, slotsCacheRef);
   const fetchedSlots = getSlotsForDate(date);
+  const [, setRebuild] = useState(0);
+
+  // Use cache if fetched slots are undefined or empty, but we have cached data
+  const daySlots =
+    fetchedSlots && fetchedSlots.length > 0 ? fetchedSlots : null;
+
+  // Set up timers to rebuild when slot start/end times are reached
+  useEffect(() => {
+    if (!isCurrentDay || !daySlots?.length) {
+      return;
+    }
+
+    const now = dayjs();
+    const timeouts: NodeJS.Timeout[] = [];
+
+    // Collect all start and end times from slots
+    const startTimes = daySlots
+      .map(slot => slot.startTime)
+      .filter((startTime): startTime is string => startTime !== null && startTime !== undefined)
+      .map(startTime => dayjs(startTime));
+
+    const endTimes = daySlots
+      .map(slot => slot.endTime)
+      .filter((endTime): endTime is string => endTime !== null && endTime !== undefined)
+      .map(endTime => dayjs(endTime));
+
+    const allBoundaryTimes = [...startTimes, ...endTimes];
+
+    // Set up a timeout for each future boundary time
+    allBoundaryTimes.forEach(boundaryTime => {
+      const msUntilBoundary = boundaryTime.diff(now);
+      
+      if (msUntilBoundary > 0) {
+        const timeout = setTimeout(() => {
+          setRebuild(prev => prev + 1);
+        }, msUntilBoundary);
+        
+        timeouts.push(timeout);
+      }
+    });
+
+    // Clean up all timeouts
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
+  }, [daySlots, isCurrentDay]);
 
   // handle cache and dynamic DayPage layout during drag and drop
   useEffect(() => {
@@ -77,10 +123,6 @@ const DayPageComponent = ({
     updateSlotCache(draggedSlot.id, previousSelectedDate, date, updatedSlot);
     setShowSpaceForDraggedSlot(true);
   }, [draggedSlot, date, updateSlotCache, isCurrentDay, previousSelectedDate, showSpaceForDraggedSlot, setShowSpaceForDraggedSlot]);
-
-  // Use cache if fetched slots are undefined or empty, but we have cached data
-  const daySlots =
-    fetchedSlots && fetchedSlots.length > 0 ? fetchedSlots : null;
 
   const buildContent = () => {
     if (loading && isCurrentDay && !daySlots) {

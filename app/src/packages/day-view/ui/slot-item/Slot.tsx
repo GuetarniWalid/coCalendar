@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, ViewStyle } from 'react-native';
 import { CompletionCheckmark } from './CompletionCheckmark';
 import { fontSize, fontWeight } from '@project/shared/theme/typography';
 import { colors } from '@project/shared/theme/colors';
@@ -18,8 +18,15 @@ import {
 } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { StyleProp } from 'react-native';
 
-export const Slot = ({ slot, onImageLoad }: { slot: SlotItemType; onImageLoad?: () => void }) => {
+type SlotProps = {
+  slot: SlotItemType;
+  onImageLoad?: () => void;
+  draggedShadowStyle?: StyleProp<ViewStyle>;
+};
+
+export const Slot = ({ slot, onImageLoad, draggedShadowStyle }: SlotProps) => {
   const t = useTranslation();
   const dynamicStyle = useMemo(
     () => ({
@@ -57,8 +64,8 @@ export const Slot = ({ slot, onImageLoad }: { slot: SlotItemType; onImageLoad?: 
   }, [slot.image]);
 
   return (
-    <Animated.View style={[styles.container, dynamicStyle]} collapsable={false} layout={LinearTransition}>
-      <View style={styles.cardContainer}>
+    <Animated.View style={[styles.container, dynamicStyle, draggedShadowStyle]} collapsable={false} layout={LinearTransition}>
+      <View style={[styles.cardContainer]}>
         <CompletionCheckmark slot={slot} />
         <View style={styles.contentContainer}>
           <Text style={styles.time}>{timeText}</Text>

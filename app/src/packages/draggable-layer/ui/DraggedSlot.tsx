@@ -3,6 +3,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { Slot } from '@project/day-view';
 import { useDraggedSlotPosition } from '../hooks/useDraggedSlotPosition';
+import { StyleSheet } from 'react-native';
 
 type DraggedSlotProps = {
   padding: number;
@@ -57,7 +58,13 @@ export const DraggedSlot = ({ padding }: DraggedSlotProps) => {
 
   return (
     <Animated.View style={[animatedStyle, animatedOpacityStyle]}>
-      <Slot slot={draggedSlot} onImageLoad={handleImageLoad} />
+      <Slot slot={draggedSlot} onImageLoad={handleImageLoad} draggedShadowStyle={styles.shadow} />
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  shadow: {
+    boxShadow: '0px 0px 5px 0 rgba(0, 0, 0, 0.15)',
+  },
+})

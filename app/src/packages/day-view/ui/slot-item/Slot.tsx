@@ -17,6 +17,7 @@ import {
   getSlotBackgroundColor,
 } from '@project/shared';
 import { useTranslation } from '@project/i18n';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 export const Slot = ({ slot, onImageLoad }: { slot: SlotItemType; onImageLoad?: () => void }) => {
   const t = useTranslation();
@@ -56,7 +57,7 @@ export const Slot = ({ slot, onImageLoad }: { slot: SlotItemType; onImageLoad?: 
   }, [slot.image]);
 
   return (
-    <View style={[styles.container, dynamicStyle]} collapsable={false}>
+    <Animated.View style={[styles.container, dynamicStyle]} collapsable={false} layout={LinearTransition}>
       <View style={styles.cardContainer}>
         <CompletionCheckmark slot={slot} />
         <View style={styles.contentContainer}>
@@ -69,18 +70,18 @@ export const Slot = ({ slot, onImageLoad }: { slot: SlotItemType; onImageLoad?: 
             endTime={slot.endTime}
             slotColor={slot.color}
           />
-          <View style={styles.indicatorsRow}>
+          <Animated.View style={styles.indicatorsRow} layout={LinearTransition}>
             <TaskCounter tasks={slot.tasks ?? undefined} />
             <NoteIndicator description={slot.description} />
             <VoiceIndicator voice_path={slot.voice_path} />
-          </View>
+          </Animated.View>
           {slot.participants && slot.participants.length > 0 && (
-            <View style={styles.participantsRow}>
+            <Animated.View style={styles.participantsRow} layout={LinearTransition}>
               <ParticipantsIndicator
                 participants={slot.participants}
                 slotColor={slot.color as SlotColorName}
               />
-            </View>
+            </Animated.View>
           )}
         </View>
       </View>
@@ -97,7 +98,7 @@ export const Slot = ({ slot, onImageLoad }: { slot: SlotItemType; onImageLoad?: 
           {...(onImageLoad && { onLoad: () => onImageLoad() })}
         />
       )}
-    </View>
+    </Animated.View>
   );
 };
 

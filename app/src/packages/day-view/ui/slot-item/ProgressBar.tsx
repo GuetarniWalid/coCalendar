@@ -1,13 +1,18 @@
-import { FC, useMemo, useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { Text, StyleSheet } from 'react-native';
+import Animated, {
+  LinearTransition,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  useSharedValue,
+} from 'react-native-reanimated';
 import {
-  spacing,
-  progressBarConfig,
   hasSpecificTime,
   calculateSlotProgress,
-  formatRemainingTime,
   getSlotContrastColor,
   SlotColorName,
+  fontSize,
 } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
@@ -18,32 +23,24 @@ interface ProgressBarProps {
   slotColor?: SlotColorName | undefined;
 }
 
-const ProgressBarBase: FC<ProgressBarProps> = ({
+export const ProgressBar = ({
   startTime,
   endTime,
   slotColor,
-}) => {
-  const [currentTime, setCurrentTime] = useState(() => new Date()); // Initialize with current time immediately
+}: ProgressBarProps) => {
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const t = useTranslation();
-  const animatedWidth = useRef(new Animated.Value(0)).current;
-  const animatedTextHeight = useRef(new Animated.Value(0)).current;
-  const [isInitialized, setIsInitialized] = useState(false);
-  // Track the current day to handle day transitions for long-running apps
-  const [trackedDay, setTrackedDay] = useState(() =>
-    dayjs().format('YYYY-MM-DD')
-  );
+  const progressWidth = useSharedValue(0);
+  
+  // Timer state for remaining time display
+  const [tick, setTick] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const shouldShowProgress = useMemo(() => {
     if (!startTime || !endTime) return false;
     return hasSpecificTime(startTime) && hasSpecificTime(endTime);
   }, [startTime, endTime]);
-
-  const isCompleted = useMemo(() => {
-    if (!endTime) return false;
-    const now = dayjs();
-    const endDateTime = dayjs(endTime);
-    return now.isAfter(endDateTime);
-  }, [endTime]);
 
   const isFutureDay = useMemo(() => {
     if (!startTime) return false;
@@ -52,321 +49,242 @@ const ProgressBarBase: FC<ProgressBarProps> = ({
     return slotDate > today;
   }, [startTime]);
 
-  // Early return checks for optimization - BEFORE any other hooks
-  if (!shouldShowProgress) {
-    return null;
-  }
-
-  // For future days, don't show progress bar at all (no calculations needed)
-  if (isFutureDay) {
-    return null;
-  }
-
   const progressColor = useMemo(() => {
     return getSlotContrastColor(slotColor);
   }, [slotColor]);
 
-  // For completed slots (end time has passed), show a simple filled progress bar without animations
-  if (isCompleted) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressFill,
-              {
-                width: '100%',
-                backgroundColor: progressColor,
-              },
-            ]}
-          />
-        </View>
-      </View>
-    );
-  }
-
-  // For non-completed slots - Calculate progress data with animations and timers
-  // Calculate progress data - recalculate on every currentTime change for precision
   const progressData = useMemo(() => {
-    // At this point we know shouldShowProgress is true, isCompleted is false, and isFutureDay is false
-    // Always use the most current time for calculations
     const progressResult = calculateSlotProgress(startTime, endTime);
-    const remainingTime = formatRemainingTime(startTime, endTime, {
-      remainingPrefix: t.remainingPrefix,
-      minutesSingular: t.minutesSingular,
-      minutesPlural: t.minutesPlural,
-      secondsSingular: t.secondsSingular,
-      secondsPlural: t.secondsPlural,
-    });
 
-    // Show progress bar if we have progress data
     if (progressResult !== null) {
+      // Calculate remaining time in milliseconds for animation
+      const now = dayjs();
+      const end = dayjs(endTime);
+      const remainingMs = end.diff(now);
+
       return {
         percentage: progressResult.percentage,
-        remainingTime: progressResult.isCompleted ? null : remainingTime, // Hide text when completed
         isCompleted: progressResult.isCompleted,
+        remainingMs: Math.max(0, remainingMs), // Remaining time in ms for animation
       };
     }
 
     return null;
-  }, [startTime, endTime, currentTime, t]);
+  }, [startTime, endTime, currentTime]);
 
-  // Daily reset mechanism for long-running apps
-  useEffect(() => {
-    const checkDayChange = () => {
-      const currentDay = dayjs().format('YYYY-MM-DD');
-      if (currentDay !== trackedDay) {
-        setTrackedDay(currentDay);
-        setCurrentTime(new Date()); // Force recalculation of day-based logic
-      }
-    };
-
-    // Check immediately
-    checkDayChange();
-
-    // Set up interval to check for day changes every minute
-    const dayCheckInterval = setInterval(checkDayChange, 60000); // Check every minute
-
-    return () => clearInterval(dayCheckInterval);
-  }, [trackedDay]);
-
-  // Set up real-time updates - separate effect for initial setup (only for non-completed current day slots)
-  useEffect(() => {
-    // At this point we know shouldShowProgress is true, isCompleted is false, and isFutureDay is false
-    // Immediate update to sync with mobile system time
-    setCurrentTime(new Date());
-  }, [startTime, endTime]);
-
-  // Set up a timer to transition to completed when slot ends (only for current day)
-  useEffect(() => {
-    // At this point we know shouldShowProgress is true, isCompleted is false, and isFutureDay is false
-    const endDateTime = dayjs(endTime);
+  // Calculate remaining time text with smart update intervals
+  const remainingTimeText = useMemo(() => {
+    if (!startTime || !endTime) return null;
+    
     const now = dayjs();
+    const start = dayjs(startTime);
+    const end = dayjs(endTime);
 
-    // If slot will end in the future, set a timeout to trigger re-render when it ends
-    if (now.isBefore(endDateTime)) {
-      const timeUntilEnd = endDateTime.diff(now);
-
-      const timeout = setTimeout(() => {
-        setCurrentTime(new Date()); // Force re-render to recalculate isCompleted
-      }, timeUntilEnd);
-
-      return () => clearTimeout(timeout);
+    // If not started yet or already completed, don't show remaining time
+    if (now.isBefore(start) || now.isAfter(end)) {
+      return null;
     }
 
-    return undefined;
-  }, [startTime, endTime]);
+    const remainingMs = end.diff(now);
+    const totalSeconds = Math.floor(remainingMs / 1000);
 
-  // Initialize animations with correct values (no animation for completed tasks)
-  useEffect(() => {
-    if (progressData && !isInitialized) {
-      // For completed tasks, set values immediately without animation
-      if (progressData.isCompleted) {
-        animatedWidth.setValue(100);
-        animatedTextHeight.setValue(0); // No text for completed tasks
+    // If time is up, return null
+    if (totalSeconds <= 0) {
+      return null;
+    }
+
+    // Format time based on duration
+    if (totalSeconds < 60) {
+      // Less than 1 minute - show seconds
+      const unit = totalSeconds === 1 ? t.secondsSingular : t.secondsPlural;
+      return `${t.remainingPrefix} ${totalSeconds} ${unit}`;
+    } else {
+      const totalMinutes = Math.ceil(totalSeconds / 60);
+
+      if (totalMinutes < 60) {
+        // Less than 1 hour - show minutes only
+        const unit = totalMinutes === 1 ? t.minutesSingular : t.minutesPlural;
+        return `${t.remainingPrefix} ${totalMinutes} ${unit}`;
       } else {
-        // For active tasks, start from 0 and let animations handle smooth appearance
-        animatedWidth.setValue(progressData.percentage);
-        animatedTextHeight.setValue(0); // Start from 0 for smooth animation
-      }
-      setIsInitialized(true);
-    }
-  }, [progressData, isInitialized, animatedWidth, animatedTextHeight]);
-
-  // Trigger initial text height animation after initialization
-  useEffect(() => {
-    if (isInitialized && progressData && !progressData.isCompleted) {
-      const hasText = !!progressData.remainingTime;
-
-      // Small delay to ensure initialization is complete
-      setTimeout(() => {
-        Animated.timing(animatedTextHeight, {
-          toValue: hasText ? 1 : 0,
-          duration: 300,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: false,
-        }).start();
-      }, 50); // 50ms delay for smooth initial appearance
-    }
-  }, [isInitialized, progressData, animatedTextHeight]);
-
-  // Set up continuous timer for active slots (only for non-completed current day slots)
-  useEffect(() => {
-    // At this point we know shouldShowProgress is true, isCompleted is false, and isFutureDay is false
-    if (!progressData || !startTime || !endTime) return;
-
-    const endTimeDate = new Date(endTime);
-    const startTimeDate = new Date(startTime);
-    const now = new Date();
-
-    // For active slots, update every second synchronized to system clock
-    if (now >= startTimeDate && now <= endTimeDate) {
-      // Calculate delay to next second boundary for perfect sync
-      const currentMs = now.getMilliseconds();
-      const delayToNextSecond = 1000 - currentMs;
-
-      let intervalId: NodeJS.Timeout | null = null;
-
-      // First, sync to the next second boundary
-      const syncTimeout = setTimeout(() => {
-        setCurrentTime(new Date());
-
-        // Then set up interval synchronized to exact seconds
-        intervalId = setInterval(() => {
-          setCurrentTime(new Date());
-        }, 1000);
-      }, delayToNextSecond);
-
-      return () => {
-        clearTimeout(syncTimeout);
-        if (intervalId) {
-          clearInterval(intervalId);
+        // 1 hour or more - show hours and minutes
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        
+        if (minutes === 0) {
+          return `${t.remainingPrefix} ${hours}h`;
         }
-      };
-    }
-
-    return undefined;
-  }, [startTime, endTime, progressData]);
-
-  // Set up precise timeouts for slot boundaries (only for non-completed current day slots)
-  useEffect(() => {
-    // At this point we know shouldShowProgress is true, isCompleted is false, and isFutureDay is false
-    if (!startTime || !endTime) return;
-
-    const endTimeDate = new Date(endTime);
-    const startTimeDate = new Date(startTime);
-    const now = new Date();
-
-    // For slots that will start soon, set timeout for start time
-    if (now < startTimeDate) {
-      const timeUntilStart = startTimeDate.getTime() - now.getTime();
-
-      const timeout = setTimeout(() => {
-        setCurrentTime(new Date());
-      }, timeUntilStart);
-
-      return () => clearTimeout(timeout);
-    }
-
-    // For slots that will end soon, set precise timeout for end time
-    if (now < endTimeDate) {
-      const timeUntilEnd = endTimeDate.getTime() - now.getTime();
-
-      const timeout = setTimeout(() => {
-        setCurrentTime(new Date());
-      }, timeUntilEnd);
-
-      return () => clearTimeout(timeout);
-    }
-
-    return undefined;
-  }, [startTime, endTime]);
-
-  const progressWidth = useMemo(
-    () =>
-      progressData ? Math.max(0, Math.min(100, progressData.percentage)) : 0,
-    [progressData]
-  );
-
-  // Animate progress bar width changes for smooth transitions
-  useEffect(() => {
-    if (progressData && isInitialized) {
-      // Only animate if component is initialized and not completed
-      const shouldAnimate = !progressData.isCompleted;
-
-      if (shouldAnimate) {
-        Animated.timing(animatedWidth, {
-          toValue: progressWidth,
-          duration: 800, // Slightly faster for smoother feel
-          easing: Easing.out(Easing.quad), // Natural easing for smooth feel
-          useNativeDriver: false, // Width animations can't use native driver
-        }).start();
-      } else {
-        // For completed tasks, set immediately
-        animatedWidth.setValue(progressWidth);
+        
+        return `${t.remainingPrefix} ${hours}h ${minutes}${t.minutesPlural}`;
       }
-    } else if (!progressData) {
-      // Reset animation when no progress data
-      animatedWidth.setValue(0);
     }
-  }, [progressWidth, isInitialized, progressData]);
+  }, [startTime, endTime, tick, t]);
 
-  // Animate text container height for smooth transitions
+  // Set up timeout to trigger animation when slot starts (if it hasn't started yet)
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!shouldShowProgress) return undefined;
 
-    const hasText = !!progressData?.remainingTime;
+    const now = dayjs();
+    const start = dayjs(startTime);
 
-    Animated.timing(animatedTextHeight, {
-      toValue: hasText ? 1 : 0,
-      duration: 300, // Faster than progress animation to avoid conflicts
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: false, // Height animation requires layout thread
-    }).start();
-  }, [progressData?.remainingTime, isInitialized, animatedTextHeight]);
+    // If slot hasn't started yet, set a timeout to trigger recalculation when it starts
+    if (now.isBefore(start)) {
+      const msUntilStart = start.diff(now);
+      
+      // Add a small buffer (100ms) to ensure we're past the start time
+      const timeout = setTimeout(() => {
+        setCurrentTime(new Date()); // Trigger progress animation recalculation
+        setTick(prev => prev + 1); // Trigger text timer setup
+      }, msUntilStart + 100);
 
-  // Don't render if no progress data - but this comes after all hooks
+      return () => clearTimeout(timeout);
+    }
+
+    return undefined;
+  }, [startTime, endTime, shouldShowProgress]);
+
+  // Smart timer for remaining time text updates
+  useEffect(() => {
+    // Clean up any existing timers
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    if (!startTime || !endTime) return undefined;
+
+    const now = dayjs();
+    const start = dayjs(startTime);
+    const end = dayjs(endTime);
+
+    // Only set up timer if slot is currently active
+    if (now.isBefore(start) || now.isAfter(end)) {
+      return undefined;
+    }
+
+    const remainingMs = end.diff(now);
+    const totalSeconds = Math.floor(remainingMs / 1000);
+
+    if (totalSeconds <= 0) {
+      return undefined;
+    }
+
+    if (totalSeconds <= 60) {
+      // Update every second when 1 minute or less
+      intervalRef.current = setInterval(() => {
+        setTick(prev => prev + 1);
+      }, 1000);
+    } else {
+      // For minute-based updates, sync to minute boundaries
+      const secondsIntoMinute = totalSeconds % 60;
+      const msUntilNextMinute = secondsIntoMinute * 1000;
+
+      if (msUntilNextMinute > 0) {
+        // First timer: wait until the next minute boundary
+        timeoutRef.current = setTimeout(() => {
+          setTick(prev => prev + 1);
+          
+          // Check if we're now at < 60 seconds
+          const nowAfterTimeout = dayjs();
+          const remainingAfterTimeout = end.diff(nowAfterTimeout);
+          const secondsRemaining = Math.floor(remainingAfterTimeout / 1000);
+
+          if (secondsRemaining <= 60) {
+            // Switch to second-based updates
+            intervalRef.current = setInterval(() => {
+              setTick(prev => prev + 1);
+            }, 1000);
+          } else {
+            // Continue with minute-based updates
+            intervalRef.current = setInterval(() => {
+              setTick(prev => prev + 1);
+            }, 60000);
+          }
+        }, msUntilNextMinute);
+      } else {
+        // Already at a minute boundary, start interval immediately
+        intervalRef.current = setInterval(() => {
+          setTick(prev => prev + 1);
+        }, 60000);
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [startTime, endTime, tick]);
+
+  // Update progress animation when progressData changes
+  useEffect(() => {
+    if (!progressData) {
+      progressWidth.value = 0;
+      return;
+    }
+
+    if (progressData.isCompleted) {
+      progressWidth.value = 100;
+      return;
+    }
+
+    // Set the initial width to the current percentage (without animation)
+    progressWidth.value = progressData.percentage;
+
+    // Then animate from current percentage to 100% over the remaining time
+    if (progressData.remainingMs > 0) {
+      progressWidth.value = withTiming(100, {
+        duration: progressData.remainingMs,
+        easing: Easing.linear,
+      });
+    }
+  }, [progressData, progressWidth]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: `${progressWidth.value}%`,
+    };
+  });
+
+  if (!shouldShowProgress) return null;
+  if (isFutureDay) return null;
   if (!progressData) return null;
 
   return (
-    <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.textContainer,
-          {
-            height: animatedTextHeight.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, progressBarConfig.textContainerHeight], // Calculated from theme tokens
-              extrapolate: 'clamp',
-            }),
-            overflow: 'hidden',
-          },
-        ]}
-      >
-        {progressData.remainingTime && (
+    <Animated.View style={styles.container}>
+      {remainingTimeText && (
+        <Animated.View style={[styles.textContainer]}>
           <Text style={[styles.remainingText, { color: progressColor }]}>
-            {progressData.remainingTime}
+            {remainingTimeText}
           </Text>
-        )}
-      </Animated.View>
-      <View style={styles.progressTrack}>
+        </Animated.View>
+      )}
+      <Animated.View style={styles.progressTrack} layout={LinearTransition}>
         <Animated.View
           style={[
             styles.progressFill,
             {
-              width: animatedWidth.interpolate({
-                inputRange: [0, 100],
-                outputRange: ['0%', '100%'],
-                extrapolate: 'clamp',
-              }),
               backgroundColor: progressColor,
             },
+            animatedStyle,
           ]}
         />
-      </View>
-    </View>
+      </Animated.View>
+    </Animated.View>
   );
 };
-
-export const ProgressBar = ProgressBarBase;
 
 const styles = StyleSheet.create({
   container: {
     marginTop: 8,
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   textContainer: {
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   remainingText: {
-    fontSize: progressBarConfig.textFontSize, // Use configured font size
-    lineHeight:
-      progressBarConfig.textFontSize * progressBarConfig.textLineHeight, // Calculated line height
-    paddingBottom: progressBarConfig.textPadding, // Use configured padding
-    // Color is set dynamically to match progress bar color
+    fontSize: fontSize.sm,
+    paddingBottom: 12,
   },
   progressTrack: {
-    height: progressBarConfig.trackHeight, // Use configured track height
+    height: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 4,
     overflow: 'hidden',
@@ -374,6 +292,5 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: 4,
-    // backgroundColor is set dynamically based on slot color
   },
 });

@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { DayItem, SlotItem } from '../types/calendar';
+import { Translations } from '@project/i18n';
 
 export const calculateTaskCompletion = (
   tasks: SlotItem[],
@@ -192,13 +193,7 @@ export const calculateSlotProgress = (
 export const formatRemainingTime = (
   startTime: string | null,
   endTime: string | null,
-  translations?: {
-    remainingPrefix: string;
-    minutesSingular: string;
-    minutesPlural: string;
-    secondsSingular: string;
-    secondsPlural: string;
-  }
+  t: Translations
 ): string | null => {
   try {
     if (!startTime || !endTime) return null;
@@ -220,15 +215,6 @@ export const formatRemainingTime = (
     if (remainingMs <= 0) {
       return null;
     }
-
-    // Use default English if translations not provided
-    const t = translations || {
-      remainingPrefix: 'Still',
-      minutesSingular: 'minute',
-      minutesPlural: 'min',
-      secondsSingular: 'second',
-      secondsPlural: 'seconds',
-    };
 
     const totalSeconds = Math.floor(remainingMs / 1000);
 

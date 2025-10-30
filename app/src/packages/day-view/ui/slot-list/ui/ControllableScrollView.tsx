@@ -40,6 +40,9 @@ export const ControllableScrollView = ({
     <Animated.ScrollView
       ref={animatedRef}
       style={styles.scrollView}
+      contentContainerStyle={styles.contentContainer}
+      contentInset={{ bottom: 0, top: 0, left: 0, right: 0 }}
+      scrollIndicatorInsets={{ bottom: 0, top: 0, left: 0, right: 0 }}
       showsVerticalScrollIndicator={false}
       onScroll={scrollHandler}
     >
@@ -53,9 +56,11 @@ ControllableScrollView.displayName = 'ControllableScrollView';
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+    backgroundColor: colors.background.primary,
+  },
+  contentContainer: {
     paddingHorizontal: 12,
     paddingTop: 24,
-    paddingBottom: 12,
-    backgroundColor: colors.background.primary,
+    paddingBottom: 0,
   },
 });

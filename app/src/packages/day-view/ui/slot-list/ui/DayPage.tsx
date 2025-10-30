@@ -49,6 +49,20 @@ const DayPageComponent = ({
   const { createEnhancedSlotData } = useSlotData();
   const [, setRebuild] = useState(0);
 
+  const applyDate = (isoString: string, targetDate: string) => {
+    try {
+      const source = dayjs(isoString);
+      const target = dayjs(targetDate, 'YYYY-MM-DD');
+      const adjusted = source
+        .year(target.year())
+        .month(target.month())
+        .date(target.date());
+      return adjusted.toISOString();
+    } catch {
+      return isoString;
+    }
+  };
+
   // Use the passed cached slots directly (single source of truth)
   const daySlots = cachedSlotsForDate && cachedSlotsForDate.length > 0 ? cachedSlotsForDate : null;
 
@@ -111,10 +125,10 @@ const DayPageComponent = ({
     const updatedSlot: SlotItemType = {
       ...draggedSlot,
       startTime: draggedSlot.startTime
-        ? draggedSlot.startTime.replace(previousSelectedDate, date)
+        ? applyDate(draggedSlot.startTime, date)
         : null,
       endTime: draggedSlot.endTime
-        ? draggedSlot.endTime.replace(previousSelectedDate, date)
+        ? applyDate(draggedSlot.endTime, date)
         : null,
     };
 
@@ -147,16 +161,19 @@ const DayPageComponent = ({
       if (!a.startTime) return -1;
       if (!b.startTime) return 1;
 
-      // Sort by start time
-      const startTimeDiff =
-        dayjs(a.startTime).unix() - dayjs(b.startTime).unix();
+      // Sort by local time-of-day to avoid timezone offset issues
+      const aStart = dayjs(a.startTime);
+      const bStart = dayjs(b.startTime);
+      const startTimeDiff = aStart.diff(aStart.startOf('day')) - bStart.diff(bStart.startOf('day'));
 
       // If same start time, prioritize no end time
       if (startTimeDiff === 0) {
         if (!a.endTime && !b.endTime) return 0;
         if (!a.endTime) return -1;
         if (!b.endTime) return 1;
-        return dayjs(a.endTime).unix() - dayjs(b.endTime).unix();
+        const aEnd = dayjs(a.endTime);
+        const bEnd = dayjs(b.endTime);
+        return aEnd.diff(aEnd.startOf('day')) - bEnd.diff(bEnd.startOf('day'));
       }
 
       return startTimeDiff;

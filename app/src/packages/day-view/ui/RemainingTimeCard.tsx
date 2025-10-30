@@ -1,5 +1,6 @@
 import { FC, memo, useMemo, useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, { FlipInEasyX, FlipOutEasyX } from 'react-native-reanimated';
 import {
   colors,
   spacing,
@@ -102,7 +103,7 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
   }, [nextActivityStartTime, tick]);
 
   return (
-    <View>
+    <Animated.View entering={FlipInEasyX} exiting={FlipOutEasyX}>
       <Pressable style={styles.container}>
         {!!uri && (
           <Image
@@ -124,7 +125,7 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
           <Text style={styles.time}>{timeDisplay}</Text>
         </View>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 };
 

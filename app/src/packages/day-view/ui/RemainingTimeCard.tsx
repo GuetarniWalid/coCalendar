@@ -82,7 +82,7 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
         // First timer: wait until the next minute boundary
         timeoutRef.current = setTimeout(() => {
           setTick(prev => prev + 1);
-          
+
           // Then set up interval for subsequent minute updates
           intervalRef.current = setInterval(() => {
             setTick(prev => prev + 1);

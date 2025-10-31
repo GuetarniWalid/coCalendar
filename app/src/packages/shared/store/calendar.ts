@@ -13,7 +13,13 @@ const initialCalendarState: CalendarState = {
   changeAskedBy: null,
 };
 
-function onAfterUpdate({ store, prevStore }: { store: CalendarState; prevStore: CalendarState }) {
+function onAfterUpdate({
+  store,
+  prevStore,
+}: {
+  store: CalendarState;
+  prevStore: CalendarState;
+}) {
   if (store.selectedDate !== prevStore.selectedDate) {
     const [, setPreviousSelectedDate] = getCalendarStore.previousSelectedDate();
     setPreviousSelectedDate(prevStore.selectedDate);

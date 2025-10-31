@@ -124,7 +124,7 @@ export const fetchSlotsForDate = async (
   // Create timezone-aware date range for the selected date
   const startOfDay = dayjs(selectedDate).startOf('day');
   const endOfDay = dayjs(selectedDate).endOf('day');
-  
+
   const startIso = startOfDay.toISOString();
   const endIso = endOfDay.toISOString();
 
@@ -142,7 +142,7 @@ export const fetchSlotsInRange = async (
   // Create timezone-aware date range
   const startOfDay = dayjs(startDate).startOf('day');
   const endOfDay = dayjs(endDate).endOf('day');
-  
+
   const startIso = startOfDay.toISOString();
   const endIso = endOfDay.toISOString();
 

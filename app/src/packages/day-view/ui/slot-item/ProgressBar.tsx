@@ -31,7 +31,7 @@ export const ProgressBar = ({
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const t = useTranslation();
   const progressWidth = useSharedValue(0);
-  
+
   // Timer state for remaining time display
   const [tick, setTick] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,7 +75,7 @@ export const ProgressBar = ({
   // Calculate remaining time text with smart update intervals
   const remainingTimeText = useMemo(() => {
     if (!startTime || !endTime) return null;
-    
+
     const now = dayjs();
     const start = dayjs(startTime);
     const end = dayjs(endTime);
@@ -109,11 +109,11 @@ export const ProgressBar = ({
         // 1 hour or more - show hours and minutes
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
-        
+
         if (minutes === 0) {
           return `${t.remainingPrefix} ${hours}h`;
         }
-        
+
         return `${t.remainingPrefix} ${hours}h ${minutes}${t.minutesPlural}`;
       }
     }
@@ -129,7 +129,7 @@ export const ProgressBar = ({
     // If slot hasn't started yet, set a timeout to trigger recalculation when it starts
     if (now.isBefore(start)) {
       const msUntilStart = start.diff(now);
-      
+
       // Add a small buffer (100ms) to ensure we're past the start time
       const timeout = setTimeout(() => {
         setCurrentTime(new Date()); // Trigger progress animation recalculation
@@ -180,7 +180,7 @@ export const ProgressBar = ({
         // First timer: wait until the next minute boundary
         timeoutRef.current = setTimeout(() => {
           setTick(prev => prev + 1);
-          
+
           // Check if we're now at < 60 seconds
           const nowAfterTimeout = dayjs();
           const remainingAfterTimeout = end.diff(nowAfterTimeout);

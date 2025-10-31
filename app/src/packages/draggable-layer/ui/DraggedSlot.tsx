@@ -58,7 +58,11 @@ export const DraggedSlot = ({ padding }: DraggedSlotProps) => {
 
   return (
     <Animated.View style={[animatedStyle, animatedOpacityStyle]}>
-      <Slot slot={draggedSlot} onImageLoad={handleImageLoad} draggedShadowStyle={styles.shadow} />
+      <Slot
+        slot={draggedSlot}
+        onImageLoad={handleImageLoad}
+        draggedShadowStyle={styles.shadow}
+      />
     </Animated.View>
   );
 };
@@ -67,4 +71,4 @@ const styles = StyleSheet.create({
   shadow: {
     boxShadow: '0px 0px 5px 0 rgba(0, 0, 0, 0.15)',
   },
-})
+});

@@ -16,8 +16,12 @@ interface SlotPositionerProps {
  */
 export const SlotPositioner: FC<SlotPositionerProps> = ({ children, slot }) => {
   const ref = useRef<View>(null);
-  const { draggedSlot, firstOriginalSlotY, lastOriginalSlotY, setNewDraggedSlotScrollY } =
-    useDraggedSlotContext();
+  const {
+    draggedSlot,
+    firstOriginalSlotY,
+    lastOriginalSlotY,
+    setNewDraggedSlotScrollY,
+  } = useDraggedSlotContext();
 
   useEffect(() => {
     if (draggedSlot?.id !== slot.id) return;

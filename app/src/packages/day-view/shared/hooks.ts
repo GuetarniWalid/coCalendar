@@ -129,7 +129,7 @@ export const useDayView = () => {
       const promise = fetchSlotsInRange(supabase, user.id, start, end)
         .then(result => {
           let cacheUpdated = false;
-          
+
           // Merge into cache, but NEVER overwrite existing entries
           Object.keys(result).forEach(dateId => {
             if (slotsCacheRef.current[dateId] === undefined && result[dateId]) {
@@ -203,7 +203,7 @@ export const useDayView = () => {
         slotsCacheRef.current[targetDate].push(updatedSlot);
       }
     }
-    
+
     setCacheVersion(v => v + 1);
   };
 

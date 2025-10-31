@@ -1,6 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { colors, useCalendarStore } from '@project/shared';
-import Animated, { useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useEffect } from 'react';
 
@@ -14,12 +17,18 @@ export const ControllableScrollView = ({
   date,
 }: ControllableScrollViewProps) => {
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
-  const { draggedSlot, newDraggedSlotScrollY, firstOriginalSlotY, lastOriginalSlotY, initialScroll } = useDraggedSlotContext();
+  const {
+    draggedSlot,
+    newDraggedSlotScrollY,
+    firstOriginalSlotY,
+    lastOriginalSlotY,
+    initialScroll,
+  } = useDraggedSlotContext();
   const [selectedDate] = useCalendarStore.selectedDate();
 
   useEffect(() => {
     if (!draggedSlot) return;
-    if(date !== selectedDate) return;
+    if (date !== selectedDate) return;
 
     animatedRef.current?.scrollTo({
       y: newDraggedSlotScrollY,
@@ -28,11 +37,12 @@ export const ControllableScrollView = ({
   }, [newDraggedSlotScrollY]);
 
   const scrollHandler = useAnimatedScrollHandler({
-    onMomentumBegin: (e) => {
+    onMomentumBegin: e => {
       initialScroll.value = e.contentOffset.y;
     },
-    onMomentumEnd: (e) => {
-      lastOriginalSlotY.value = firstOriginalSlotY.value - e.contentOffset.y + initialScroll.value;
+    onMomentumEnd: e => {
+      lastOriginalSlotY.value =
+        firstOriginalSlotY.value - e.contentOffset.y + initialScroll.value;
     },
   });
 

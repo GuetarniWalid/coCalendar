@@ -4,11 +4,7 @@ import { SlotItem } from '../../slot-item';
 import { EmptyDayCard } from '../../EmptyDayCard';
 import { RemainingTimeCard } from '../../RemainingTimeCard';
 import { ControllableScrollView } from './ControllableScrollView';
-import {
-  colors,
-  SlotItem as SlotItemType,
-  fontSize,
-} from '@project/shared';
+import { colors, SlotItem as SlotItemType, fontSize } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
 import { getDateFromIndex } from '../shared/utils';
@@ -64,7 +60,10 @@ const DayPageComponent = ({
   };
 
   // Use the passed cached slots directly (single source of truth)
-  const daySlots = cachedSlotsForDate && cachedSlotsForDate.length > 0 ? cachedSlotsForDate : null;
+  const daySlots =
+    cachedSlotsForDate && cachedSlotsForDate.length > 0
+      ? cachedSlotsForDate
+      : null;
 
   // Set up timers to rebuild when slot start/end times are reached
   useEffect(() => {
@@ -78,12 +77,18 @@ const DayPageComponent = ({
     // Collect all start and end times from slots
     const startTimes = daySlots
       .map(slot => slot.startTime)
-      .filter((startTime): startTime is string => startTime !== null && startTime !== undefined)
+      .filter(
+        (startTime): startTime is string =>
+          startTime !== null && startTime !== undefined
+      )
       .map(startTime => dayjs(startTime));
 
     const endTimes = daySlots
       .map(slot => slot.endTime)
-      .filter((endTime): endTime is string => endTime !== null && endTime !== undefined)
+      .filter(
+        (endTime): endTime is string =>
+          endTime !== null && endTime !== undefined
+      )
       .map(endTime => dayjs(endTime));
 
     const allBoundaryTimes = [...startTimes, ...endTimes];
@@ -91,12 +96,12 @@ const DayPageComponent = ({
     // Set up a timeout for each future boundary time
     allBoundaryTimes.forEach(boundaryTime => {
       const msUntilBoundary = boundaryTime.diff(now);
-      
+
       if (msUntilBoundary > 0) {
         const timeout = setTimeout(() => {
           setRebuild(prev => prev + 1);
         }, msUntilBoundary);
-        
+
         timeouts.push(timeout);
       }
     });
@@ -134,7 +139,15 @@ const DayPageComponent = ({
 
     updateSlotCache(draggedSlot.id, previousSelectedDate, date, updatedSlot);
     setShowSpaceForDraggedSlot(true);
-  }, [draggedSlot, date, updateSlotCache, isCurrentDay, previousSelectedDate, showSpaceForDraggedSlot, setShowSpaceForDraggedSlot]);
+  }, [
+    draggedSlot,
+    date,
+    updateSlotCache,
+    isCurrentDay,
+    previousSelectedDate,
+    showSpaceForDraggedSlot,
+    setShowSpaceForDraggedSlot,
+  ]);
 
   const buildContent = () => {
     if (loading && isCurrentDay && !daySlots) {
@@ -164,7 +177,8 @@ const DayPageComponent = ({
       // Sort by local time-of-day to avoid timezone offset issues
       const aStart = dayjs(a.startTime);
       const bStart = dayjs(b.startTime);
-      const startTimeDiff = aStart.diff(aStart.startOf('day')) - bStart.diff(bStart.startOf('day'));
+      const startTimeDiff =
+        aStart.diff(aStart.startOf('day')) - bStart.diff(bStart.startOf('day'));
 
       // If same start time, prioritize no end time
       if (startTimeDiff === 0) {
@@ -217,7 +231,7 @@ export const DayPage = memo(DayPageComponent, (prevProps, nextProps) => {
   const nextDate = getDateFromIndex(nextProps.dayIndex);
   const isCurrentDayNext = nextDate === nextProps.selectedDate;
   const isPreviousDayNext = nextDate === nextProps.previousSelectedDate;
-  
+
   // Always re-render if this is the current or previous day for drag and drop
   if (isCurrentDayNext || isPreviousDayNext) {
     return false;

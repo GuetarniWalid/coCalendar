@@ -75,7 +75,7 @@ export const useDragSlotListGesture = ({
     })
     .onEnd(() => {
       const finalDraggedSlotOffsetY =
-      lastOriginalSlotY.value - draggedSlotY.value;
+        lastOriginalSlotY.value - draggedSlotY.value;
 
       draggedSlotOffsetX.value = withSpring(0);
       draggedSlotOffsetY.value = withSpring(finalDraggedSlotOffsetY, {}, () => {

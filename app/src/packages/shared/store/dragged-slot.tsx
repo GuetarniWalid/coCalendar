@@ -57,7 +57,7 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
 
   // For scrolling the slot list
   const [newDraggedSlotScrollY, setNewDraggedSlotScrollY] = useState<number>(0);
-  const initialScroll = useSharedValue(0)
+  const initialScroll = useSharedValue(0);
 
   const contextValue = {
     draggedSlotOpacity,

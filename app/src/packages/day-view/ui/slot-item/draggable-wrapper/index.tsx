@@ -47,10 +47,7 @@ export const DraggableSlotWrapper: FC<DraggableSlotWrapperProps> = ({
   });
 
   return (
-    <Animated.View
-      ref={ref}
-      style={isSlotDragged ? animatedOpacityStyle : {}}
-    >
+    <Animated.View ref={ref} style={isSlotDragged ? animatedOpacityStyle : {}}>
       <GestureDetector gesture={gesture}>{children}</GestureDetector>
     </Animated.View>
   );

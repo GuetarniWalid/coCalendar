@@ -39,7 +39,7 @@ export const updateSlotDate = async (
       const hour = startTime.hour();
       const minute = startTime.minute();
       const second = startTime.second();
-      
+
       // Create new start time with target date
       updatedStartTime = dayjs(targetDate)
         .hour(hour)
@@ -53,7 +53,7 @@ export const updateSlotDate = async (
       const hour = endTime.hour();
       const minute = endTime.minute();
       const second = endTime.second();
-      
+
       // Create new end time with target date
       updatedEndTime = dayjs(targetDate)
         .hour(hour)
@@ -111,4 +111,3 @@ export const updateSlotDate = async (
     return null;
   }
 };
-

@@ -170,7 +170,7 @@ export const DateSelector: FC = () => {
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToIndex({ index: 1, animated: false });
         setTimeout(() => {
-          setSelectedDate(targetSelectedDate)
+          setSelectedDate(targetSelectedDate);
           setChangeAskedBy('dateSelector');
         }, 0);
       });
@@ -199,7 +199,7 @@ export const DateSelector: FC = () => {
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToIndex({ index: 1, animated: false });
         setTimeout(() => {
-          setSelectedDate(targetSelectedDate)
+          setSelectedDate(targetSelectedDate);
           setChangeAskedBy('dateSelector');
         }, 0);
       });

@@ -6,32 +6,33 @@
  * @returns Promise with the result or throws after all retries fail
  */
 export async function retryWithBackoff<T>(
-    fn: () => Promise<T>,
-    maxRetries: number = 3,
-    initialDelay: number = 1000
-  ): Promise<T> {
-    let lastError: any;
-    
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error) {
-        lastError = error;
-        
-        // Don't retry on the last attempt
-        if (attempt === maxRetries - 1) {
-          throw error;
-        }
-        
-        // Calculate delay with exponential backoff
-        const delay = initialDelay * Math.pow(2, attempt);
-        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`);
-        
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, delay));
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: any;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      // Don't retry on the last attempt
+      if (attempt === maxRetries - 1) {
+        throw error;
       }
+
+      // Calculate delay with exponential backoff
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.log(
+        `Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`
+      );
+
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-    
-    throw lastError;
   }
-  
+
+  throw lastError;
+}

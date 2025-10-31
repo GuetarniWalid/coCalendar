@@ -1,11 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import { useCallback } from 'react';
 import { useDayView } from '../shared/hooks';
-import {
-  useAuthStore,
-  SlotItem,
-  retryWithBackoff,
-} from '@project/shared';
+import { useAuthStore, SlotItem, retryWithBackoff } from '@project/shared';
 import { SlotList } from './slot-list';
 import { colors } from '@project/shared';
 import { VisibleMonthYear } from './VisibleMonthYear';
@@ -14,7 +10,8 @@ import { DateSelector } from './DateSelector';
 import { updateSlotDate } from '../data/update-slot';
 
 export const DayViewScreen = () => {
-  const { slots, loading, updateSlotCache, slotsCacheRef, cacheVersion } = useDayView();
+  const { slots, loading, updateSlotCache, slotsCacheRef, cacheVersion } =
+    useDayView();
   const [{ supabase, user }] = useAuthStore();
 
   // Handle slot drop to another day

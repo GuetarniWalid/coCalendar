@@ -20,8 +20,7 @@ import { hexToRgba } from '../shared/utils';
  * (opacity and width animations)
  */
 export const useZoneVisualEffects = () => {
-  const { draggedSlotHorizontalZone, draggedSlot } =
-    useDraggedSlotContext();
+  const { draggedSlotHorizontalZone, draggedSlot } = useDraggedSlotContext();
 
   const leftZoneOpacity = useSharedValue(0);
   const rightZoneOpacity = useSharedValue(0);
@@ -87,7 +86,7 @@ export const useZoneVisualEffects = () => {
 
   // Create background color with opacity
   const zoneBackgroundColor = hexToRgba(
-     getSlotBackgroundColor(draggedSlot?.color),
+    getSlotBackgroundColor(draggedSlot?.color),
     0.6
   );
 

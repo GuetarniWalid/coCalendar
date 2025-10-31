@@ -7,11 +7,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import {
-  CALENDAR_CONSTANTS,
-  colors,
-  useCalendarStore,
-} from '@project/shared';
+import { CALENDAR_CONSTANTS, colors, useCalendarStore } from '@project/shared';
 import { DayPage } from './DayPage';
 import { SlotListProps } from '../shared/types';
 import { getDateFromIndex, getIndexFromDate } from '../shared/utils';
@@ -81,7 +77,7 @@ export const SlotList = ({
     ({ item: dayIndex }: { item: number }) => {
       const date = getDateFromIndex(dayIndex);
       const cachedSlots = slotsCacheRef.current?.[date] ?? undefined;
-      
+
       return (
         <DayPage
           dayIndex={dayIndex}
@@ -96,7 +92,16 @@ export const SlotList = ({
         />
       );
     },
-    [screenWidth, loading, previousSelectedDate, selectedDate, draggedSlot, slotsCacheRef, cacheVersion, updateSlotCache]
+    [
+      screenWidth,
+      loading,
+      previousSelectedDate,
+      selectedDate,
+      draggedSlot,
+      slotsCacheRef,
+      cacheVersion,
+      updateSlotCache,
+    ]
   );
 
   return (

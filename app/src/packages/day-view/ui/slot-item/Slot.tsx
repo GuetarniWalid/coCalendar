@@ -64,14 +64,16 @@ export const Slot = ({ slot, onImageLoad, draggedShadowStyle }: SlotProps) => {
   }, [slot.image]);
 
   return (
-    <Animated.View style={[styles.container, dynamicStyle, draggedShadowStyle]} collapsable={false} layout={LinearTransition}>
+    <Animated.View
+      style={[styles.container, dynamicStyle, draggedShadowStyle]}
+      collapsable={false}
+      layout={LinearTransition}
+    >
       <View style={[styles.cardContainer]}>
         <CompletionCheckmark slot={slot} />
         <View style={styles.contentContainer}>
           <Text style={styles.time}>{timeText}</Text>
-          <Text style={styles.title}>
-            {slot.title}
-          </Text>
+          <Text style={styles.title}>{slot.title}</Text>
           <ProgressBar
             startTime={slot.startTime}
             endTime={slot.endTime}
@@ -83,7 +85,10 @@ export const Slot = ({ slot, onImageLoad, draggedShadowStyle }: SlotProps) => {
             <VoiceIndicator voice_path={slot.voice_path} />
           </Animated.View>
           {slot.participants && slot.participants.length > 0 && (
-            <Animated.View style={styles.participantsRow} layout={LinearTransition}>
+            <Animated.View
+              style={styles.participantsRow}
+              layout={LinearTransition}
+            >
               <ParticipantsIndicator
                 participants={slot.participants}
                 slotColor={slot.color as SlotColorName}

@@ -27,7 +27,6 @@ export const useHorizontalScroll = () => {
   // Clear timer helper for horizontal scroll
   const clearHorizontalTimer = useCallback(() => {
     if (horizontalScrollTimerRef.current) {
-
       clearTimeout(horizontalScrollTimerRef.current);
       horizontalScrollTimerRef.current = null;
     }

@@ -88,7 +88,7 @@ export const useZoneVisualEffects = () => {
   // Create background color with opacity
   const zoneBackgroundColor = hexToRgba(
      getSlotBackgroundColor(draggedSlot?.color),
-    0.3
+    0.6
   );
 
   // Animated styles for zones

@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
   year: {
     fontSize: fontSize.xl,
     fontWeight: fontWeight.black,
-    color: colors.typography.secondary,
+    color: colors.bottomNavigation.selector,
     marginLeft: 5,
   },
 });

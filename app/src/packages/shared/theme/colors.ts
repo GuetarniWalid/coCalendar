@@ -139,11 +139,11 @@ const lightColors: ColorPalette = {
   // Action colors
   action: {
     background: {
-      primary: '#FFE78D',
+      primary: '#F9EFC6',
     },
 
     typography: {
-      primary: '#6E2F1D',
+      primary: '#904633',
     },
   },
 
@@ -189,11 +189,11 @@ const darkColors: ColorPalette = {
 
   action: {
     background: {
-      primary: '#FFE78D',
+      primary: '#F9EFC6',
     },
 
     typography: {
-      primary: '#6E2F1D',
+      primary: '#904633',
     },
   },
 

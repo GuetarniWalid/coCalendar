@@ -1,5 +1,4 @@
 import { View, StyleSheet } from 'react-native';
-import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 import { ScrollZones } from './ScrollZones';
 import { DraggedSlot } from './DraggedSlot';
 
@@ -10,8 +9,6 @@ const PADDING = 12;
  * Orchestrates horizontal scrolling, visual effects, and dragged slot positioning
  */
 export const DraggableLayer = () => {
-  useHorizontalScroll();
-
   return (
     <View style={styles.container} pointerEvents="none">
       <ScrollZones />

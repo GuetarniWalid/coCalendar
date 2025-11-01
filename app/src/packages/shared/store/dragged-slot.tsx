@@ -2,7 +2,6 @@ import { createContext, useContext, ReactNode, useState } from 'react';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
 import { SlotItem as SlotItemType } from '@project/shared';
 
-// Create context for dragged slot shared values
 interface DraggedSlotContextType {
   draggedSlotOpacity: SharedValue<number>;
   draggedSlotX: SharedValue<number>;
@@ -19,6 +18,8 @@ interface DraggedSlotContextType {
   newDraggedSlotScrollY: number;
   setNewDraggedSlotScrollY: (y: number) => void;
   initialScroll: SharedValue<number>;
+  hasDayChangedDuringDrag: boolean;
+  setHasDayChangedDuringDrag: (hasChanged: boolean) => void;
 }
 
 const DraggedSlotContext = createContext<DraggedSlotContextType | null>(null);
@@ -33,13 +34,11 @@ export const useDraggedSlotContext = () => {
   return context;
 };
 
-// Provider component
 interface DraggedSlotProviderProps {
   children: ReactNode;
 }
 
 export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
-  // Create shared values for dragged slot
   const draggedSlotOpacity = useSharedValue(0);
   const draggedSlotX = useSharedValue(0);
   const draggedSlotY = useSharedValue(0);
@@ -51,12 +50,9 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     'middle'
   );
   const [draggedSlot, setDraggedSlot] = useState<SlotItemType | null>(null);
-
-  // For drag and drop between days
   const [sourceDayDate, setSourceDayDate] = useState<string | null>(null);
-
-  // For scrolling the slot list
-  const [newDraggedSlotScrollY, setNewDraggedSlotScrollY] = useState<number>(0);
+  const [hasDayChangedDuringDrag, setHasDayChangedDuringDrag] = useState(false);
+  const [newDraggedSlotScrollY, setNewDraggedSlotScrollY] = useState(0);
   const initialScroll = useSharedValue(0);
 
   const contextValue = {
@@ -72,6 +68,8 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     setDraggedSlot,
     sourceDayDate,
     setSourceDayDate,
+    hasDayChangedDuringDrag,
+    setHasDayChangedDuringDrag,
     newDraggedSlotScrollY,
     setNewDraggedSlotScrollY,
     initialScroll,

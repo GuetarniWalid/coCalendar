@@ -10,6 +10,7 @@ import {
 import { BottomNavigationProps } from '../shared/types';
 import dayjs from 'dayjs';
 import { useNavigation } from '@react-navigation/native';
+import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 
 const stateMachineName = 'State Machine 1';
 const resourceName = 'bottom_navigation';
@@ -24,6 +25,7 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
   const [selectedDate] = useCalendarStore.selectedDate();
   const currentDay = dayjs(selectedDate).format('DD');
   const navigation = useNavigation<any>();
+  const { draggedSlot } = useDraggedSlotContext();
 
   // Screen mapping array - maps index to screen name (except index 0 which toggles)
   const screenMap = [null, 'Profile', 'SlotForm', 'Statistics', 'Tasks'];
@@ -79,7 +81,7 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
   };
 
   return (
-    <SafeAreaView edges={['bottom']} style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={[styles.container]} pointerEvents={draggedSlot ? "none" : "auto"}>
       <View style={styles.riveContainer}>
         <Rive
           style={styles.rive}

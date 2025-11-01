@@ -15,9 +15,6 @@ interface UseDragSlotListGestureProps {
   ) => void;
 }
 
-/**
- * Hook to manage the position animation of the dragged slot
- */
 export const useDragSlotListGesture = ({
   handleSlotDropped,
 }: UseDragSlotListGestureProps) => {
@@ -32,17 +29,15 @@ export const useDragSlotListGesture = ({
     draggedSlotOpacity,
     lastOriginalSlotY,
     draggedSlotY,
+    setHasDayChangedDuringDrag,
   } = useDraggedSlotContext();
   const [selectedDate] = useCalendarStore.selectedDate();
   const slotListPanRef = useRef<GestureType | undefined>(undefined);
-
-  // Hook for zone detection logic
   const { updateZones } = useZoneDetection(draggedSlotHorizontalZone);
 
   const handlePanEnd = useCallback(() => {
     setDraggedSlot(null);
 
-    // Update slot on database
     if (
       handleSlotDropped &&
       draggedSlot &&
@@ -52,10 +47,12 @@ export const useDragSlotListGesture = ({
       handleSlotDropped(draggedSlot, sourceDayDate, selectedDate);
     }
 
-    // Clean up drag data
     setSourceDayDate(null);
+    setHasDayChangedDuringDrag(false);
   }, [
+    setDraggedSlot,
     setSourceDayDate,
+    setHasDayChangedDuringDrag,
     selectedDate,
     sourceDayDate,
     handleSlotDropped,
@@ -69,8 +66,6 @@ export const useDragSlotListGesture = ({
     .onUpdate(e => {
       draggedSlotOffsetX.value = e.translationX;
       draggedSlotOffsetY.value = e.translationY;
-
-      // Update zone detection
       updateZones(e.absoluteX);
     })
     .onEnd(() => {
@@ -79,7 +74,6 @@ export const useDragSlotListGesture = ({
 
       draggedSlotOffsetX.value = withSpring(0);
       draggedSlotOffsetY.value = withSpring(finalDraggedSlotOffsetY, {}, () => {
-        // Reset all dragged slot values after animation completes
         draggedSlotHorizontalZone.value = 'middle';
         draggedSlotOpacity.value = 0;
         scheduleOnRN(handlePanEnd);

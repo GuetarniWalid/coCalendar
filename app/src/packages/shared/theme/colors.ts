@@ -134,7 +134,7 @@ const lightColors: ColorPalette = {
   // Semantic colors
   success: '#76C496',
   warning: '#fbbf24',
-  error: '#f87171',
+  error: '#F65757',
 
   // Action colors
   action: {
@@ -183,7 +183,7 @@ const darkColors: ColorPalette = {
   // Semantic colors
   success: '#76C496',
   warning: '#fbbf24',
-  error: '#f87171',
+  error: '#F65757',
 
   // Action colors
 

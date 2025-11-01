@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { CALENDAR_CONSTANTS } from '@project/shared';
 import { useZoneVisualEffects } from '../hooks/useZoneVisualEffects';
+import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
 /**
  * Visual indicators for left and right scroll zones
@@ -9,6 +10,7 @@ import { useZoneVisualEffects } from '../hooks/useZoneVisualEffects';
 export const ScrollZones = () => {
   // Handle visual effects for scroll zones
   const { leftZoneStyle, rightZoneStyle } = useZoneVisualEffects();
+  useHorizontalScroll();
 
   return (
     <>

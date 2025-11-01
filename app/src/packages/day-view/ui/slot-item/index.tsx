@@ -4,6 +4,8 @@ import { DraggableSlotWrapper } from './draggable-wrapper';
 import { SlotPositioner } from './SlotPositioner';
 import { Slot } from './Slot';
 import { useNavigation } from '@react-navigation/native';
+import { SwipeActionButton } from './SwipeActionButton';
+import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -14,14 +16,39 @@ interface SlotItemProps {
 const SlotItemBase: FC<SlotItemProps> = ({ slot, date, slotListPanRef }) => {
   const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
   const navigation = useNavigation<any>();
+  const { draggedSlot, hasDayChangedDuringDrag } = useDraggedSlotContext();
 
   const handleSlotPress = useCallback(() => {
     setSelectedSlot(slot);
     navigation.navigate('SlotForm');
-  }, [setSelectedSlot, navigation]);
+  }, [slot, setSelectedSlot, navigation]);
+
+  const handleDeleteAction = useCallback(() => {
+    // TODO: Implement delete action
+  }, []);
+
+  const handleSuccessAction = useCallback(() => {
+    // TODO: Implement success action
+  }, []);
 
   return (
     <SlotPositioner slot={slot} date={date}>
+      {draggedSlot?.id === slot.id && !hasDayChangedDuringDrag && (
+        <>
+          <SwipeActionButton
+            side="left"
+            variant="delete"
+            slotDate={date}
+            onAction={handleDeleteAction}
+          />
+          <SwipeActionButton
+            side="right"
+            variant="success"
+            slotDate={date}
+            onAction={handleSuccessAction}
+          />
+        </>
+      )}
       <DraggableSlotWrapper
         onPress={handleSlotPress}
         slot={slot}
@@ -37,7 +64,6 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
   const prev = prevProps.slot;
   const next = nextProps.slot;
 
-  // Compare essential props that affect rendering
   return (
     prev.id === next.id &&
     prev.title === next.title &&

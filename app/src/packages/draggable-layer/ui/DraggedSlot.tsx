@@ -4,6 +4,7 @@ import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { Slot } from '@project/day-view';
 import { useDraggedSlotPosition } from '../hooks/useDraggedSlotPosition';
 import { StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 type DraggedSlotProps = {
   padding: number;
@@ -12,7 +13,7 @@ type DraggedSlotProps = {
 const IMAGE_LOAD_TIMEOUT = 300;
 
 export const DraggedSlot = ({ padding }: DraggedSlotProps) => {
-  const { draggedSlot, draggedSlotOpacity } = useDraggedSlotContext();
+  const { draggedSlot, draggedSlotOpacity, isSlotReady } = useDraggedSlotContext();
   const imageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { animatedStyle } = useDraggedSlotPosition({ padding });
 
@@ -26,12 +27,14 @@ export const DraggedSlot = ({ padding }: DraggedSlotProps) => {
   const showSlot = useCallback(() => {
     clearImageTimeout();
     draggedSlotOpacity.value = 1;
-  }, [clearImageTimeout]);
+    isSlotReady.value = true;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  }, [clearImageTimeout, draggedSlotOpacity, isSlotReady]);
 
   const hideSlot = useCallback(() => {
     clearImageTimeout();
     draggedSlotOpacity.value = 0;
-  }, [clearImageTimeout]);
+  }, [clearImageTimeout, draggedSlotOpacity]);
 
   // Handle slot changes
   useEffect(() => {

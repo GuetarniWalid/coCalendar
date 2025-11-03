@@ -6,6 +6,7 @@ import { LONG_PRESS_DURATION } from '../../slot-item/draggable-wrapper/shared/co
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useZoneDetection } from '../../slot-item/draggable-wrapper/hooks/useZoneDetection';
 import { useVerticalSnap } from '../../slot-item/draggable-wrapper/hooks/useVerticalSnap';
+import { useHorizontalSnap } from '../../slot-item/draggable-wrapper/hooks/useHorizontalSnap';
 import { useCalendarStore } from '@project/shared/store/calendar';
 
 interface UseDragSlotListGestureProps {
@@ -36,6 +37,7 @@ export const useDragSlotListGesture = ({
   const slotListPanRef = useRef<GestureType | undefined>(undefined);
   const { updateZones } = useZoneDetection(draggedSlotHorizontalZone);
   const { applyVerticalSnap } = useVerticalSnap();
+  const { applyHorizontalSnap } = useHorizontalSnap();
 
   const handlePanEnd = useCallback(() => {
     setDraggedSlot(null);
@@ -66,7 +68,7 @@ export const useDragSlotListGesture = ({
     .activateAfterLongPress(LONG_PRESS_DURATION)
     .shouldCancelWhenOutside(false)
     .onUpdate(e => {
-      draggedSlotOffsetX.value = e.translationX;
+      applyHorizontalSnap(e.translationX);
       applyVerticalSnap(e.translationY);
       updateZones(e.absoluteX);
     })
@@ -74,12 +76,24 @@ export const useDragSlotListGesture = ({
       const finalDraggedSlotOffsetY =
         lastOriginalSlotY.value - draggedSlotY.value;
 
-      draggedSlotOffsetX.value = withSpring(0);
-      draggedSlotOffsetY.value = withSpring(finalDraggedSlotOffsetY, {}, () => {
+      const absOffsetX = Math.abs(draggedSlotOffsetX.value);
+      const absOffsetY = Math.abs(finalDraggedSlotOffsetY);
+      const isXLonger = absOffsetX > absOffsetY;
+
+      const onFinish = () => {
         draggedSlotHorizontalZone.value = 'middle';
         draggedSlotOpacity.value = 0;
         scheduleOnRN(handlePanEnd);
-      });
+      };
+
+      if (isXLonger) {
+        draggedSlotOffsetX.value = withSpring(0, {}, onFinish);
+        draggedSlotOffsetY.value = withSpring(finalDraggedSlotOffsetY);
+      } else {
+        draggedSlotOffsetX.value = withSpring(0);
+        draggedSlotOffsetY.value = withSpring(finalDraggedSlotOffsetY, {}, onFinish);
+      }
+
       draggedSlotHorizontalZone.value = 'middle';
     });
 

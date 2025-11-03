@@ -25,10 +25,12 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, date, slotListPanRef }) => {
 
   const handleDeleteAction = useCallback(() => {
     // TODO: Implement delete action
+    console.log('delete action');
   }, []);
 
   const handleSuccessAction = useCallback(() => {
     // TODO: Implement success action
+    console.log('success action');
   }, []);
 
   return (

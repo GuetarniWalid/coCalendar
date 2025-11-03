@@ -1,6 +1,7 @@
 import { createContext, useContext, ReactNode, useState } from 'react';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
 import { SlotItem as SlotItemType } from '@project/shared';
+import { SWIPE_BUTTON_WIDTH } from '../../day-view/ui/slot-item/SwipeActionButton/constants';
 
 interface DraggedSlotContextType {
   draggedSlotOpacity: SharedValue<number>;
@@ -23,6 +24,16 @@ interface DraggedSlotContextType {
   isVerticalSnapActive: SharedValue<boolean>;
   verticalSnapThreshold: SharedValue<number>;
   snapTransitionProgress: SharedValue<number>;
+  isHorizontalSnapActive: SharedValue<boolean>;
+  horizontalSnapThreshold: SharedValue<number>;
+  horizontalSnapBreakThreshold: SharedValue<number>;
+  horizontalSnapProgress: SharedValue<number>;
+  lastHorizontalOffset: SharedValue<number>;
+  hasReturnedBelowThreshold: SharedValue<boolean>;
+  snapStartPosition: SharedValue<number>;
+  lastAbsOffset: SharedValue<number>;
+  isDragging: SharedValue<boolean>;
+  isSlotReady: SharedValue<boolean>;
 }
 
 const DraggedSlotContext = createContext<DraggedSlotContextType | null>(null);
@@ -52,7 +63,7 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
   const draggedSlotHorizontalZone = useSharedValue<'left' | 'middle' | 'right'>(
     'middle'
   );
-  const [draggedSlot, setDraggedSlot] = useState<SlotItemType | null>(null);
+  const [draggedSlot, setDraggedSlotState] = useState<SlotItemType | null>(null);
   const [sourceDayDate, setSourceDayDate] = useState<string | null>(null);
   const [hasDayChangedDuringDrag, setHasDayChangedDuringDrag] = useState(false);
   const [newDraggedSlotScrollY, setNewDraggedSlotScrollY] = useState(0);
@@ -60,6 +71,24 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
   const isVerticalSnapActive = useSharedValue(true);
   const verticalSnapThreshold = useSharedValue(50);
   const snapTransitionProgress = useSharedValue(0);
+  const isHorizontalSnapActive = useSharedValue(false);
+  const horizontalSnapThreshold = useSharedValue(SWIPE_BUTTON_WIDTH);
+  const horizontalSnapBreakThreshold = useSharedValue(50);
+  const horizontalSnapProgress = useSharedValue(0);
+  const lastHorizontalOffset = useSharedValue(0);
+  const hasReturnedBelowThreshold = useSharedValue(true);
+  const snapStartPosition = useSharedValue(0);
+  const lastAbsOffset = useSharedValue(0);
+  const isDragging = useSharedValue(false);
+  const isSlotReady = useSharedValue(false);
+
+  const setDraggedSlot = (slot: SlotItemType | null) => {
+    setDraggedSlotState(slot);
+    isDragging.value = slot !== null;
+    if (slot !== null) {
+      isSlotReady.value = false;
+    }
+  };
 
   const contextValue = {
     draggedSlotOpacity,
@@ -82,6 +111,16 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     isVerticalSnapActive,
     verticalSnapThreshold,
     snapTransitionProgress,
+    isHorizontalSnapActive,
+    horizontalSnapThreshold,
+    horizontalSnapBreakThreshold,
+    horizontalSnapProgress,
+    lastHorizontalOffset,
+    hasReturnedBelowThreshold,
+    snapStartPosition,
+    lastAbsOffset,
+    isDragging,
+    isSlotReady,
   };
 
   return (

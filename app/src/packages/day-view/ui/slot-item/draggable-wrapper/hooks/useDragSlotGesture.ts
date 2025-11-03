@@ -6,6 +6,7 @@ import { LONG_PRESS_DURATION, TAP_MAX_DURATION } from '../shared/constants';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useCalendarStore } from '@project/shared/store/calendar';
 import { useVerticalSnap } from './useVerticalSnap';
+import { useHorizontalSnap } from './useHorizontalSnap';
 import { SlotItem as SlotItemType } from '@project/shared';
 import { View } from 'react-native';
 
@@ -34,6 +35,7 @@ export const useDragSlotGesture = ({
   } = useDraggedSlotContext();
   const [selectedDate] = useCalendarStore.selectedDate();
   const { resetVerticalSnap } = useVerticalSnap();
+  const { resetHorizontalSnap } = useHorizontalSnap();
 
   const handlePress = useCallback(() => {
     onPress();
@@ -48,8 +50,6 @@ export const useDragSlotGesture = ({
     }
     setDraggedSlot(slot);
     setSourceDayDate(selectedDate);
-    resetVerticalSnap();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }, [
     slotRef,
     draggedSlotX,
@@ -58,7 +58,6 @@ export const useDragSlotGesture = ({
     setDraggedSlot,
     selectedDate,
     setSourceDayDate,
-    resetVerticalSnap,
   ]);
 
   const tap = Gesture.Tap()
@@ -71,6 +70,8 @@ export const useDragSlotGesture = ({
     .activateAfterLongPress(LONG_PRESS_DURATION)
     .onStart(e => {
       draggedSlotOffsetY.value = e.translationY;
+      resetVerticalSnap();
+      resetHorizontalSnap();
       scheduleOnRN(handlePanStart);
     });
 

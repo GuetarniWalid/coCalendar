@@ -1,0 +1,2 @@
+export const SWIPE_BUTTON_WIDTH = 115;
+export const CONTAINER_PADDING_VERTICAL = 12;

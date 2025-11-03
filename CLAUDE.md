@@ -309,3 +309,7 @@ BREAKING CHANGE: Store structure has changed, requires migration
 3. **Scope**: Always use lowercase, match package names when possible
 4. **Type**: Must be one of the approved types listed above
 5. **Format**: Always include scope in parentheses, even if it's general like `(app)`
+
+
+### Reanimated Guidelines
+- when using reanimated, never use runOnJS but scheduleOnRN instead, runOnJS is deprecated

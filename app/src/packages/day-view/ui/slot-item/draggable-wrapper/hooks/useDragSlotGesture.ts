@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { LONG_PRESS_DURATION, TAP_MAX_DURATION } from '../shared/constants';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useCalendarStore } from '@project/shared/store/calendar';
+import { useVerticalSnap } from './useVerticalSnap';
 import { SlotItem as SlotItemType } from '@project/shared';
 import { View } from 'react-native';
 
@@ -32,6 +33,7 @@ export const useDragSlotGesture = ({
     draggedSlotOffsetY,
   } = useDraggedSlotContext();
   const [selectedDate] = useCalendarStore.selectedDate();
+  const { resetVerticalSnap } = useVerticalSnap();
 
   const handlePress = useCallback(() => {
     onPress();
@@ -46,6 +48,7 @@ export const useDragSlotGesture = ({
     }
     setDraggedSlot(slot);
     setSourceDayDate(selectedDate);
+    resetVerticalSnap();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }, [
     slotRef,
@@ -55,6 +58,7 @@ export const useDragSlotGesture = ({
     setDraggedSlot,
     selectedDate,
     setSourceDayDate,
+    resetVerticalSnap,
   ]);
 
   const tap = Gesture.Tap()

@@ -20,6 +20,9 @@ interface DraggedSlotContextType {
   initialScroll: SharedValue<number>;
   hasDayChangedDuringDrag: boolean;
   setHasDayChangedDuringDrag: (hasChanged: boolean) => void;
+  isVerticalSnapActive: SharedValue<boolean>;
+  verticalSnapThreshold: SharedValue<number>;
+  snapTransitionProgress: SharedValue<number>;
 }
 
 const DraggedSlotContext = createContext<DraggedSlotContextType | null>(null);
@@ -54,6 +57,9 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
   const [hasDayChangedDuringDrag, setHasDayChangedDuringDrag] = useState(false);
   const [newDraggedSlotScrollY, setNewDraggedSlotScrollY] = useState(0);
   const initialScroll = useSharedValue(0);
+  const isVerticalSnapActive = useSharedValue(true);
+  const verticalSnapThreshold = useSharedValue(50);
+  const snapTransitionProgress = useSharedValue(0);
 
   const contextValue = {
     draggedSlotOpacity,
@@ -73,6 +79,9 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     newDraggedSlotScrollY,
     setNewDraggedSlotScrollY,
     initialScroll,
+    isVerticalSnapActive,
+    verticalSnapThreshold,
+    snapTransitionProgress,
   };
 
   return (

@@ -5,6 +5,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { LONG_PRESS_DURATION } from '../../slot-item/draggable-wrapper/shared/constants';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useZoneDetection } from '../../slot-item/draggable-wrapper/hooks/useZoneDetection';
+import { useVerticalSnap } from '../../slot-item/draggable-wrapper/hooks/useVerticalSnap';
 import { useCalendarStore } from '@project/shared/store/calendar';
 
 interface UseDragSlotListGestureProps {
@@ -34,6 +35,7 @@ export const useDragSlotListGesture = ({
   const [selectedDate] = useCalendarStore.selectedDate();
   const slotListPanRef = useRef<GestureType | undefined>(undefined);
   const { updateZones } = useZoneDetection(draggedSlotHorizontalZone);
+  const { applyVerticalSnap } = useVerticalSnap();
 
   const handlePanEnd = useCallback(() => {
     setDraggedSlot(null);
@@ -65,7 +67,7 @@ export const useDragSlotListGesture = ({
     .shouldCancelWhenOutside(false)
     .onUpdate(e => {
       draggedSlotOffsetX.value = e.translationX;
-      draggedSlotOffsetY.value = e.translationY;
+      applyVerticalSnap(e.translationY);
       updateZones(e.absoluteX);
     })
     .onEnd(() => {

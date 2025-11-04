@@ -31,7 +31,7 @@ const SLOT_SELECT_COLUMNS = `
   voice_mime,
   voice_size_bytes,
   voice_created_at,
-  completed,
+  completion_status,
   owner_id,
   slot_tasks(id, text, is_done, position),
   slot_participants(
@@ -71,7 +71,7 @@ const transformSlotData = (slot: any): SlotItem => {
     description: slot.description ?? undefined,
     color: slot.color as SlotColorName | undefined,
     image: slot.image ?? undefined,
-    completed: slot.completed ?? false,
+    completionStatus: slot.completion_status ?? 'auto',
     tasks: Array.isArray(slot.slot_tasks)
       ? slot.slot_tasks.sort((a: any, b: any) => a.position - b.position)
       : undefined,

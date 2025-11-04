@@ -5,6 +5,7 @@ import {
   SlotItem,
   calculateTaskCompletion,
   useCalendarStore,
+  isSlotCompleted,
 } from '@project/shared';
 import dayjs from 'dayjs';
 
@@ -49,7 +50,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots }) => {
 
     // Find the next slot to end
     const upcomingSlots = slots.filter(slot => {
-      if (slot.completed || !slot.endTime) return false;
+      if (isSlotCompleted(slot) || !slot.endTime) return false;
       const endTime = new Date(slot.endTime);
       return endTime > now;
     });

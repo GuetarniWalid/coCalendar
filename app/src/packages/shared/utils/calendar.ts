@@ -1,6 +1,27 @@
 import dayjs from 'dayjs';
 import { DayItem, SlotItem } from '../types/calendar';
-import { Translations } from '@project/i18n';
+
+const isDayPassed = (startTime: string | null): boolean => {
+  if (!startTime) return false;
+  const slotDate = new Date(startTime);
+  const today = new Date();
+  slotDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return slotDate < today;
+};
+
+export const isSlotCompleted = (slot: SlotItem): boolean => {
+  if (slot.completionStatus === 'completed') return true;
+  if (slot.completionStatus === 'incomplete') return false;
+
+  if (!slot.endTime) {
+    return isDayPassed(slot.startTime);
+  }
+
+  const endTimeDate = new Date(slot.endTime);
+  const now = new Date();
+  return now > endTimeDate;
+};
 
 export const calculateTaskCompletion = (
   tasks: SlotItem[],
@@ -35,14 +56,11 @@ export const calculateTaskCompletion = (
 
     if (!taskDate || !currentDate) continue;
 
-    // Check if task is manually marked as completed
-    if (task.completed) {
+    if (isSlotCompleted(task)) {
       completedTasks++;
     } else if (taskDate < currentDate) {
-      // Task is from a previous date - consider it completed
       completedTasks++;
     } else if (taskDate === currentDate) {
-      // Task is from today - check if end time has passed
       if (taskEndTime && currentTime && taskEndTime <= currentTime) {
         completedTasks++;
       }

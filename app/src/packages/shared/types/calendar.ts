@@ -14,6 +14,8 @@ export interface SlotParticipant {
   created_at?: string;
 }
 
+export type SlotCompletionStatus = 'auto' | 'completed' | 'incomplete';
+
 export interface SlotItem {
   id: string;
   title: string;
@@ -24,7 +26,7 @@ export interface SlotItem {
   visibility?: 'private' | 'public';
   description?: string;
   color?: SlotColorName | undefined;
-  completed?: boolean;
+  completionStatus: SlotCompletionStatus;
   image?: {
     persona: 'adult-female' | 'adult-male' | 'child-female' | 'child-male';
     activity: string;

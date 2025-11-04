@@ -204,6 +204,7 @@ const DayPageComponent = ({
               slot={item.data}
               date={date}
               slotListPanRef={slotListPanRef}
+              updateSlotCache={updateSlotCache}
             />
           ) : (
             <RemainingTimeCard

@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import dayjs from 'dayjs';
-import { SlotItem } from '@project/shared';
+import { SlotItem, SlotCompletionStatus } from '@project/shared';
 
 /**
  * Updates a slot's date in Supabase, adjusting the time fields appropriately
@@ -96,7 +96,7 @@ export const updateSlotDate = async (
       visibility: updatedSlot.visibility,
       description: updatedSlot.description,
       color: updatedSlot.color,
-      completed: updatedSlot.completed,
+      completionStatus: updatedSlot.completion_status ?? 'auto',
       image: updatedSlot.image,
       tasks: updatedSlot.tasks,
       voice_path: updatedSlot.voice_path,
@@ -108,6 +108,60 @@ export const updateSlotDate = async (
     };
   } catch (error) {
     console.error('Error in updateSlotDate:', error);
+    return null;
+  }
+};
+
+/**
+ * Updates a slot's completion status in Supabase
+ * @param supabase - Supabase client instance
+ * @param ownerId - Owner ID
+ * @param slotId - Slot ID to update
+ * @param completionStatus - New completion status
+ * @returns Updated slot data or null if failed
+ */
+export const updateSlotCompletion = async (
+  supabase: SupabaseClient,
+  ownerId: string,
+  slotId: string,
+  completionStatus: SlotCompletionStatus
+): Promise<SlotItem | null> => {
+  try {
+    const { data: updatedSlot, error: updateError } = await supabase
+      .from('slots')
+      .update({ completion_status: completionStatus })
+      .eq('id', slotId)
+      .eq('owner_id', ownerId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating slot completion:', updateError);
+      return null;
+    }
+
+    return {
+      id: updatedSlot.id,
+      title: updatedSlot.title,
+      startTime: updatedSlot.start_at,
+      endTime: updatedSlot.end_at,
+      withoutTime: updatedSlot.without_time,
+      type: updatedSlot.type,
+      visibility: updatedSlot.visibility,
+      description: updatedSlot.description,
+      color: updatedSlot.color,
+      completionStatus: updatedSlot.completion_status ?? 'auto',
+      image: updatedSlot.image,
+      tasks: updatedSlot.tasks,
+      voice_path: updatedSlot.voice_path,
+      voice_duration: updatedSlot.voice_duration,
+      voice_mime: updatedSlot.voice_mime,
+      voice_size_bytes: updatedSlot.voice_size_bytes,
+      voice_created_at: updatedSlot.voice_created_at,
+      participants: updatedSlot.participants,
+    };
+  } catch (error) {
+    console.error('Error in updateSlotCompletion:', error);
     return null;
   }
 };

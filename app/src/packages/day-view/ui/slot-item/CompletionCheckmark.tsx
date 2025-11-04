@@ -30,14 +30,14 @@ const isDayPassed = (startTime: string | null): boolean => {
 export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ slot }) => {
   // Calculate initial completion state once
   const [isCompleted, setIsCompleted] = useState<boolean>(() => {
-    if (slot.completed === true) return true;
+    if (slot.completionStatus === 'completed') return true;
+    if (slot.completionStatus === 'incomplete') return false;
 
-    // If no end time, check if the day has passed
+    // Auto mode: check time-based completion
     if (!slot.endTime) {
       return isDayPassed(slot.startTime);
     }
 
-    // Check if current time is after end time
     const endTimeDate = new Date(slot.endTime);
     const now = new Date();
     return now > endTimeDate;
@@ -78,11 +78,19 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ slot }) => {
       return;
     }
 
-    // If manually completed, show checkmark immediately
-    if (slot.completed === true && !isCompleted) {
+    // Explicit completion status takes precedence
+    if (slot.completionStatus === 'completed' && !isCompleted) {
       setIsCompleted(true);
       return;
     }
+
+    if (slot.completionStatus === 'incomplete' && isCompleted) {
+      setIsCompleted(false);
+      return;
+    }
+
+    // Only proceed with auto-completion logic if status is 'auto'
+    if (slot.completionStatus !== 'auto') return;
 
     // If no end time, check if the day has passed
     if (!slot.endTime) {
@@ -113,7 +121,13 @@ export const CompletionCheckmark: FC<CompletionCheckmarkProps> = ({ slot }) => {
 
     // Cleanup timeout on unmount or when dependencies change
     return () => clearTimeout(timeoutId);
-  }, [slot.completed, slot.endTime, slot.startTime, isCompleted, isDragged]);
+  }, [
+    slot.completionStatus,
+    slot.endTime,
+    slot.startTime,
+    isCompleted,
+    isDragged,
+  ]);
 
   useEffect(() => {
     if (isCompleted) animateCompletion();

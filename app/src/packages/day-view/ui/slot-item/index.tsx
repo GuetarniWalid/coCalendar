@@ -1,22 +1,39 @@
 import { FC, memo, useCallback } from 'react';
-import { SlotItem as SlotItemType, useSlotFormStore } from '@project/shared';
+import {
+  SlotItem as SlotItemType,
+  useSlotFormStore,
+  useAuthStore,
+} from '@project/shared';
 import { DraggableSlotWrapper } from './draggable-wrapper';
 import { SlotPositioner } from './SlotPositioner';
 import { Slot } from './Slot';
 import { useNavigation } from '@react-navigation/native';
 import { SwipeActionButton } from './SwipeActionButton';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
+import { updateSlotCompletion } from '../../data/update-slot';
 
 interface SlotItemProps {
   slot: SlotItemType;
   date: string;
   slotListPanRef: any;
+  updateSlotCache: (
+    slotId: string,
+    sourceDate: string,
+    targetDate: string,
+    updatedSlot: SlotItemType
+  ) => void;
 }
 
-const SlotItemBase: FC<SlotItemProps> = ({ slot, date, slotListPanRef }) => {
+const SlotItemBase: FC<SlotItemProps> = ({
+  slot,
+  date,
+  slotListPanRef,
+  updateSlotCache,
+}) => {
   const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
   const navigation = useNavigation<any>();
   const { draggedSlot, hasDayChangedDuringDrag } = useDraggedSlotContext();
+  const [{ supabase, user }] = useAuthStore();
 
   const handleSlotPress = useCallback(() => {
     setSelectedSlot(slot);
@@ -28,10 +45,28 @@ const SlotItemBase: FC<SlotItemProps> = ({ slot, date, slotListPanRef }) => {
     console.log('delete action');
   }, []);
 
-  const handleSuccessAction = useCallback(() => {
-    // TODO: Implement success action
-    console.log('success action');
-  }, []);
+  const handleSuccessAction = useCallback(async () => {
+    if (!supabase || !user) return;
+
+    const optimisticSlot: SlotItemType = {
+      ...slot,
+      completionStatus: 'completed',
+    };
+
+    updateSlotCache(slot.id, date, date, optimisticSlot);
+
+    const updatedSlot = await updateSlotCompletion(
+      supabase,
+      user.id,
+      slot.id,
+      'completed'
+    );
+
+    if (!updatedSlot) {
+      console.error('Failed to update slot completion in database, rolling back');
+      updateSlotCache(slot.id, date, date, slot);
+    }
+  }, [supabase, user, slot, date, updateSlotCache]);
 
   return (
     <SlotPositioner slot={slot} date={date}>
@@ -72,7 +107,7 @@ export const SlotItem = memo(SlotItemBase, (prevProps, nextProps) => {
     prev.startTime === next.startTime &&
     prev.endTime === next.endTime &&
     prev.color === next.color &&
-    prev.completed === next.completed &&
+    prev.completionStatus === next.completionStatus &&
     prev.description === next.description &&
     prev.voice_path === next.voice_path &&
     prev.image?.name === next.image?.name &&

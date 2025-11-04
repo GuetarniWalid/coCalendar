@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
-import * as Haptics from 'expo-haptics';
 import { LONG_PRESS_DURATION, TAP_MAX_DURATION } from '../shared/constants';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { useCalendarStore } from '@project/shared/store/calendar';

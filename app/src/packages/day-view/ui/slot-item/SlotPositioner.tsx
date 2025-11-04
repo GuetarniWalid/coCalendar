@@ -1,5 +1,8 @@
 import { FC, ReactNode, useEffect, useRef } from 'react';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, {
+  LinearTransition,
+  FadeOutRight,
+} from 'react-native-reanimated';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 import { SlotItem } from '@project/shared';
 import { View } from 'react-native';
@@ -10,10 +13,6 @@ interface SlotPositionerProps {
   date: string;
 }
 
-/**
- * Component that handles slot positioning and reordering animations
- * When a slot is dragged, other slots shift to make space for it
- */
 export const SlotPositioner: FC<SlotPositionerProps> = ({ children, slot }) => {
   const ref = useRef<View>(null);
   const {
@@ -35,7 +34,11 @@ export const SlotPositioner: FC<SlotPositionerProps> = ({ children, slot }) => {
   }, [draggedSlot]);
 
   return (
-    <Animated.View ref={ref} layout={LinearTransition}>
+    <Animated.View
+      ref={ref}
+      layout={LinearTransition}
+      exiting={FadeOutRight}
+    >
       {children}
     </Animated.View>
   );

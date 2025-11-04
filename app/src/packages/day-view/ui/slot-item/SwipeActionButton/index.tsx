@@ -9,7 +9,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { TrashIcon } from './TrashIcon';
-import { SuccessIcon } from './SuccessIcon';
+import { CompleteIcon } from './CompleteIcon';
+import { IncompleteIcon } from './IncompleteIcon';
 import { useCallback, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -210,8 +211,18 @@ export const SwipeActionButton = ({
     };
   });
 
-  const buttonColor = variant === 'delete' ? colors.error : colors.success;
-  const IconComponent = variant === 'delete' ? TrashIcon : SuccessIcon;
+  const buttonColor =
+    variant === 'delete'
+      ? colors.error
+      : variant === 'complete'
+        ? colors.success
+        : colors.neutral;
+  const IconComponent =
+    variant === 'delete'
+      ? TrashIcon
+      : variant === 'complete'
+        ? CompleteIcon
+        : IncompleteIcon;
   const containerStyle = isLeftButton
     ? styles.containerLeft
     : styles.containerRight;

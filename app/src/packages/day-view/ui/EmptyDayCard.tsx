@@ -10,6 +10,7 @@ import {
 import { Image } from 'expo-image';
 import { useTranslation } from '@project/i18n';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
+import Animated, { FadeInLeft } from 'react-native-reanimated';
 
 const EmptyDayCardBase = () => {
   const t = useTranslation();
@@ -26,7 +27,7 @@ const EmptyDayCardBase = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} entering={FadeInLeft.delay(300)}>
       {!!uri && (
         <Image
           source={uri}
@@ -46,7 +47,7 @@ const EmptyDayCardBase = () => {
         <Text style={styles.text}>{t.emptyDayText}</Text>
         <Text style={styles.title}>{t.emptyDayTitle}</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

@@ -1,5 +1,5 @@
 export type SwipeActionSide = 'left' | 'right';
-export type SwipeActionVariant = 'delete' | 'success';
+export type SwipeActionVariant = 'delete' | 'complete' | 'incomplete';
 
 export interface SwipeActionButtonProps {
   side: SwipeActionSide;

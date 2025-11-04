@@ -1,8 +1,9 @@
-import { FC, memo, useCallback } from 'react';
+import { FC, memo, useCallback, useMemo } from 'react';
 import {
   SlotItem as SlotItemType,
   useSlotFormStore,
   useAuthStore,
+  retryWithBackoff,
 } from '@project/shared';
 import { DraggableSlotWrapper } from './draggable-wrapper';
 import { SlotPositioner } from './SlotPositioner';
@@ -10,7 +11,31 @@ import { Slot } from './Slot';
 import { useNavigation } from '@react-navigation/native';
 import { SwipeActionButton } from './SwipeActionButton';
 import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
-import { updateSlotCompletion } from '../../data/update-slot';
+import { updateSlotCompletion, deleteSlot } from '../../data/update-slot';
+
+const isDayPassed = (startTime: string | null): boolean => {
+  if (!startTime) return false;
+  const slotDate = new Date(startTime);
+  const today = new Date();
+  slotDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return slotDate < today;
+};
+
+const isSlotEffectivelyCompleted = (slot: SlotItemType): boolean => {
+  if (slot.completionStatus === 'completed') {
+    return true;
+  }
+  if (slot.completionStatus === 'incomplete') {
+    return false;
+  }
+  if (!slot.endTime) {
+    return isDayPassed(slot.startTime);
+  }
+  const endTimeDate = new Date(slot.endTime);
+  const now = new Date();
+  return now > endTimeDate;
+};
 
 interface SlotItemProps {
   slot: SlotItemType;
@@ -20,7 +45,7 @@ interface SlotItemProps {
     slotId: string,
     sourceDate: string,
     targetDate: string,
-    updatedSlot: SlotItemType
+    updatedSlot: SlotItemType | null
   ) => void;
 }
 
@@ -40,12 +65,29 @@ const SlotItemBase: FC<SlotItemProps> = ({
     navigation.navigate('SlotForm');
   }, [slot, setSelectedSlot, navigation]);
 
-  const handleDeleteAction = useCallback(() => {
-    // TODO: Implement delete action
-    console.log('delete action');
-  }, []);
+  const handleDeleteAction = useCallback(async () => {
+    if (!supabase || !user) return;
 
-  const handleSuccessAction = useCallback(async () => {
+    updateSlotCache(slot.id, date, '', null);
+
+    try {
+      const success = await retryWithBackoff(
+        () => deleteSlot(supabase, user.id, slot.id),
+        3,
+        1000
+      );
+
+      if (!success) {
+        console.error('Failed to delete slot in database, rolling back');
+        updateSlotCache('', '', date, slot);
+      }
+    } catch (error) {
+      console.error('Error deleting slot:', error);
+      updateSlotCache('', '', date, slot);
+    }
+  }, [supabase, user, slot, date, updateSlotCache]);
+
+  const handleCompleteAction = useCallback(async () => {
     if (!supabase || !user) return;
 
     const optimisticSlot: SlotItemType = {
@@ -68,6 +110,41 @@ const SlotItemBase: FC<SlotItemProps> = ({
     }
   }, [supabase, user, slot, date, updateSlotCache]);
 
+  const handleIncompleteAction = useCallback(async () => {
+    if (!supabase || !user) return;
+
+    const optimisticSlot: SlotItemType = {
+      ...slot,
+      completionStatus: 'incomplete',
+    };
+
+    updateSlotCache(slot.id, date, date, optimisticSlot);
+
+    const updatedSlot = await updateSlotCompletion(
+      supabase,
+      user.id,
+      slot.id,
+      'incomplete'
+    );
+
+    if (!updatedSlot) {
+      console.error(
+        'Failed to update slot incompletion in database, rolling back'
+      );
+      updateSlotCache(slot.id, date, date, slot);
+    }
+  }, [supabase, user, slot, date, updateSlotCache]);
+
+  const rightButtonVariant = useMemo(() => {
+    return isSlotEffectivelyCompleted(slot) ? 'incomplete' : 'complete';
+  }, [slot]);
+
+  const rightButtonAction = useMemo(() => {
+    return isSlotEffectivelyCompleted(slot)
+      ? handleIncompleteAction
+      : handleCompleteAction;
+  }, [slot, handleIncompleteAction, handleCompleteAction]);
+
   return (
     <SlotPositioner slot={slot} date={date}>
       {draggedSlot?.id === slot.id && !hasDayChangedDuringDrag && (
@@ -80,9 +157,9 @@ const SlotItemBase: FC<SlotItemProps> = ({
           />
           <SwipeActionButton
             side="right"
-            variant="success"
+            variant={rightButtonVariant}
             slotDate={date}
-            onAction={handleSuccessAction}
+            onAction={rightButtonAction}
           />
         </>
       )}

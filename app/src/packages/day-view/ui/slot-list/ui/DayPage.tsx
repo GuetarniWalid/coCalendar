@@ -9,6 +9,7 @@ import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
 import { getDateFromIndex } from '../shared/utils';
 import { useSlotData } from '../shared/hooks';
+import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 
 interface DayPageProps {
   dayIndex: number;
@@ -19,10 +20,9 @@ interface DayPageProps {
     slotId: string,
     sourceDate: string,
     targetDate: string,
-    updatedSlot: SlotItemType
+    updatedSlot: SlotItemType | null
   ) => void;
   selectedDate: string;
-  previousSelectedDate: string | null;
   draggedSlot: SlotItemType | null;
   cachedSlotsForDate?: SlotItemType[] | undefined;
 }
@@ -34,7 +34,6 @@ const DayPageComponent = ({
   slotListPanRef,
   updateSlotCache,
   selectedDate,
-  previousSelectedDate,
   draggedSlot,
   cachedSlotsForDate,
 }: DayPageProps) => {
@@ -44,6 +43,8 @@ const DayPageComponent = ({
   const isCurrentDay = date === selectedDate;
   const { createEnhancedSlotData } = useSlotData();
   const [, setRebuild] = useState(0);
+  const { sourceDayDate } = useDraggedSlotContext();
+  const [shouldShowEmpty, setShouldShowEmpty] = useState(true);
 
   const applyDate = (isoString: string, targetDate: string) => {
     try {
@@ -64,6 +65,20 @@ const DayPageComponent = ({
     cachedSlotsForDate && cachedSlotsForDate.length > 0
       ? cachedSlotsForDate
       : null;
+
+  useEffect(() => {
+    if (!daySlots || daySlots.length > 0) {
+      setShouldShowEmpty(true);
+      return;
+    }
+
+    setShouldShowEmpty(false);
+    const timer = setTimeout(() => {
+      setShouldShowEmpty(true);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [daySlots]);
 
   // Set up timers to rebuild when slot start/end times are reached
   useEffect(() => {
@@ -123,10 +138,20 @@ const DayPageComponent = ({
       return;
     }
 
-    if (showSpaceForDraggedSlot) return;
-    if (!previousSelectedDate) return;
+    if (showSpaceForDraggedSlot) {
+      return;
+    }
+    if (!sourceDayDate) {
+      return;
+    }
 
-    // Create updated slot with new date
+    const slotDayHasChanged = sourceDayDate !== date;
+
+    if (!slotDayHasChanged) {
+      setShowSpaceForDraggedSlot(true);
+      return;
+    }
+
     const updatedSlot: SlotItemType = {
       ...draggedSlot,
       startTime: draggedSlot.startTime
@@ -135,16 +160,17 @@ const DayPageComponent = ({
       endTime: draggedSlot.endTime
         ? applyDate(draggedSlot.endTime, date)
         : null,
+      completionStatus: 'auto',
     };
 
-    updateSlotCache(draggedSlot.id, previousSelectedDate, date, updatedSlot);
+    updateSlotCache(draggedSlot.id, sourceDayDate, date, updatedSlot);
     setShowSpaceForDraggedSlot(true);
   }, [
     draggedSlot,
     date,
     updateSlotCache,
     isCurrentDay,
-    previousSelectedDate,
+    sourceDayDate,
     showSpaceForDraggedSlot,
     setShowSpaceForDraggedSlot,
   ]);
@@ -160,7 +186,7 @@ const DayPageComponent = ({
     }
 
     if (!daySlots?.length) {
-      return <EmptyDayCard />;
+      return shouldShowEmpty ? <EmptyDayCard /> : null;
     }
 
     const sortedSlots = [...daySlots].sort((a, b) => {
@@ -231,10 +257,9 @@ const DayPageComponent = ({
 export const DayPage = memo(DayPageComponent, (prevProps, nextProps) => {
   const nextDate = getDateFromIndex(nextProps.dayIndex);
   const isCurrentDayNext = nextDate === nextProps.selectedDate;
-  const isPreviousDayNext = nextDate === nextProps.previousSelectedDate;
 
-  // Always re-render if this is the current or previous day for drag and drop
-  if (isCurrentDayNext || isPreviousDayNext) {
+  // Always re-render if this is the current day for drag and drop
+  if (isCurrentDayNext) {
     return false;
   }
 

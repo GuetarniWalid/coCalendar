@@ -19,6 +19,11 @@ export const DayViewScreen = () => {
     async (slot: SlotItem, sourceDate: string, targetDate: string) => {
       if (!user || !supabase) return;
 
+      // Only update database if date actually changed
+      if (sourceDate === targetDate) {
+        return;
+      }
+
       // Update database in background with retry logic
       try {
         const dbUpdatedSlot = await retryWithBackoff(

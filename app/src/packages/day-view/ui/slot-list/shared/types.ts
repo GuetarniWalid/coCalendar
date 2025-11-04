@@ -11,7 +11,7 @@ export interface SlotListProps {
     slotId: string,
     sourceDate: string,
     targetDate: string,
-    updatedSlot: SlotItem
+    updatedSlot: SlotItem | null
   ) => void;
   slotsCacheRef: React.RefObject<Record<string, SlotItem[]>>;
   cacheVersion: number;

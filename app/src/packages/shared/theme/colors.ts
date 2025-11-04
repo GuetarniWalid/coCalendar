@@ -135,6 +135,7 @@ const lightColors: ColorPalette = {
   success: '#76C496',
   warning: '#fbbf24',
   error: '#F65757',
+  neutral: '#9CA3AF',
 
   // Action colors
   action: {
@@ -184,7 +185,7 @@ const darkColors: ColorPalette = {
   success: '#76C496',
   warning: '#fbbf24',
   error: '#F65757',
-
+  neutral: '#9CA3AF',
   // Action colors
 
   action: {

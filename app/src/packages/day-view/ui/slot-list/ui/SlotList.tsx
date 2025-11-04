@@ -24,7 +24,6 @@ export const SlotList = ({
 }: SlotListProps) => {
   const screenWidth = Dimensions.get('window').width;
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
-  const [previousSelectedDate] = useCalendarStore.previousSelectedDate();
   const [changeAskedBy, setChangeAskedBy] = useCalendarStore.changeAskedBy();
   const [isInitialized, setIsInitialized] = useState(false);
   const flatListRef = useRef<FlatList>(null);
@@ -86,7 +85,6 @@ export const SlotList = ({
           slotListPanRef={slotListPanRef as any}
           updateSlotCache={updateSlotCache}
           selectedDate={selectedDate}
-          previousSelectedDate={previousSelectedDate}
           draggedSlot={draggedSlot}
           cachedSlotsForDate={cachedSlots}
         />
@@ -95,7 +93,6 @@ export const SlotList = ({
     [
       screenWidth,
       loading,
-      previousSelectedDate,
       selectedDate,
       draggedSlot,
       slotsCacheRef,

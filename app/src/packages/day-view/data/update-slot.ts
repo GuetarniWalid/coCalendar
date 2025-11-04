@@ -74,6 +74,7 @@ export const updateSlotDate = async (
       .update({
         start_at: updatedStartTime,
         end_at: updatedEndTime,
+        completion_status: 'auto',
       })
       .eq('id', slotId)
       .eq('owner_id', ownerId)
@@ -163,5 +164,36 @@ export const updateSlotCompletion = async (
   } catch (error) {
     console.error('Error in updateSlotCompletion:', error);
     return null;
+  }
+};
+
+/**
+ * Deletes a slot from Supabase
+ * @param supabase - Supabase client instance
+ * @param ownerId - Owner ID
+ * @param slotId - Slot ID to delete
+ * @returns true if deleted successfully, false otherwise
+ */
+export const deleteSlot = async (
+  supabase: SupabaseClient,
+  ownerId: string,
+  slotId: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('slots')
+      .delete()
+      .eq('id', slotId)
+      .eq('owner_id', ownerId);
+
+    if (error) {
+      console.error('Error deleting slot:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteSlot:', error);
+    return false;
   }
 };

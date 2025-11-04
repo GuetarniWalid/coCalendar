@@ -27,6 +27,7 @@ export interface ColorPalette {
   success: string;
   warning: string;
   error: string;
+  neutral: string;
 
   // Action colors
   action: {

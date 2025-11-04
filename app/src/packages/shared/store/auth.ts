@@ -23,6 +23,8 @@ const initialAuthState = {
   loading: true,
   supabase: null as SupabaseClient | null,
   envReady: false as boolean,
+  onboardingCompleted: false as boolean,
+  checkingOnboarding: true as boolean,
 };
 
 // Create the auth store using correct Teaful pattern
@@ -158,9 +160,63 @@ export const signOut = async () => {
     const { error } = await store[0].supabase.auth.signOut();
     if (error) throw error;
 
-    // Clear user state
-    setAuthState({ user: null });
+    // Clear user state and reset onboarding
+    setAuthState({ user: null, onboardingCompleted: false });
   } catch (error) {
     throw error;
+  }
+};
+
+// Check if user has completed onboarding
+export const checkOnboardingStatus = async () => {
+  const store = getAuthStore();
+  if (!store[0].supabase || !store[0].user) {
+    setAuthState({ checkingOnboarding: false, onboardingCompleted: false });
+    return false;
+  }
+
+  try {
+    const { data, error } = await store[0].supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', store[0].user.id)
+      .single();
+
+    if (error) throw error;
+
+    const completed = data?.onboarding_completed ?? false;
+    setAuthState({ onboardingCompleted: completed, checkingOnboarding: false });
+    return completed;
+  } catch (error) {
+    console.error('Error checking onboarding status:', error);
+    setAuthState({ checkingOnboarding: false, onboardingCompleted: false });
+    return false;
+  }
+};
+
+// Mark onboarding as completed
+export const completeOnboarding = async () => {
+  const store = getAuthStore();
+  if (!store[0].supabase || !store[0].user) {
+    console.error('Cannot complete onboarding: user not authenticated');
+    return false;
+  }
+
+  try {
+    const { error } = await store[0].supabase
+      .from('profiles')
+      .update({
+        onboarding_completed: true,
+        onboarding_completed_at: new Date().toISOString(),
+      })
+      .eq('id', store[0].user.id);
+
+    if (error) throw error;
+
+    setAuthState({ onboardingCompleted: true });
+    return true;
+  } catch (error) {
+    console.error('Error completing onboarding:', error);
+    return false;
   }
 };

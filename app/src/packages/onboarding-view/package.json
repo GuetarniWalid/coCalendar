@@ -1,0 +1,13 @@
+{
+  "name": "@project/onboarding-view",
+  "version": "1.0.0",
+  "main": "./ui/index.tsx",
+  "types": "./ui/index.tsx",
+  "dependencies": {
+    "@project/shared": "*",
+    "@project/i18n": "*"
+  },
+  "exports": {
+    ".": "./ui/index.tsx"
+  }
+}

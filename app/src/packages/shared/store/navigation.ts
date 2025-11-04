@@ -8,7 +8,8 @@ export type ScreenType =
   | 'SlotForm'
   | 'Statistics'
   | 'Tasks'
-  | 'Auth';
+  | 'Auth'
+  | 'Onboarding';
 
 const initialState = {
   currentScreen: 'Day' as ScreenType,

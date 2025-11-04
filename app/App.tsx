@@ -1,11 +1,12 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
 import AuthScreen from './src/packages/auth-view/ui';
+import OnboardingScreen from './src/packages/onboarding-view/ui';
 import CalendarScreen from './src/packages/calendar-view/ui';
 import { DayViewScreen } from './src/packages/day-view/ui';
 import SlotFormScreen from './src/packages/slot-form-view/ui';
@@ -17,6 +18,9 @@ import {
   useAuthStore,
   initializeAuthClient,
   registerAuthSetters,
+  checkOnboardingStatus,
+  completeOnboarding,
+  setCurrentScreen,
   colors,
 } from '@project/shared';
 import { DraggedSlotProvider } from '@project/shared/store/dragged-slot';
@@ -27,12 +31,46 @@ const Stack = createNativeStackNavigator();
 const AppContent = () => {
   const [user, setUser] = useAuthStore.user();
   const [, setLoading] = useAuthStore.loading();
+  const [onboardingCompleted] = useAuthStore.onboardingCompleted();
+  const [checkingOnboarding] = useAuthStore.checkingOnboarding();
 
   useEffect(() => {
     initializeAuthClient();
     // Wire Teaful setters so the store updates trigger renders
     registerAuthSetters(setUser, setLoading);
   }, []);
+
+  // Check onboarding status when user logs in
+  useEffect(() => {
+    if (user) {
+      checkOnboardingStatus();
+    }
+  }, [user]);
+
+  const handleCompleteOnboarding = async () => {
+    const success = await completeOnboarding();
+    if (success) {
+      // Navigate to Day view after completing onboarding
+      setCurrentScreen('Day');
+    }
+  };
+
+  // Show loading while checking onboarding status
+  if (user && checkingOnboarding) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    );
+  }
+
+  // Determine which screen to show
+  const shouldShowOnboarding = user && !onboardingCompleted;
+  const shouldShowApp = user && onboardingCompleted;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -43,6 +81,7 @@ const AppContent = () => {
             config: {
               screens: {
                 Auth: 'auth/*',
+                Onboarding: 'onboarding',
                 Calendar: 'calendar',
                 Day: 'day/:date?',
                 Profile: 'profile',
@@ -55,10 +94,14 @@ const AppContent = () => {
         >
           <SafeAreaView style={styles.container} edges={['top']}>
             <Stack.Navigator
-              key={user ? 'app' : 'auth'}
+              key={shouldShowApp ? 'app' : shouldShowOnboarding ? 'onboarding' : 'auth'}
               screenOptions={{ headerShown: false }}
             >
-              {user ? (
+              {shouldShowOnboarding ? (
+                <Stack.Screen name="Onboarding">
+                  {() => <OnboardingScreen onComplete={handleCompleteOnboarding} />}
+                </Stack.Screen>
+              ) : shouldShowApp ? (
                 <>
                   <Stack.Screen
                     name="Day"
@@ -89,7 +132,7 @@ const AppContent = () => {
                 <Stack.Screen name="Auth" component={AuthScreen as any} />
               )}
             </Stack.Navigator>
-            {user && <BottomNavigation />}
+            {shouldShowApp && <BottomNavigation />}
           </SafeAreaView>
         </NavigationContainer>
       </SafeAreaProvider>
@@ -109,6 +152,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background.primary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: colors.background.primary,
   },
 });

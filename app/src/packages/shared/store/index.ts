@@ -6,6 +6,8 @@ export {
   signOut,
   registerAuthSetters,
   initializeAuthClient,
+  checkOnboardingStatus,
+  completeOnboarding,
 } from './auth';
 export { useThemeStore, setThemeMode, toggleThemeMode } from './theme';
 export { useSlotFormStore } from './slot-form';

@@ -59,6 +59,7 @@ export const useHorizontalSnap = () => {
     hasDayChangedDuringDrag,
     isVerticalSnapActive,
     isSlotReady,
+    areSwipeButtonsDisabled,
   } = useDraggedSlotContext();
 
   const triggerSnapHaptic = () => {
@@ -113,7 +114,7 @@ export const useHorizontalSnap = () => {
       return;
     }
 
-    if (hasDayChangedDuringDrag || !isVerticalSnapActive.value) {
+    if (hasDayChangedDuringDrag || !isVerticalSnapActive.value || areSwipeButtonsDisabled.value) {
       draggedSlotOffsetX.value = translationX;
       return;
     }

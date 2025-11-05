@@ -34,6 +34,7 @@ interface DraggedSlotContextType {
   lastAbsOffset: SharedValue<number>;
   isDragging: SharedValue<boolean>;
   isSlotReady: SharedValue<boolean>;
+  areSwipeButtonsDisabled: SharedValue<boolean>;
 }
 
 const DraggedSlotContext = createContext<DraggedSlotContextType | null>(null);
@@ -81,12 +82,14 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
   const lastAbsOffset = useSharedValue(0);
   const isDragging = useSharedValue(false);
   const isSlotReady = useSharedValue(false);
+  const areSwipeButtonsDisabled = useSharedValue(false);
 
   const setDraggedSlot = (slot: SlotItemType | null) => {
     setDraggedSlotState(slot);
     isDragging.value = slot !== null;
     if (slot !== null) {
       isSlotReady.value = false;
+      areSwipeButtonsDisabled.value = false;
     }
   };
 
@@ -121,6 +124,7 @@ export const DraggedSlotProvider = ({ children }: DraggedSlotProviderProps) => {
     lastAbsOffset,
     isDragging,
     isSlotReady,
+    areSwipeButtonsDisabled,
   };
 
   return (

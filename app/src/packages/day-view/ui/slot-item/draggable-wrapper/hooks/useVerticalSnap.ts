@@ -9,10 +9,16 @@ export const useVerticalSnap = () => {
     isVerticalSnapActive,
     verticalSnapThreshold,
     snapTransitionProgress,
+    areSwipeButtonsDisabled,
   } = useDraggedSlotContext();
 
   const applyVerticalSnap = (translationY: number) => {
     'worklet';
+
+    if (areSwipeButtonsDisabled.value) {
+      draggedSlotOffsetY.value = translationY;
+      return;
+    }
 
     const absVerticalOffset = Math.abs(translationY);
     const threshold = verticalSnapThreshold.value;

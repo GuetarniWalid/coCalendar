@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedReaction,
   useSharedValue,
   useAnimatedStyle,
+  withTiming,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
@@ -17,25 +18,66 @@ export const CompleteIcon: React.FC<CompleteIconProps> = ({
   color = 'currentColor',
   side,
 }) => {
-  const { draggedSlotOffsetX } = useDraggedSlotContext();
+  const { draggedSlotOffsetX, areSwipeButtonsDisabled, isVerticalSnapActive, isHorizontalSnapActive, isDragging } = useDraggedSlotContext();
   const svgSize = useSharedValue(0);
+  const wasVerticalSnapActive = useSharedValue(true);
+  const wasHorizontalSnapActive = useSharedValue(false);
+  const isDisabling = useSharedValue(false);
 
   const isLeftButton = side === 'left';
 
   useAnimatedReaction(
-    () => draggedSlotOffsetX.value,
-    (offset, prevOffset) => {
-      if (prevOffset === offset) return;
-
-      const rawOffset = offset ?? 0;
+    () => ({
+      offset: draggedSlotOffsetX.value,
+      disabled: areSwipeButtonsDisabled.value,
+      verticalActive: isVerticalSnapActive.value,
+      horizontalActive: isHorizontalSnapActive.value,
+      isDragging: isDragging.value,
+    }),
+    (current, previous) => {
+      if (current.isDragging && previous && !previous.isDragging) {
+        isDisabling.value = false;
+      }
+      const rawOffset = current.offset ?? 0;
+      const prevOffset = previous?.offset ?? 0;
       const offsetValue = isLeftButton ? rawOffset : Math.abs(rawOffset);
+
+      const isMovingRight = rawOffset > prevOffset;
+      const isMovingLeft = rawOffset < prevOffset;
+      const isPositive = rawOffset > 0;
+      const isNegative = rawOffset < 0;
+      const movingAwayFromButton = (isPositive && isMovingRight) || (isNegative && isMovingLeft);
+
+      const justBrokeVertical = wasVerticalSnapActive.value && !current.verticalActive;
+      const justBrokeHorizontal = wasHorizontalSnapActive.value && !current.horizontalActive;
+
+      if (justBrokeVertical || (justBrokeHorizontal && movingAwayFromButton)) {
+        isDisabling.value = true;
+        svgSize.value = withTiming(0, { duration: 150 });
+        wasVerticalSnapActive.value = current.verticalActive;
+        wasHorizontalSnapActive.value = current.horizontalActive;
+        return;
+      }
+
+      if (current.disabled || isDisabling.value) {
+        return;
+      }
+
+      if (previous?.offset === current.offset) return;
 
       if ((isLeftButton && rawOffset < 0) || (!isLeftButton && rawOffset > 0)) {
         return;
       }
 
       const delayedSize = Math.max(0, offsetValue - 50);
-      svgSize.value = clamp(delayedSize, 0, 40);
+      const newSize = clamp(delayedSize, 0, 40);
+      svgSize.value = newSize;
+
+      if (newSize >= 40 && current.horizontalActive) {
+        wasHorizontalSnapActive.value = true;
+      }
+      wasVerticalSnapActive.value = current.verticalActive;
+      wasHorizontalSnapActive.value = current.horizontalActive;
     }
   );
 

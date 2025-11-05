@@ -17,7 +17,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { SwipeActionButtonProps } from './types';
 import { SWIPE_BUTTON_WIDTH, CONTAINER_PADDING_VERTICAL } from './constants';
 
-const BUTTON_WIDTH = SWIPE_BUTTON_WIDTH;
 
 export const SwipeActionButton = ({
   side,
@@ -35,6 +34,7 @@ export const SwipeActionButton = ({
     isHorizontalSnapActive,
     isDragging,
     isSlotReady,
+    areSwipeButtonsDisabled,
   } = useDraggedSlotContext();
   const buttonSize = useSharedValue(0);
   const buttonWidth = useSharedValue(0);
@@ -42,6 +42,7 @@ export const SwipeActionButton = ({
   const isHapticsTriggered = useSharedValue(false);
   const hasActionTriggered = useSharedValue(false);
   const wasVerticalSnapActive = useSharedValue(true);
+  const wasHorizontalSnapActive = useSharedValue(false);
   const isTransitioning = useSharedValue(false);
   const isReleasing = useSharedValue(false);
   const isDayChanged = sourceDayDate && slotDate && sourceDayDate !== slotDate;
@@ -105,14 +106,8 @@ export const SwipeActionButton = ({
       const prevOffset = previous?.offset ?? 0;
       const isVerticalActive = current.verticalActive;
       const isHorizontalActive = current.horizontalActive;
-      const wasActive = wasVerticalSnapActive.value;
-
-      if (
-        prevOffset === nextOffset &&
-        previous?.verticalActive === isVerticalActive &&
-        previous?.horizontalActive === isHorizontalActive
-      )
-        return;
+      const wasVerticalActive = wasVerticalSnapActive.value;
+      const wasHorizontalActive = wasHorizontalSnapActive.value;
 
       const rawOffset = nextOffset ?? 0;
       const offset = isLeftButton ? rawOffset : Math.abs(rawOffset);
@@ -121,20 +116,32 @@ export const SwipeActionButton = ({
         return;
       }
 
-      const justBroke = wasActive && !isVerticalActive;
-      const justRestored = !wasActive && isVerticalActive;
+      const isMovingRight = rawOffset > prevOffset;
+      const isMovingLeft = rawOffset < prevOffset;
+      const isPositive = rawOffset > 0;
+      const isNegative = rawOffset < 0;
+      const movingAwayFromButton = (isPositive && isMovingRight) || (isNegative && isMovingLeft);
 
-      if (justBroke) {
+      if (prevOffset === nextOffset) {
+        return;
+      }
+
+      const justBrokeVertical = wasVerticalActive && !isVerticalActive;
+      const justBrokeHorizontal = wasHorizontalActive && !isHorizontalActive;
+
+      if (justBrokeVertical || (justBrokeHorizontal && movingAwayFromButton)) {
         isTransitioning.value = true;
         isHapticsTriggered.value = false;
         hasActionTriggered.value = false;
-        buttonSize.value = withTiming(0, { duration: 150 }, finished => {
+        buttonSize.value = withTiming(0, { duration: 220 }, finished => {
           if (finished) {
             isTransitioning.value = false;
+            areSwipeButtonsDisabled.value = true;
           }
         });
-        buttonWidth.value = withTiming(0, { duration: 150 });
-        wasVerticalSnapActive.value = false;
+        buttonWidth.value = withTiming(0, { duration: 220 });
+        wasVerticalSnapActive.value = isVerticalActive;
+        wasHorizontalSnapActive.value = isHorizontalActive;
         return;
       }
 
@@ -142,37 +149,19 @@ export const SwipeActionButton = ({
         return;
       }
 
-      if (justRestored) {
-        isTransitioning.value = true;
-        buttonSize.value = withTiming(offset, { duration: 150 }, finished => {
-          if (finished) {
-            isTransitioning.value = false;
-            const actionConditionsMet =
-              offset >= BUTTON_WIDTH && isHorizontalActive;
-            if (actionConditionsMet && !isHapticsTriggered.value) {
-              scheduleOnRN(triggerHaptics);
-              isHapticsTriggered.value = true;
-              hasActionTriggered.value = true;
-            }
-          }
-        });
-        buttonWidth.value = withTiming(offset, { duration: 150 });
-        wasVerticalSnapActive.value = true;
-        return;
-      }
-
-      if (isTransitioning.value) {
+      if (isTransitioning.value || areSwipeButtonsDisabled.value) {
         return;
       }
 
       buttonSize.value = offset;
       buttonWidth.value = offset;
 
-      const actionConditionsMet = offset >= BUTTON_WIDTH && isHorizontalActive;
+      const actionConditionsMet = offset >= SWIPE_BUTTON_WIDTH && isHorizontalActive;
 
       if (actionConditionsMet && !isHapticsTriggered.value) {
         scheduleOnRN(triggerHaptics);
         isHapticsTriggered.value = true;
+        wasHorizontalSnapActive.value = true;
       } else if (!actionConditionsMet && isHapticsTriggered.value) {
         isHapticsTriggered.value = false;
       }
@@ -186,27 +175,41 @@ export const SwipeActionButton = ({
       ) {
         hasActionTriggered.value = false;
       }
+
+      wasHorizontalSnapActive.value = isHorizontalActive;
     }
   );
 
   const animatedStyle = useAnimatedStyle(() => {
+    if (areSwipeButtonsDisabled.value) {
+      return {
+        width: 0,
+        height: 0,
+      };
+    }
     const heightMultiplier = maxHeight.value / 100;
     return {
-      width: clamp(buttonSize.value, 0, BUTTON_WIDTH),
+      width: clamp(buttonSize.value, 0, SWIPE_BUTTON_WIDTH),
       height: clamp(buttonSize.value * heightMultiplier, 0, maxHeight.value),
     };
   });
 
   const animatedStyleOverlay = useAnimatedStyle(() => {
+    if (areSwipeButtonsDisabled.value) {
+      return {
+        width: 0,
+        height: 0,
+      };
+    }
     const heightMaxedAt = 100;
     const overlayProgress = clamp(
-      (buttonSize.value - heightMaxedAt) / (BUTTON_WIDTH - heightMaxedAt),
+      (buttonSize.value - heightMaxedAt) / (SWIPE_BUTTON_WIDTH - heightMaxedAt),
       0,
       1
     );
 
     return {
-      width: overlayProgress * BUTTON_WIDTH,
+      width: overlayProgress * SWIPE_BUTTON_WIDTH,
       height: overlayProgress * maxHeight.value,
     };
   });

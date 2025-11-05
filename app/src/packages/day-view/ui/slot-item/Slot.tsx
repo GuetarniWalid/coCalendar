@@ -73,7 +73,7 @@ export const Slot = ({ slot, onImageLoad, draggedShadowStyle }: SlotProps) => {
         <CompletionCheckmark slot={slot} />
         <View style={styles.contentContainer}>
           <Text style={styles.time}>{timeText}</Text>
-          <Text style={styles.title}>{slot.title}</Text>
+          <Text style={styles.title} numberOfLines={2}>{slot.title}</Text>
           <ProgressBar
             startTime={slot.startTime}
             endTime={slot.endTime}

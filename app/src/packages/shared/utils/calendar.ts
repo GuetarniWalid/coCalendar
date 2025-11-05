@@ -10,17 +10,21 @@ const isDayPassed = (startTime: string | null): boolean => {
   return slotDate < today;
 };
 
-export const isSlotCompleted = (slot: SlotItem): boolean => {
-  if (slot.completionStatus === 'completed') return true;
-  if (slot.completionStatus === 'incomplete') return false;
-
+const isSlotTimeBasedCompleted = (slot: SlotItem, now: Date): boolean => {
   if (!slot.endTime) {
     return isDayPassed(slot.startTime);
   }
 
   const endTimeDate = new Date(slot.endTime);
-  const now = new Date();
-  return now > endTimeDate;
+  return now >= endTimeDate;
+};
+
+export const isSlotCompleted = (slot: SlotItem, now?: Date): boolean => {
+  if (slot.completionStatus === 'completed') return true;
+  if (slot.completionStatus === 'incomplete') return false;
+
+  const currentTime = now || new Date();
+  return isSlotTimeBasedCompleted(slot, currentTime);
 };
 
 export const calculateTaskCompletion = (
@@ -31,9 +35,8 @@ export const calculateTaskCompletion = (
     return { completedTasks: 0, totalTasks: 0, percentage: 0 };
   }
 
-  const now = dayjs();
-  const currentDate = now.format('YYYY-MM-DD');
-  const currentTime = now.format('HH:mm:ss');
+  const now = new Date();
+  const currentDate = dayjs(now).format('YYYY-MM-DD');
 
   if (!currentDate) {
     return { completedTasks: 0, totalTasks: 0, percentage: 0 };
@@ -51,19 +54,10 @@ export const calculateTaskCompletion = (
   }
 
   for (const task of tasks) {
-    const taskDate = dayjs(task.startTime).format('YYYY-MM-DD');
-    const taskEndTime = dayjs(task.endTime).format('HH:mm:ss');
-
-    if (!taskDate || !currentDate) continue;
-
-    if (isSlotCompleted(task)) {
+    if (task.completionStatus === 'completed') {
       completedTasks++;
-    } else if (taskDate < currentDate) {
+    } else if (isSlotTimeBasedCompleted(task, now)) {
       completedTasks++;
-    } else if (taskDate === currentDate) {
-      if (taskEndTime && currentTime && taskEndTime <= currentTime) {
-        completedTasks++;
-      }
     }
   }
 

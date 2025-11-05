@@ -11,21 +11,23 @@ import dayjs from 'dayjs';
 
 interface DayTasksProgressProps {
   slots: SlotItem[];
+  loading: boolean;
 }
 
 const stateMachineName = 'State Machine Progression';
 const resourceName = 'progression';
 const artboardName = 'progression';
 
-export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots }) => {
+const TIMEOUT_SAFETY_BUFFER_MS = 100;
+
+export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, loading }) => {
   const riveRef = useRef<RiveRef>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [selectedDate] = useCalendarStore.selectedDate();
 
   // Calculate progress based on real-time data
   const percent = useMemo(() => {
-    // If slots haven't loaded yet (null/undefined), return 0 as initial state
-    if (!slots) {
+    if (loading) {
       return 0;
     }
 
@@ -36,7 +38,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots }) => {
 
     const progressData = calculateTaskCompletion(slots, selectedDate);
     return progressData.percentage;
-  }, [slots, selectedDate, currentTime]);
+  }, [slots, selectedDate, refreshTrigger, loading]);
 
   // Set up real-time tracking for slots that haven't ended yet
   useEffect(() => {
@@ -50,7 +52,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots }) => {
 
     // Find the next slot to end
     const upcomingSlots = slots.filter(slot => {
-      if (isSlotCompleted(slot) || !slot.endTime) return false;
+      if (isSlotCompleted(slot, now) || !slot.endTime) return false;
       const endTime = new Date(slot.endTime);
       return endTime > now;
     });
@@ -71,14 +73,14 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots }) => {
 
     if (timeUntilEnd > 0) {
       const timeout = setTimeout(() => {
-        setCurrentTime(new Date());
-      }, timeUntilEnd);
+        setRefreshTrigger(prev => prev + 1);
+      }, timeUntilEnd + TIMEOUT_SAFETY_BUFFER_MS);
 
       return () => clearTimeout(timeout);
     }
 
     return undefined;
-  }, [slots, selectedDate, currentTime]);
+  }, [slots, selectedDate, refreshTrigger]);
 
   useEffect(() => {
     const rive = riveRef.current;

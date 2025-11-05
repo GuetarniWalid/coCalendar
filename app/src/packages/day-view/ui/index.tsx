@@ -52,7 +52,7 @@ export const DayViewScreen = () => {
     <>
       <View style={styles.headerRow}>
         <VisibleMonthYear />
-        <DayTasksProgress slots={loading ? [] : slots} />
+        <DayTasksProgress slots={slots} loading={loading} />
       </View>
       <DateSelector />
       <SlotList

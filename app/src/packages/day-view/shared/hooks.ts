@@ -205,6 +205,11 @@ export const useDayView = () => {
     }
 
     setCacheVersion(v => v + 1);
+
+    if (sourceDate === selectedDate || targetDate === selectedDate) {
+      const updatedSlots = slotsCacheRef.current[selectedDate] || [];
+      setSlots(updatedSlots);
+    }
   };
 
   // Method to invalidate cache for specific dates (to refetch fresh data from DB)

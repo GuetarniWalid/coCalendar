@@ -1,7 +1,8 @@
 import { View, StyleSheet } from 'react-native';
 import { useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useDayView } from '../shared/hooks';
-import { useAuthStore, SlotItem, retryWithBackoff } from '@project/shared';
+import { useAuthStore, SlotItem, retryWithBackoff, setCurrentScreen } from '@project/shared';
 import { SlotList } from './slot-list';
 import { colors } from '@project/shared';
 import { VisibleMonthYear } from './VisibleMonthYear';
@@ -10,6 +11,11 @@ import { DateSelector } from './DateSelector';
 import { updateSlotDate } from '../data/update-slot';
 
 export const DayViewScreen = () => {
+  useFocusEffect(
+    useCallback(() => {
+      setCurrentScreen('Day');
+    }, [])
+  );
   const { slots, loading, updateSlotCache, slotsCacheRef, cacheVersion } =
     useDayView();
   const [{ supabase, user }] = useAuthStore();

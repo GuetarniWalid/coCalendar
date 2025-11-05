@@ -6,6 +6,7 @@ import {
   colors,
   useCalendarStore,
   handleFirstButtonPress,
+  useNavigationStore,
 } from '@project/shared';
 import { BottomNavigationProps } from '../shared/types';
 import dayjs from 'dayjs';
@@ -26,6 +27,7 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
   const currentDay = dayjs(selectedDate).format('DD');
   const navigation = useNavigation<any>();
   const { draggedSlot } = useDraggedSlotContext();
+  const [currentScreen] = useNavigationStore.currentScreen();
 
   // Screen mapping array - maps index to screen name (except index 0 which toggles)
   const screenMap = [null, 'Profile', 'SlotForm', 'Statistics', 'Tasks'];
@@ -36,6 +38,26 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
     rive.play();
     rive.setString('day', currentDay);
   }, [currentDay]);
+
+  useEffect(() => {
+    const rive = riveRef.current;
+    if (!rive) return;
+
+    const screenToIndex: Record<string, number> = {
+      Day: 0,
+      Calendar: 0,
+      Profile: 1,
+      SlotForm: 2,
+      Statistics: 3,
+      Tasks: 4,
+    };
+
+    const index = screenToIndex[currentScreen];
+    if (index !== undefined) {
+      rive.play();
+      rive.setNumber('item selected', index + 1);
+    }
+  }, [currentScreen]);
 
   const getCurrentRouteName = (): string | undefined => {
     const state = navigation.getState?.();
@@ -81,7 +103,11 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
   };
 
   return (
-    <SafeAreaView edges={['bottom']} style={[styles.container]} pointerEvents={draggedSlot ? "none" : "auto"}>
+    <SafeAreaView
+      edges={['bottom']}
+      style={[styles.container]}
+      pointerEvents={draggedSlot ? 'none' : 'auto'}
+    >
       <View style={styles.riveContainer}>
         <Rive
           style={styles.rive}

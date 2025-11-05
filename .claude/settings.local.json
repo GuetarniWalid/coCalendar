@@ -7,7 +7,19 @@
       "Bash(git add:*)",
       "Bash(npx supabase:*)",
       "Bash(npx tsc:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(Select-Object -First 20 Name, FullName)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:web-ridge.github.io)",
+      "Bash(Get-ChildItem -Path \"C:\\Users\\gueta\\Documents\\coCalendar\\app\\src\\packages\\slot-form-view\" -Directory)",
+      "Bash(Get-Content \"C:\\Users\\gueta\\Documents\\coCalendar\\app\\package.json\")",
+      "Bash(Select-String -Pattern \"patch-package\" -Context 0,0)",
+      "Bash(Test-Path \"C:\\Users\\gueta\\Documents\\coCalendar\\patches\")",
+      "Bash(npm install:*)",
+      "Bash(npx patch-package react-native-paper-dates)",
+      "Bash(Test-Path \"C:\\Users\\gueta\\Documents\\coCalendar\\app\\node_modules\\react-native-paper-dates\\src\")"
     ],
     "deny": [],
     "ask": []

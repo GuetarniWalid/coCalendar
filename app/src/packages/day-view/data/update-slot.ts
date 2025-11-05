@@ -168,6 +168,65 @@ export const updateSlotCompletion = async (
 };
 
 /**
+ * Updates a slot's start and/or end time in Supabase
+ * @param supabase - Supabase client instance
+ * @param ownerId - Owner ID
+ * @param slotId - Slot ID to update
+ * @param newStartTime - New start time (ISO string) or null
+ * @param newEndTime - New end time (ISO string) or null
+ * @returns Updated slot data or null if failed
+ */
+export const updateSlotTime = async (
+  supabase: SupabaseClient,
+  ownerId: string,
+  slotId: string,
+  newStartTime: string | null,
+  newEndTime: string | null
+): Promise<SlotItem | null> => {
+  try {
+    const { data: updatedSlot, error: updateError } = await supabase
+      .from('slots')
+      .update({
+        start_at: newStartTime,
+        end_at: newEndTime,
+      })
+      .eq('id', slotId)
+      .eq('owner_id', ownerId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating slot time:', updateError);
+      return null;
+    }
+
+    return {
+      id: updatedSlot.id,
+      title: updatedSlot.title,
+      startTime: updatedSlot.start_at,
+      endTime: updatedSlot.end_at,
+      withoutTime: updatedSlot.without_time,
+      type: updatedSlot.type,
+      visibility: updatedSlot.visibility,
+      description: updatedSlot.description,
+      color: updatedSlot.color,
+      completionStatus: updatedSlot.completion_status ?? 'auto',
+      image: updatedSlot.image,
+      tasks: updatedSlot.tasks,
+      voice_path: updatedSlot.voice_path,
+      voice_duration: updatedSlot.voice_duration,
+      voice_mime: updatedSlot.voice_mime,
+      voice_size_bytes: updatedSlot.voice_size_bytes,
+      voice_created_at: updatedSlot.voice_created_at,
+      participants: updatedSlot.participants,
+    };
+  } catch (error) {
+    console.error('Error in updateSlotTime:', error);
+    return null;
+  }
+};
+
+/**
  * Deletes a slot from Supabase
  * @param supabase - Supabase client instance
  * @param ownerId - Owner ID

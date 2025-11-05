@@ -1,0 +1,294 @@
+diff --git a/node_modules/react-native-paper-dates/lib/commonjs/Time/AnalogClock.js b/node_modules/react-native-paper-dates/lib/commonjs/Time/AnalogClock.js
+index e15d81b..670937d 100644
+--- a/node_modules/react-native-paper-dates/lib/commonjs/Time/AnalogClock.js
++++ b/node_modules/react-native-paper-dates/lib/commonjs/Time/AnalogClock.js
+@@ -43,9 +43,44 @@ function AnalogClock({
+   const focusedRef = (0, _utils.useLatest)(focused);
+   const is24HourRef = (0, _utils.useLatest)(is24Hour);
+   const modeRef = (0, _utils.useLatest)(mode);
++
++  // Gesture tracking refs for tap vs drag detection
++  const isDragging = (0, _react.useRef)(false);
++  const initialTouchPosition = (0, _react.useRef)({
++    x: 0,
++    y: 0
++  });
+   const onPointerMove = (0, _react.useCallback)((e, final) => {
+     let x = e.nativeEvent.locationX;
+     let y = e.nativeEvent.locationY;
++
++    // Drag detection: track initial position and detect movement
++    if (!isDragging.current && !final) {
++      const dx = x - initialTouchPosition.current.x;
++      const dy = y - initialTouchPosition.current.y;
++      const distance = Math.sqrt(dx * dx + dy * dy);
++
++      // If first touch or very close to initial position, record position
++      if (initialTouchPosition.current.x === 0 && initialTouchPosition.current.y === 0) {
++        initialTouchPosition.current = {
++          x,
++          y
++        };
++      }
++      // If moved beyond threshold (10px), mark as dragging
++      else if (distance > 10) {
++        isDragging.current = true;
++      }
++    }
++
++    // Reset gesture state on release
++    if (final) {
++      isDragging.current = false;
++      initialTouchPosition.current = {
++        x: 0,
++        y: 0
++      };
++    }
+     let angle = (0, _timeUtils.getAngle)(x, y, _timeUtils.circleSize);
+     if (focusedRef.current === _timeUtils.clockTypes.hours) {
+       let hours24 = is24HourRef.current;
+@@ -78,7 +113,8 @@ function AnalogClock({
+         });
+       }
+     } else if (focusedRef.current === _timeUtils.clockTypes.minutes) {
+-      let pickedMinutes = (0, _timeUtils.getMinutes)(angle);
++      // Use free selection during drag, snap to 5min on tap
++      let pickedMinutes = isDragging.current ? (0, _timeUtils.getMinutesNoSnap)(angle) : (0, _timeUtils.getMinutes)(angle);
+       if (minutesRef.current !== pickedMinutes) {
+         onChangeRef.current({
+           hours: hoursRef.current,
+diff --git a/node_modules/react-native-paper-dates/lib/commonjs/Time/timeUtils.js b/node_modules/react-native-paper-dates/lib/commonjs/Time/timeUtils.js
+index 7f2522a..63e9d37 100644
+--- a/node_modules/react-native-paper-dates/lib/commonjs/Time/timeUtils.js
++++ b/node_modules/react-native-paper-dates/lib/commonjs/Time/timeUtils.js
+@@ -58,6 +58,7 @@ const clockTypes = exports.clockTypes = {
+ const outerHeight = 34;
+ const _30 = Math.PI / 6;
+ const _12 = Math.PI / 30;
++const _60 = Math.PI / 6;
+ const _360 = Math.PI * 2;
+ const _90 = Math.PI / 2;
+ 
+@@ -82,14 +83,25 @@ function getHourTypeFromOffset(left, top, size) {
+   return distance > maxPm ? hourTypes.am : hourTypes.pm;
+ }
+ 
+-// Calculate the minute from the hand angle
++// Calculate the minute from the hand angle (snapped to 5-minute intervals)
+ function getMinutes(handAngle) {
++  handAngle = snap(handAngle, _60);
++  let minute = parseInt(((handAngle - _90) % _360 / _60).toFixed(), 10);
++  minute = minute * 5;
++  while (minute < 0) minute += 60;
++  while (minute >= 60) minute -= 60;
++  return minute;
++}
++
++// Calculate the minute from the hand angle (no snap, free selection)
++function getMinutesNoSnap(handAngle) {
+   handAngle = snap(handAngle, _12);
+   let minute = parseInt(((handAngle - _90) % _360 / _12).toFixed(), 10);
+   while (minute < 0) minute += 60;
+   while (minute >= 60) minute -= 60;
+   return minute;
+ }
++exports.getMinutesNoSnap = getMinutesNoSnap;
+ 
+ // Calculate the hour from the hand angle
+ function getHours(handAngle, hourType) {
+diff --git a/node_modules/react-native-paper-dates/lib/module/Time/AnalogClock.js b/node_modules/react-native-paper-dates/lib/module/Time/AnalogClock.js
+index 85cb26a..dc2440b 100644
+--- a/node_modules/react-native-paper-dates/lib/module/Time/AnalogClock.js
++++ b/node_modules/react-native-paper-dates/lib/module/Time/AnalogClock.js
+@@ -3,7 +3,7 @@
+ import Color from 'color';
+ import { PanResponder, StyleSheet, View } from 'react-native';
+ import { useTheme } from 'react-native-paper';
+-import { circleSize, clockTypes, getAngle, getHours, getHourType, getHourTypeFromOffset, getMinutes, hourTypes } from './timeUtils';
++import { circleSize, clockTypes, getAngle, getHours, getHourType, getHourTypeFromOffset, getMinutes, getMinutesNoSnap, hourTypes } from './timeUtils';
+ import { useLatest } from '../shared/utils';
+ import AnalogClockHours from './AnalogClockHours';
+ import AnimatedClockSwitcher from './AnimatedClockSwitcher';
+@@ -38,9 +38,44 @@ function AnalogClock({
+   const focusedRef = useLatest(focused);
+   const is24HourRef = useLatest(is24Hour);
+   const modeRef = useLatest(mode);
++
++  // Gesture tracking refs for tap vs drag detection
++  const isDragging = useRef(false);
++  const initialTouchPosition = useRef({
++    x: 0,
++    y: 0
++  });
+   const onPointerMove = useCallback((e, final) => {
+     let x = e.nativeEvent.locationX;
+     let y = e.nativeEvent.locationY;
++
++    // Drag detection: track initial position and detect movement
++    if (!isDragging.current && !final) {
++      const dx = x - initialTouchPosition.current.x;
++      const dy = y - initialTouchPosition.current.y;
++      const distance = Math.sqrt(dx * dx + dy * dy);
++
++      // If first touch or very close to initial position, record position
++      if (initialTouchPosition.current.x === 0 && initialTouchPosition.current.y === 0) {
++        initialTouchPosition.current = {
++          x,
++          y
++        };
++      }
++      // If moved beyond threshold (10px), mark as dragging
++      else if (distance > 10) {
++        isDragging.current = true;
++      }
++    }
++
++    // Reset gesture state on release
++    if (final) {
++      isDragging.current = false;
++      initialTouchPosition.current = {
++        x: 0,
++        y: 0
++      };
++    }
+     let angle = getAngle(x, y, circleSize);
+     if (focusedRef.current === clockTypes.hours) {
+       let hours24 = is24HourRef.current;
+@@ -73,7 +108,8 @@ function AnalogClock({
+         });
+       }
+     } else if (focusedRef.current === clockTypes.minutes) {
+-      let pickedMinutes = getMinutes(angle);
++      // Use free selection during drag, snap to 5min on tap
++      let pickedMinutes = isDragging.current ? getMinutesNoSnap(angle) : getMinutes(angle);
+       if (minutesRef.current !== pickedMinutes) {
+         onChangeRef.current({
+           hours: hoursRef.current,
+diff --git a/node_modules/react-native-paper-dates/lib/module/Time/timeUtils.js b/node_modules/react-native-paper-dates/lib/module/Time/timeUtils.js
+index b2411b5..8d1f2dc 100644
+--- a/node_modules/react-native-paper-dates/lib/module/Time/timeUtils.js
++++ b/node_modules/react-native-paper-dates/lib/module/Time/timeUtils.js
+@@ -41,6 +41,7 @@ export const clockTypes = {
+ const outerHeight = 34;
+ const _30 = Math.PI / 6;
+ const _12 = Math.PI / 30;
++const _60 = Math.PI / 6;
+ const _360 = Math.PI * 2;
+ const _90 = Math.PI / 2;
+ 
+@@ -65,8 +66,18 @@ export function getHourTypeFromOffset(left, top, size) {
+   return distance > maxPm ? hourTypes.am : hourTypes.pm;
+ }
+ 
+-// Calculate the minute from the hand angle
++// Calculate the minute from the hand angle (snapped to 5-minute intervals)
+ export function getMinutes(handAngle) {
++  handAngle = snap(handAngle, _60);
++  let minute = parseInt(((handAngle - _90) % _360 / _60).toFixed(), 10);
++  minute = minute * 5;
++  while (minute < 0) minute += 60;
++  while (minute >= 60) minute -= 60;
++  return minute;
++}
++
++// Calculate the minute from the hand angle (no snap, free selection)
++export function getMinutesNoSnap(handAngle) {
+   handAngle = snap(handAngle, _12);
+   let minute = parseInt(((handAngle - _90) % _360 / _12).toFixed(), 10);
+   while (minute < 0) minute += 60;
+diff --git a/node_modules/react-native-paper-dates/src/Time/AnalogClock.tsx b/node_modules/react-native-paper-dates/src/Time/AnalogClock.tsx
+index 97480f0..01da10d 100644
+--- a/node_modules/react-native-paper-dates/src/Time/AnalogClock.tsx
++++ b/node_modules/react-native-paper-dates/src/Time/AnalogClock.tsx
+@@ -14,6 +14,7 @@ import {
+   getHourType,
+   getHourTypeFromOffset,
+   getMinutes,
++  getMinutesNoSnap,
+   hourTypes,
+   PossibleClockTypes,
+ } from './timeUtils'
+@@ -63,10 +64,37 @@ function AnalogClock({
+   const is24HourRef = useLatest(is24Hour)
+   const modeRef = useLatest(mode)
+ 
++  // Gesture tracking refs for tap vs drag detection
++  const isDragging = useRef(false)
++  const initialTouchPosition = useRef({ x: 0, y: 0 })
++
+   const onPointerMove = useCallback(
+     (e: GestureResponderEvent, final: boolean) => {
+       let x = e.nativeEvent.locationX
+       let y = e.nativeEvent.locationY
++
++      // Drag detection: track initial position and detect movement
++      if (!isDragging.current && !final) {
++        const dx = x - initialTouchPosition.current.x
++        const dy = y - initialTouchPosition.current.y
++        const distance = Math.sqrt(dx * dx + dy * dy)
++
++        // If first touch or very close to initial position, record position
++        if (initialTouchPosition.current.x === 0 && initialTouchPosition.current.y === 0) {
++          initialTouchPosition.current = { x, y }
++        }
++        // If moved beyond threshold (10px), mark as dragging
++        else if (distance > 10) {
++          isDragging.current = true
++        }
++      }
++
++      // Reset gesture state on release
++      if (final) {
++        isDragging.current = false
++        initialTouchPosition.current = { x: 0, y: 0 }
++      }
++
+       let angle = getAngle(x, y, circleSize)
+       if (focusedRef.current === clockTypes.hours) {
+         let hours24 = is24HourRef.current
+@@ -104,7 +132,10 @@ function AnalogClock({
+           })
+         }
+       } else if (focusedRef.current === clockTypes.minutes) {
+-        let pickedMinutes = getMinutes(angle)
++        // Use free selection during drag, snap to 5min on tap
++        let pickedMinutes = isDragging.current
++          ? getMinutesNoSnap(angle)
++          : getMinutes(angle)
+         if (minutesRef.current !== pickedMinutes) {
+           onChangeRef.current({
+             hours: hoursRef.current,
+diff --git a/node_modules/react-native-paper-dates/src/Time/timeUtils.ts b/node_modules/react-native-paper-dates/src/Time/timeUtils.ts
+index e2bad8c..713661d 100644
+--- a/node_modules/react-native-paper-dates/src/Time/timeUtils.ts
++++ b/node_modules/react-native-paper-dates/src/Time/timeUtils.ts
+@@ -67,6 +67,7 @@ export const clockTypes: ClockTypeMap = {
+ const outerHeight = 34
+ const _30 = Math.PI / 6
+ const _12 = Math.PI / 30
++const _60 = Math.PI / 6
+ const _360 = Math.PI * 2
+ const _90 = Math.PI / 2
+ 
+@@ -99,8 +100,20 @@ export function getHourTypeFromOffset(
+   return distance > maxPm ? hourTypes.am : hourTypes.pm
+ }
+ 
+-// Calculate the minute from the hand angle
++// Calculate the minute from the hand angle (snapped to 5-minute intervals)
+ export function getMinutes(handAngle: number) {
++  handAngle = snap(handAngle, _60)
++
++  let minute = parseInt((((handAngle - _90) % _360) / _60).toFixed(), 10)
++  minute = minute * 5
++  while (minute < 0) minute += 60
++  while (minute >= 60) minute -= 60
++
++  return minute
++}
++
++// Calculate the minute from the hand angle (no snap, free selection)
++export function getMinutesNoSnap(handAngle: number) {
+   handAngle = snap(handAngle, _12)
+ 
+   let minute = parseInt((((handAngle - _90) % _360) / _12).toFixed(), 10)

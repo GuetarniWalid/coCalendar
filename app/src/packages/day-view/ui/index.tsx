@@ -1,13 +1,8 @@
-import { View, StyleSheet } from 'react-native';
 import { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDayView } from '../shared/hooks';
 import { useAuthStore, SlotItem, retryWithBackoff, setCurrentScreen } from '@project/shared';
 import { SlotList } from './slot-list';
-import { colors } from '@project/shared';
-import { VisibleMonthYear } from './VisibleMonthYear';
-import { DayTasksProgress } from './DayTasksProgress';
-import { DateSelector } from './DateSelector';
 import { updateSlotDate } from '../data/update-slot';
 
 export const DayViewScreen = () => {
@@ -16,7 +11,7 @@ export const DayViewScreen = () => {
       setCurrentScreen('Day');
     }, [])
   );
-  const { slots, loading, updateSlotCache, slotsCacheRef, cacheVersion } =
+  const { loading, updateSlotCache, slotsCacheRef, cacheVersion } =
     useDayView();
   const [{ supabase, user }] = useAuthStore();
 
@@ -55,31 +50,12 @@ export const DayViewScreen = () => {
   );
 
   return (
-    <>
-      <View style={styles.headerRow}>
-        <VisibleMonthYear />
-        <DayTasksProgress slots={slots} loading={loading} />
-      </View>
-      <DateSelector />
-      <SlotList
-        loading={loading}
-        handleSlotDropped={handleSlotDropped}
-        updateSlotCache={updateSlotCache}
-        slotsCacheRef={slotsCacheRef}
-        cacheVersion={cacheVersion}
-      />
-    </>
+    <SlotList
+      loading={loading}
+      handleSlotDropped={handleSlotDropped}
+      updateSlotCache={updateSlotCache}
+      slotsCacheRef={slotsCacheRef}
+      cacheVersion={cacheVersion}
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingRight: 16,
-    paddingLeft: 24,
-    paddingBottom: 8,
-    backgroundColor: colors.background.primary,
-  },
-});

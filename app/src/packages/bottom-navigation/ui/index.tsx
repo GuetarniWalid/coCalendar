@@ -7,6 +7,8 @@ import {
   useCalendarStore,
   handleFirstButtonPress,
   useNavigationStore,
+  useSlotFormStore,
+  getSlotBackgroundColor,
 } from '@project/shared';
 import { BottomNavigationProps } from '../shared/types';
 import dayjs from 'dayjs';
@@ -28,6 +30,11 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
   const navigation = useNavigation<any>();
   const { draggedSlot } = useDraggedSlotContext();
   const [currentScreen] = useNavigationStore.currentScreen();
+  const [selectedSlot, setSelectedSlot] = useSlotFormStore.selectedSlot();
+
+  const upperBackgroundColor = currentScreen === 'SlotForm'
+    ? getSlotBackgroundColor(selectedSlot?.color)
+    : colors.background.primary;
 
   // Screen mapping array - maps index to screen name (except index 0 which toggles)
   const screenMap = [null, 'Profile', 'SlotForm', 'Statistics', 'Tasks'];
@@ -95,6 +102,10 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
           const screenName = screenMap[index];
           if (screenName) {
             if (currentRoute === screenName) return; // already focused
+            // Clear selected slot when navigating to SlotForm via bottom nav
+            if (screenName === 'SlotForm') {
+              setSelectedSlot(null);
+            }
             navigation.navigate(screenName);
           }
         }
@@ -108,6 +119,7 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
       style={[styles.container]}
       pointerEvents={draggedSlot ? 'none' : 'auto'}
     >
+      <View style={[styles.upperBackground, { backgroundColor: upperBackgroundColor }]} />
       <View style={styles.riveContainer}>
         <Rive
           style={styles.rive}
@@ -148,6 +160,13 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
 };
 
 const styles = StyleSheet.create({
+  upperBackground: {
+    height: '50%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
   container: {
     backgroundColor: colors.bottomNavigation.background,
     borderTopLeftRadius: 25,

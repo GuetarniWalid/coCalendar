@@ -1,9 +1,12 @@
 import { useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors, fontSize, spacing, setCurrentScreen } from '@project/shared';
+import { colors, fontSize, spacing, setCurrentScreen, useSlotFormStore, getSlotBackgroundColor } from '@project/shared';
 
 const SlotFormScreen = () => {
+  const [selectedSlot] = useSlotFormStore.selectedSlot();
+  const backgroundColor = getSlotBackgroundColor(selectedSlot?.color);
+
   // Track when this screen becomes active
   useFocusEffect(
     useCallback(() => {
@@ -12,7 +15,7 @@ const SlotFormScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor }]}>
       <Text style={styles.title}>Slot Form</Text>
       <Text style={styles.subtitle}>Create or edit your slots</Text>
     </View>

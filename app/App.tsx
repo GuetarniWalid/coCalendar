@@ -19,6 +19,7 @@ import {
   registerAuthSetters,
   colors,
 } from '@project/shared';
+import { SharedHeader } from './src/packages/shared/ui/SharedHeader';
 import { DraggedSlotProvider } from '@project/shared/store/dragged-slot';
 import { DraggableLayer } from '@project/draggable-layer';
 
@@ -54,6 +55,7 @@ const AppContent = () => {
           }}
         >
           <SafeAreaView style={styles.container} edges={['top']}>
+            {user && <SharedHeader />}
             <Stack.Navigator
               key={user ? 'app' : 'auth'}
               screenOptions={{ headerShown: false }}

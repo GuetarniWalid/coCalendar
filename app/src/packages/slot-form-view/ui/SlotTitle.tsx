@@ -1,19 +1,18 @@
 import { FC } from 'react';
-import { Text, StyleSheet } from 'react-native';
-import { fontSize, fontWeight, colors } from '@project/shared';
+import { StyleSheet } from 'react-native';
+import { Text, fontSize, colors } from '@project/shared';
 
 interface SlotTitleProps {
   title: string;
 }
 
 export const SlotTitle: FC<SlotTitleProps> = ({ title }) => {
-  return <Text style={styles.title}>{title}</Text>;
+  return <Text style={styles.title} fontWeight="bold">{title}</Text>;
 };
 
 const styles = StyleSheet.create({
   title: {
     fontSize: fontSize['2xl'],
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
     marginBottom: 20,
   },

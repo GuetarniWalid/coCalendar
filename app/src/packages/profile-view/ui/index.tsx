@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors, fontSize, spacing, setCurrentScreen } from '@project/shared';
+import { Text, colors, fontSize, spacing, setCurrentScreen } from '@project/shared';
 
 const ProfileScreen = () => {
   // Track when this screen becomes active

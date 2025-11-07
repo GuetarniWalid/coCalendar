@@ -2,7 +2,6 @@ import { FC, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
-  Text,
   FlatList,
   Dimensions,
   NativeScrollEvent,
@@ -10,12 +9,11 @@ import {
   Pressable,
 } from 'react-native';
 import dayjs from 'dayjs';
-import { DayItem } from '@project/shared';
+import { DayItem, Text } from '@project/shared';
 import {
   colors,
   spacing,
   fontSize,
-  fontWeight,
   useCalendarStore,
 } from '@project/shared';
 const screenWidth = Dimensions.get('window').width;
@@ -53,6 +51,7 @@ export const DateSelector: FC = () => {
             styles.dateNumber,
             d.isSelected && styles.highlightDateNumber,
           ]}
+          fontWeight="700"
         >
           {dayjs(d.date).format('D')}
         </Text>
@@ -289,7 +288,6 @@ const styles = StyleSheet.create({
   },
   dateNumber: {
     fontSize: fontSize['xl'],
-    fontWeight: fontWeight.black,
     color: colors.typography.secondary,
   },
   highlightDateName: {

@@ -1,7 +1,8 @@
-import { View, StyleSheet, Text, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle } from 'react-native';
 import { CompletionCheckmark } from './CompletionCheckmark';
-import { fontSize, fontWeight } from '@project/shared/theme/typography';
+import { fontSize } from '@project/shared/theme/typography';
 import { colors } from '@project/shared/theme/colors';
+import { Text } from '@project/shared';
 import { Image } from 'expo-image';
 import { ProgressBar } from './ProgressBar';
 import { TaskCounter } from './TaskCounter';
@@ -73,7 +74,7 @@ export const Slot = ({ slot, onImageLoad, draggedShadowStyle }: SlotProps) => {
         <CompletionCheckmark slot={slot} />
         <View style={styles.contentContainer}>
           <Text style={styles.time}>{timeText}</Text>
-          <Text style={styles.title} numberOfLines={2}>{slot.title}</Text>
+          <Text style={styles.title} fontWeight="bold" numberOfLines={2}>{slot.title}</Text>
           <ProgressBar
             startTime={slot.startTime}
             endTime={slot.endTime}
@@ -156,10 +157,10 @@ const styles = StyleSheet.create({
   time: {
     fontSize: fontSize.xs,
     color: colors.typography.primary,
+    marginBottom: 4,
   },
   title: {
     fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
     marginBottom: 4,
     color: colors.typography.primary,
   },

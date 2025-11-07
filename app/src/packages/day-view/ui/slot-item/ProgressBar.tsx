@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedStyle,
@@ -8,6 +8,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import {
+  Text,
   hasSpecificTime,
   calculateSlotProgress,
   getSlotContrastColor,
@@ -272,7 +273,7 @@ export const ProgressBar = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: 4,
   },
   textContainer: {

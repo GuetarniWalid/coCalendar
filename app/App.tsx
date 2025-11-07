@@ -5,6 +5,15 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
+import {
+  useFonts,
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+} from '@expo-google-fonts/nunito';
 import AuthScreen from './src/packages/auth-view/ui';
 import CalendarScreen from './src/packages/calendar-view/ui';
 import { DayViewScreen } from './src/packages/day-view/ui';
@@ -29,11 +38,24 @@ const AppContent = () => {
   const [user, setUser] = useAuthStore.user();
   const [, setLoading] = useAuthStore.loading();
 
+  const [fontsLoaded] = useFonts({
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
+  });
+
   useEffect(() => {
     initializeAuthClient();
     // Wire Teaful setters so the store updates trigger renders
     registerAuthSetters(setUser, setLoading);
   }, []);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

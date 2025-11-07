@@ -1,6 +1,6 @@
 import { FC } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { fontSize, spacing, colors } from '@project/shared';
+import { View, StyleSheet } from 'react-native';
+import { Text, fontSize, spacing, colors } from '@project/shared';
 
 interface SlotTaskPlaceholderProps {
   text: string;

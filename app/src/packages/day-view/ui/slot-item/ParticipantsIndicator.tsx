@@ -1,11 +1,13 @@
 import { FC, useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
+  Text,
   SlotParticipant,
   SlotColorName,
   getSlotParticipantColors,
+  colors,
+  fontSize,
 } from '@project/shared';
-import { colors, fontSize, fontWeight } from '@project/shared';
 
 interface ParticipantsIndicatorProps {
   participants?: SlotParticipant[];
@@ -111,7 +113,7 @@ export const ParticipantsIndicator: FC<ParticipantsIndicatorProps> = ({
             },
           ]}
         >
-          <Text style={styles.overflowText}>
+          <Text style={styles.overflowText} fontWeight="bold">
             +{participantData.overflowCount}
           </Text>
         </View>
@@ -131,7 +133,7 @@ export const ParticipantsIndicator: FC<ParticipantsIndicatorProps> = ({
             },
           ]}
         >
-          <Text style={styles.initialsText}>{participant.initials}</Text>
+          <Text style={styles.initialsText} fontWeight="800">{participant.initials}</Text>
         </View>
       ))}
     </View>
@@ -155,13 +157,11 @@ const styles = StyleSheet.create({
   },
   initialsText: {
     fontSize: fontSize.sm,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
     textAlign: 'center',
   },
   overflowText: {
     fontSize: fontSize.sm,
-    fontWeight: fontWeight.bold,
     color: colors.white,
     textAlign: 'center',
   },

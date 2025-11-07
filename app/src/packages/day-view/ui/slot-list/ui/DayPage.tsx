@@ -1,10 +1,10 @@
 import { memo, useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { SlotItem } from '../../slot-item';
 import { EmptyDayCard } from '../../EmptyDayCard';
 import { RemainingTimeCard } from '../../RemainingTimeCard';
 import { ControllableScrollView } from './ControllableScrollView';
-import { colors, SlotItem as SlotItemType, fontSize } from '@project/shared';
+import { Text, colors, SlotItem as SlotItemType, fontSize } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
 import { getDateFromIndex } from '../shared/utils';

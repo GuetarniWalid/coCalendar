@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import dayjs from 'dayjs';
 import { TimePickerModal } from 'react-native-paper-dates';
 import {
-  fontWeight,
+  Text,
   colors,
   SlotColorName,
   getSlotContrastColor,
@@ -34,15 +34,15 @@ const TimeCircleContent = ({ time }: { time: string }) => {
       const [, timeValue = '', period = ''] = match;
       return (
         <View style={styles.timeWithPeriodContainer}>
-          <Text style={styles.timeText}>{timeValue}</Text>
-          <Text style={styles.periodText}>{period.toUpperCase()}</Text>
+          <Text style={styles.timeText} fontWeight="bold">{timeValue}</Text>
+          <Text style={styles.periodText} fontWeight="bold">{period.toUpperCase()}</Text>
         </View>
       );
     }
   }
 
   // No AM/PM, just show the time
-  return <Text style={styles.timeText}>{time}</Text>;
+  return <Text style={styles.timeText} fontWeight="bold">{time}</Text>;
 };
 
 export const SlotTimeSection = ({
@@ -180,12 +180,10 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 19,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
   },
   periodText: {
     fontSize: 10,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
   },
 });

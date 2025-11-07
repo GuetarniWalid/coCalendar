@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
+import { View, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import {
-  fontWeight,
+  Text,
   colors,
   SlotColorName,
   getSlotBackgroundColor,
@@ -22,14 +22,14 @@ const TimeCircleContent = ({ time }: { time: string }) => {
       const [, timeValue = '', period = ''] = match;
       return (
         <View style={styles.timeWithPeriodContainer}>
-          <Text style={styles.timeText}>{timeValue}</Text>
-          <Text style={styles.periodText}>{period.toUpperCase()}</Text>
+          <Text style={styles.timeText} fontWeight="bold">{timeValue}</Text>
+          <Text style={styles.periodText} fontWeight="bold">{period.toUpperCase()}</Text>
         </View>
       );
     }
   }
 
-  return <Text style={styles.timeText}>{time}</Text>;
+  return <Text style={styles.timeText} fontWeight="bold">{time}</Text>;
 };
 
 export const TimeCircle = ({
@@ -86,12 +86,10 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 16,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
   },
   periodText: {
     fontSize: 10,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
   },
 });

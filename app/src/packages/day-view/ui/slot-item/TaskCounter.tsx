@@ -1,8 +1,7 @@
 import { FC, useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { SlotTask } from '@project/shared';
+import { View, StyleSheet } from 'react-native';
+import { Text, SlotTask, colors, fontSize } from '@project/shared';
 import { ToDoList } from '@project/icons';
-import { colors, fontSize } from '@project/shared';
 
 interface TaskCounterProps {
   tasks: SlotTask[] | undefined;

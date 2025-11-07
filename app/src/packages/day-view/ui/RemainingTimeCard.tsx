@@ -1,11 +1,11 @@
 import { FC, memo, useMemo, useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import Animated, { FlipInEasyX, FlipOutEasyX } from 'react-native-reanimated';
 import {
+  Text,
   colors,
   spacing,
   fontSize,
-  fontWeight,
   getAvatarPublicUrl,
 } from '@project/shared';
 import { Image } from 'expo-image';
@@ -122,7 +122,7 @@ const RemainingTimeCardBase: FC<RemainingTimeCardProps> = ({
         )}
         <View style={styles.content}>
           <Text style={styles.text}>{t.remainingTimeText}</Text>
-          <Text style={styles.time}>{timeDisplay}</Text>
+          <Text style={styles.time} fontWeight="bold">{timeDisplay}</Text>
         </View>
       </Pressable>
     </Animated.View>
@@ -162,7 +162,6 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
     alignSelf: 'center',
   },

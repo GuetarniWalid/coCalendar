@@ -1,7 +1,11 @@
 // Design Tokens - Typography
 export const fontFamily = {
-  primary: 'Nunito',
-  secondary: 'Nunito',
+  primary: 'Nunito_400Regular',
+  medium: 'Nunito_500Medium',
+  semibold: 'Nunito_600SemiBold',
+  bold: 'Nunito_700Bold',
+  extrabold: 'Nunito_800ExtraBold',
+  black: 'Nunito_900Black',
 } as const;
 
 export const fontSize = {

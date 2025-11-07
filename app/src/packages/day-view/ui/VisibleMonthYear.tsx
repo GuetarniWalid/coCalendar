@@ -1,9 +1,9 @@
 import { FC } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
+  Text,
   colors,
   fontSize,
-  fontWeight,
   useCalendarStore,
 } from '@project/shared';
 import { formatMonthYear } from '@project/i18n';
@@ -14,8 +14,8 @@ export const VisibleMonthYear: FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.month}>{month}</Text>
-      <Text style={styles.year}>{year}</Text>
+      <Text style={styles.month} fontWeight="700">{month}</Text>
+      <Text style={styles.year} fontWeight="800">{year}</Text>
     </View>
   );
 };
@@ -27,12 +27,10 @@ const styles = StyleSheet.create({
   },
   month: {
     fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
   },
   year: {
     fontSize: fontSize.xl,
-    fontWeight: fontWeight.black,
     color: colors.bottomNavigation.selector,
     marginLeft: 5,
   },

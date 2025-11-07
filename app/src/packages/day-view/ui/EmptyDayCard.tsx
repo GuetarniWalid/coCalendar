@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
+  Text,
   colors,
   spacing,
   fontSize,
-  fontWeight,
   getAvatarPublicUrl,
 } from '@project/shared';
 import { Image } from 'expo-image';
@@ -45,7 +45,7 @@ const EmptyDayCardBase = () => {
       )}
       <View style={styles.content}>
         <Text style={styles.text}>{t.emptyDayText}</Text>
-        <Text style={styles.title}>{t.emptyDayTitle}</Text>
+        <Text style={styles.title} fontWeight="bold">{t.emptyDayTitle}</Text>
       </View>
     </Animated.View>
   );
@@ -74,7 +74,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
     color: colors.typography.primary,
   },
   text: {

@@ -1,6 +1,6 @@
 import { FC } from 'react';
-import { Text, StyleSheet } from 'react-native';
-import { fontSize, colors } from '@project/shared';
+import { StyleSheet } from 'react-native';
+import { Text, fontSize, colors } from '@project/shared';
 
 interface SlotMessagePlaceholderProps {
   text: string;

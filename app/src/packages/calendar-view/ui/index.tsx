@@ -1,9 +1,9 @@
 import { useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import dayjs from 'dayjs';
-import { setCurrentScreen } from '@project/shared';
+import { Text, setCurrentScreen } from '@project/shared';
 
 const CalendarScreen = () => {
   const navigation = useNavigation<any>();

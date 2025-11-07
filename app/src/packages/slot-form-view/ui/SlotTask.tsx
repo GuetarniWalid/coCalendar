@@ -1,16 +1,14 @@
-import { FC } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, fontSize, spacing, colors } from '@project/shared';
+import { useTranslation } from '@project/i18n';
 
-interface SlotTaskPlaceholderProps {
-  text: string;
-}
+export const SlotTask = () => {
+  const t = useTranslation();
 
-export const SlotTaskPlaceholder: FC<SlotTaskPlaceholderProps> = ({ text }) => {
   return (
     <View style={styles.container}>
       <View style={styles.radioCircle} />
-      <Text style={styles.text}>{text}</Text>
+      <Text style={styles.text}>{t.addTask}</Text>
     </View>
   );
 };

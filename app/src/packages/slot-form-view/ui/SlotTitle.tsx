@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     fontSize: fontSize['2xl'],
     color: colors.typography.primary,
-    marginBottom: 20,
+    marginBottom: 30,
     padding: 0,
   },
 });

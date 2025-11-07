@@ -1,12 +1,19 @@
-import { FC } from 'react';
+
 import { StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
+import { useSlotFormStore, getAvatarPublicUrl } from '@project/shared';
 
-interface SlotImageProps {
-  imageUri: string;
-}
+const DEFAULT_IMAGE = {
+  persona: 'adult-female' as const,
+  activity: 'job_study',
+  name: 'working_desktop',
+  extension: 'webp' as const,
+};
 
-export const SlotImage: FC<SlotImageProps> = ({ imageUri }) => {
+export const SlotImage = () => {
+  const [selectedSlot] = useSlotFormStore.selectedSlot();
+  const imageUri = getAvatarPublicUrl(selectedSlot?.image || DEFAULT_IMAGE);
+
   return (
     <Image
       source={imageUri}

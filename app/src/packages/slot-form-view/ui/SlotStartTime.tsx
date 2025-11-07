@@ -5,20 +5,12 @@ import {
   SlotColorName,
   getSlotContrastColor,
   getSlotBackgroundColor,
+  useSlotFormStore,
 } from '@project/shared';
 import { getCurrentLocale } from '@project/i18n';
 import { TimeCircle } from './TimeCircle';
 import { useTimePicker } from '../shared/hooks';
-
-interface Slot {
-  startTime?: string | null | undefined;
-  color?: SlotColorName | undefined;
-}
-
-interface SlotStartTimeProps {
-  slot?: Slot | null;
-  onTimeChange?: (hours: number, minutes: number) => void;
-}
+import { useSlotUpdate } from '../shared/hooks';
 
 export { PaperProvider, MD3LightTheme };
 
@@ -45,7 +37,9 @@ export const getTimePickerTheme = (slotColor?: SlotColorName | undefined) => {
   };
 };
 
-export const SlotStartTime = ({ slot, onTimeChange }: SlotStartTimeProps) => {
+export const SlotStartTime = () => {
+  const [selectedSlot] = useSlotFormStore.selectedSlot();
+  const { updateStartTime } = useSlotUpdate();
   const {
     timePickerVisible,
     displayTime,
@@ -55,17 +49,17 @@ export const SlotStartTime = ({ slot, onTimeChange }: SlotStartTimeProps) => {
     onDismissTime,
     openPicker,
   } = useTimePicker({
-    initialTime: slot?.startTime,
+    initialTime: selectedSlot?.startTime,
     defaultHour: 8,
     defaultMinute: 0,
-    onTimeChange,
+    onTimeChange: updateStartTime,
   });
 
   return (
     <>
       <TimeCircle
         time={displayTime}
-        slotColor={slot?.color}
+        slotColor={selectedSlot?.color}
         onPress={openPicker}
       />
 

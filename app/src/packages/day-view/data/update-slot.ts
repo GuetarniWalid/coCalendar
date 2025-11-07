@@ -227,6 +227,60 @@ export const updateSlotTime = async (
 };
 
 /**
+ * Updates a slot's title in Supabase
+ * @param supabase - Supabase client instance
+ * @param ownerId - Owner ID
+ * @param slotId - Slot ID to update
+ * @param newTitle - New title for the slot
+ * @returns Updated slot data or null if failed
+ */
+export const updateSlotTitle = async (
+  supabase: SupabaseClient,
+  ownerId: string,
+  slotId: string,
+  newTitle: string
+): Promise<SlotItem | null> => {
+  try {
+    const { data: updatedSlot, error: updateError } = await supabase
+      .from('slots')
+      .update({ title: newTitle })
+      .eq('id', slotId)
+      .eq('owner_id', ownerId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating slot title:', updateError);
+      return null;
+    }
+
+    return {
+      id: updatedSlot.id,
+      title: updatedSlot.title,
+      startTime: updatedSlot.start_at,
+      endTime: updatedSlot.end_at,
+      withoutTime: updatedSlot.without_time,
+      type: updatedSlot.type,
+      visibility: updatedSlot.visibility,
+      description: updatedSlot.description,
+      color: updatedSlot.color,
+      completionStatus: updatedSlot.completion_status ?? 'auto',
+      image: updatedSlot.image,
+      tasks: updatedSlot.tasks,
+      voice_path: updatedSlot.voice_path,
+      voice_duration: updatedSlot.voice_duration,
+      voice_mime: updatedSlot.voice_mime,
+      voice_size_bytes: updatedSlot.voice_size_bytes,
+      voice_created_at: updatedSlot.voice_created_at,
+      participants: updatedSlot.participants,
+    };
+  } catch (error) {
+    console.error('Error in updateSlotTitle:', error);
+    return null;
+  }
+};
+
+/**
  * Deletes a slot from Supabase
  * @param supabase - Supabase client instance
  * @param ownerId - Owner ID

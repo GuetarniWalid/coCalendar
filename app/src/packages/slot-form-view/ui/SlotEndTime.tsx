@@ -1,20 +1,12 @@
-import { SlotColorName } from '@project/shared';
+import { useSlotFormStore } from '@project/shared';
 import { getCurrentLocale } from '@project/i18n';
 import { TimePickerModal } from 'react-native-paper-dates';
 import { TimeCircle } from './TimeCircle';
-import { useTimePicker } from '../shared/hooks';
+import { useTimePicker, useSlotUpdate } from '../shared/hooks';
 
-interface SlotEndTimeProps {
-  endTime?: string | null | undefined;
-  slotColor?: SlotColorName | undefined;
-  onTimeChange?: (hours: number, minutes: number) => void;
-}
-
-export const SlotEndTime = ({
-  endTime,
-  slotColor,
-  onTimeChange,
-}: SlotEndTimeProps) => {
+export const SlotEndTime = () => {
+  const [selectedSlot] = useSlotFormStore.selectedSlot();
+  const { updateEndTime } = useSlotUpdate();
   const {
     timePickerVisible,
     displayTime,
@@ -24,17 +16,17 @@ export const SlotEndTime = ({
     onDismissTime,
     openPicker,
   } = useTimePicker({
-    initialTime: endTime,
+    initialTime: selectedSlot?.endTime,
     defaultHour: 9,
     defaultMinute: 0,
-    onTimeChange,
+    onTimeChange: updateEndTime,
   });
 
-  if (!endTime) return null;
+  if (!selectedSlot?.endTime) return null;
 
   return (
     <>
-      <TimeCircle time={displayTime} slotColor={slotColor} onPress={openPicker} />
+      <TimeCircle time={displayTime} slotColor={selectedSlot?.color} onPress={openPicker} />
 
       <TimePickerModal
         visible={timePickerVisible}

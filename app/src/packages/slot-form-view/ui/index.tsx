@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   spacing,
@@ -10,7 +10,6 @@ import {
   colors,
 } from '@project/shared';
 import { useTranslation } from '@project/i18n';
-import { useSlotTimeUpdate } from '../shared/hooks';
 import { SlotTitle } from './SlotTitle';
 import { SlotImage } from './SlotImage';
 import { SlotStartTime, PaperProvider, getTimePickerTheme } from './SlotStartTime';
@@ -21,7 +20,6 @@ import { SlotMessagePlaceholder } from './SlotMessagePlaceholder';
 const SlotFormScreen = () => {
   const t = useTranslation();
   const [selectedSlot] = useSlotFormStore.selectedSlot();
-  const { updateStartTime, updateEndTime } = useSlotTimeUpdate();
   const backgroundColor = getSlotBackgroundColor(selectedSlot?.color);
 
   // Track when this screen becomes active
@@ -39,7 +37,6 @@ const SlotFormScreen = () => {
     extension: 'webp' as const,
   };
 
-  const displayTitle = selectedSlot?.title || t.titleLabel;
   const imageUri = getAvatarPublicUrl(selectedSlot?.image || defaultImage);
 
   const pickerTheme = useMemo(
@@ -49,28 +46,23 @@ const SlotFormScreen = () => {
 
   return (
     <PaperProvider theme={pickerTheme}>
-      <View style={styles.container}>
-        <View style={[styles.slotCard, { backgroundColor }]}>
-          <View style={styles.content}>
-            <View style={styles.topRow}>
-              <SlotStartTime
-                slot={selectedSlot}
-                onTimeChange={updateStartTime}
-              />
-              <SlotImage imageUri={imageUri} />
-              <SlotEndTime
-                endTime={selectedSlot?.endTime}
-                slotColor={selectedSlot?.color}
-                onTimeChange={updateEndTime}
-              />
-            </View>
-            <SlotTitle title={displayTitle} />
-            <View style={styles.placeholdersContainer}>
-              <SlotTaskPlaceholder text={t.addTask} />
-              <SlotMessagePlaceholder text={t.addMessage ?? ''} />
+      <View style={styles.container} pointerEvents="box-none">
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={[styles.slotCard, { backgroundColor }]}>
+            <View style={styles.content}>
+              <View style={styles.topRow}>
+                <SlotStartTime />
+                <SlotImage imageUri={imageUri} />
+                <SlotEndTime />
+              </View>
+              <SlotTitle />
+              <View style={styles.placeholdersContainer}>
+                <SlotTaskPlaceholder text={t.addTask} />
+                <SlotMessagePlaceholder text={t.addMessage ?? ''} />
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </View>
     </PaperProvider>
   );
@@ -99,7 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 4,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   placeholdersContainer: {
     marginTop: 16,

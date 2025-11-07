@@ -1,2 +1,2 @@
 export { useTimePicker } from './useTimePicker';
-export { useSlotTimeUpdate } from './useSlotTimeUpdate';
+export { useSlotUpdate } from './useSlotUpdate';

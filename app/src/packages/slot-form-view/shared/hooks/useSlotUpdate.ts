@@ -46,9 +46,13 @@ export const useSlotUpdate = () => {
         );
 
         if (updatedSlot) {
-          const slotWithCurrentTasks = { ...updatedSlot, tasks: selectedSlot.tasks ?? [] };
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentTasks);
-          setSelectedSlot(slotWithCurrentTasks);
+          const slotWithCurrentData = {
+            ...updatedSlot,
+            tasks: selectedSlot.tasks ?? [],
+            participants: selectedSlot.participants ?? []
+          };
+          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
+          setSelectedSlot(slotWithCurrentData);
         } else {
           console.error('Failed to update start time');
         }
@@ -91,9 +95,13 @@ export const useSlotUpdate = () => {
         );
 
         if (updatedSlot) {
-          const slotWithCurrentTasks = { ...updatedSlot, tasks: selectedSlot.tasks ?? [] };
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentTasks);
-          setSelectedSlot(slotWithCurrentTasks);
+          const slotWithCurrentData = {
+            ...updatedSlot,
+            tasks: selectedSlot.tasks ?? [],
+            participants: selectedSlot.participants ?? []
+          };
+          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
+          setSelectedSlot(slotWithCurrentData);
         } else {
           console.error('Failed to update end time');
         }
@@ -122,9 +130,13 @@ export const useSlotUpdate = () => {
         );
 
         if (updatedSlot) {
-          const slotWithCurrentTasks = { ...updatedSlot, tasks: selectedSlot.tasks ?? [] };
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentTasks);
-          setSelectedSlot(slotWithCurrentTasks);
+          const slotWithCurrentData = {
+            ...updatedSlot,
+            tasks: selectedSlot.tasks ?? [],
+            participants: selectedSlot.participants ?? []
+          };
+          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
+          setSelectedSlot(slotWithCurrentData);
         } else {
           console.error('Failed to update title');
         }

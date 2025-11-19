@@ -1,17 +1,28 @@
-
-import { StyleSheet } from 'react-native';
-import { Text, fontSize, colors } from '@project/shared';
+import { forwardRef } from 'react';
+import { StyleSheet, TextInput } from 'react-native';
+import { fontSize, colors } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 
-export const SlotMessage = () => {
+export const SlotMessage = forwardRef<TextInput>((props, ref) => {
   const t = useTranslation();
-  return <Text style={styles.text}>{t.addMessage}</Text>;
-};
+  return (
+    <TextInput
+      ref={ref}
+      style={styles.input}
+      placeholder={t.addMessage}
+      placeholderTextColor={colors.typography.secondary}
+      multiline
+    />
+  );
+});
+
+SlotMessage.displayName = 'SlotMessage';
 
 const styles = StyleSheet.create({
-  text: {
+  input: {
     fontSize: fontSize.base,
-    color: colors.typography.secondary,
+    color: colors.typography.primary,
     paddingLeft: 6,
+    padding: 0,
   },
 });

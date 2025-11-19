@@ -1,4 +1,3 @@
-import React from 'react';
 import Svg, { Path } from 'react-native-svg';
 
 interface IconProps {
@@ -8,12 +7,12 @@ interface IconProps {
   height?: number;
 }
 
-export const Check: React.FC<IconProps> = ({
+export const Check = ({
   size = 24,
   color = 'currentColor',
   width,
   height,
-}) => {
+}: IconProps) => {
   // Original SVG dimensions from viewBox
   const originalWidth = 101;
   const originalHeight = 77;

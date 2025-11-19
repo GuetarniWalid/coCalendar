@@ -18,7 +18,8 @@ import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 const stateMachineName = 'State Machine 1';
 const resourceName = 'bottom_navigation';
 const artboardName = 'Artboard';
-const NAV_HEIGHT = 90;
+
+export const NAV_HEIGHT = 90;
 
 export const BottomNavigation: FC<BottomNavigationProps> = ({
   activeTab: _activeTab = 1,
@@ -116,10 +117,10 @@ export const BottomNavigation: FC<BottomNavigationProps> = ({
   return (
     <SafeAreaView
       edges={['bottom']}
-      style={[styles.container]}
       pointerEvents={draggedSlot ? 'none' : 'auto'}
     >
       <View style={[styles.upperBackground, { backgroundColor: upperBackgroundColor }]} />
+      <View style={styles.bottomBackground} />
       <View style={styles.riveContainer}>
         <Rive
           style={styles.rive}
@@ -167,11 +168,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  container: {
+  bottomBackground: {
+    height: '50%',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: colors.bottomNavigation.background,
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    paddingTop: 5,
   },
   riveContainer: {
     position: 'relative',

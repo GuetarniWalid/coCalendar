@@ -4,7 +4,7 @@ import { SlotItem } from '../../slot-item';
 import { EmptyDayCard } from '../../EmptyDayCard';
 import { RemainingTimeCard } from '../../RemainingTimeCard';
 import { ControllableScrollView } from './ControllableScrollView';
-import { Text, colors, SlotItem as SlotItemType, fontSize } from '@project/shared';
+import { Text, colors, SlotItem as SlotItemType, fontSize, updateSlotCache } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import dayjs from 'dayjs';
 import { getDateFromIndex } from '../shared/utils';
@@ -16,12 +16,6 @@ interface DayPageProps {
   screenWidth: number;
   loading: boolean;
   slotListPanRef: any;
-  updateSlotCache: (
-    slotId: string,
-    sourceDate: string,
-    targetDate: string,
-    updatedSlot: SlotItemType | null
-  ) => void;
   selectedDate: string;
   draggedSlot: SlotItemType | null;
   cachedSlotsForDate?: SlotItemType[] | undefined;
@@ -32,7 +26,6 @@ const DayPageComponent = ({
   screenWidth,
   loading,
   slotListPanRef,
-  updateSlotCache,
   selectedDate,
   draggedSlot,
   cachedSlotsForDate,
@@ -168,7 +161,6 @@ const DayPageComponent = ({
   }, [
     draggedSlot,
     date,
-    updateSlotCache,
     isCurrentDay,
     sourceDayDate,
     showSpaceForDraggedSlot,
@@ -230,7 +222,6 @@ const DayPageComponent = ({
               slot={item.data}
               date={date}
               slotListPanRef={slotListPanRef}
-              updateSlotCache={updateSlotCache}
             />
           ) : (
             <RemainingTimeCard

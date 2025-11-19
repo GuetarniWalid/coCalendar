@@ -7,14 +7,6 @@ export interface SlotListProps {
     sourceDate: string,
     targetDate: string
   ) => Promise<void>;
-  updateSlotCache: (
-    slotId: string,
-    sourceDate: string,
-    targetDate: string,
-    updatedSlot: SlotItem | null
-  ) => void;
-  slotsCacheRef: React.RefObject<Record<string, SlotItem[]>>;
-  cacheVersion: number;
 }
 
 export interface GestureState {

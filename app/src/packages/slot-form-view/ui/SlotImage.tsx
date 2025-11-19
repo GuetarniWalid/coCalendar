@@ -3,6 +3,8 @@ import { StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { useSlotFormStore, getAvatarPublicUrl } from '@project/shared';
 
+export const SLOT_IMAGE_SIZE = 140;
+
 const DEFAULT_IMAGE = {
   persona: 'adult-female' as const,
   activity: 'job_study',
@@ -30,7 +32,7 @@ export const SlotImage = () => {
 
 const styles = StyleSheet.create({
   image: {
-    width: 140,
-    height: 140,
+    width: SLOT_IMAGE_SIZE,
+    height: SLOT_IMAGE_SIZE,
   },
 });

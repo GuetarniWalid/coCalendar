@@ -4,6 +4,7 @@ import {
   useSlotFormStore,
   useAuthStore,
   retryWithBackoff,
+  updateSlotCache,
 } from '@project/shared';
 import { DraggableSlotWrapper } from './draggable-wrapper';
 import { SlotPositioner } from './SlotPositioner';
@@ -41,19 +42,12 @@ interface SlotItemProps {
   slot: SlotItemType;
   date: string;
   slotListPanRef: any;
-  updateSlotCache: (
-    slotId: string,
-    sourceDate: string,
-    targetDate: string,
-    updatedSlot: SlotItemType | null
-  ) => void;
 }
 
 const SlotItemBase: FC<SlotItemProps> = ({
   slot,
   date,
   slotListPanRef,
-  updateSlotCache,
 }) => {
   const [, setSelectedSlot] = useSlotFormStore.selectedSlot();
   const navigation = useNavigation<any>();
@@ -108,7 +102,7 @@ const SlotItemBase: FC<SlotItemProps> = ({
       console.error('Failed to update slot completion in database, rolling back');
       updateSlotCache(slot.id, date, date, slot);
     }
-  }, [supabase, user, slot, date, updateSlotCache]);
+  }, [supabase, user, slot, date]);
 
   const handleIncompleteAction = useCallback(async () => {
     if (!supabase || !user) return;
@@ -133,7 +127,7 @@ const SlotItemBase: FC<SlotItemProps> = ({
       );
       updateSlotCache(slot.id, date, date, slot);
     }
-  }, [supabase, user, slot, date, updateSlotCache]);
+  }, [supabase, user, slot, date]);
 
   const rightButtonVariant = useMemo(() => {
     return isSlotEffectivelyCompleted(slot) ? 'incomplete' : 'complete';

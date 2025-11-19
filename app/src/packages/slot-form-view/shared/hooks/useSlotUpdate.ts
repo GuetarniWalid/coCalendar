@@ -5,15 +5,14 @@ import {
   useAuthStore,
   useCalendarStore,
   retryWithBackoff,
+  updateSlotCache,
 } from '@project/shared';
-import { useDayView } from '@project/day-view';
 import { updateSlotTime, updateSlotTitle } from '../../../day-view/data/update-slot';
 
 export const useSlotUpdate = () => {
   const [selectedSlot, setSelectedSlot] = useSlotFormStore.selectedSlot();
   const [{ supabase, user }] = useAuthStore();
   const [selectedDate] = useCalendarStore.selectedDate();
-  const { updateSlotCache } = useDayView();
 
   const updateStartTime = useCallback(
     async (hours: number, minutes: number) => {
@@ -56,7 +55,7 @@ export const useSlotUpdate = () => {
         console.error('Error updating start time:', error);
       }
     },
-    [supabase, user, selectedSlot, selectedDate, updateSlotCache, setSelectedSlot]
+    [supabase, user, selectedSlot, selectedDate, setSelectedSlot]
   );
 
   const updateEndTime = useCallback(
@@ -100,7 +99,7 @@ export const useSlotUpdate = () => {
         console.error('Error updating end time:', error);
       }
     },
-    [supabase, user, selectedSlot, selectedDate, updateSlotCache, setSelectedSlot]
+    [supabase, user, selectedSlot, selectedDate, setSelectedSlot]
   );
 
   const updateTitle = useCallback(
@@ -130,7 +129,7 @@ export const useSlotUpdate = () => {
         console.error('Error updating title:', error);
       }
     },
-    [supabase, user, selectedSlot, selectedDate, updateSlotCache, setSelectedSlot]
+    [supabase, user, selectedSlot, selectedDate, setSelectedSlot]
   );
 
   return { updateStartTime, updateEndTime, updateTitle };

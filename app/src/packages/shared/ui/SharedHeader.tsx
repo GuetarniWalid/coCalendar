@@ -1,5 +1,5 @@
 import { View, StyleSheet } from 'react-native';
-import { VisibleMonthYear, DayTasksProgress, DateSelector, useDayView } from '@project/day-view';
+import { VisibleMonthYear, DayTasksProgress, DateSelector, useDayView, HEADER_ROW_PADDING_BOTTOM } from '@project/day-view';
 import { useNavigationStore } from '../store/navigation';
 import { colors } from '../theme';
 
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingRight: 16,
     paddingLeft: 24,
-    paddingBottom: 8,
+    paddingBottom: HEADER_ROW_PADDING_BOTTOM,
     backgroundColor: colors.background.primary,
   },
 });

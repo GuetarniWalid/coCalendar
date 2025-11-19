@@ -7,7 +7,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { CALENDAR_CONSTANTS, colors, useCalendarStore } from '@project/shared';
+import { CALENDAR_CONSTANTS, colors, useCalendarStore, useSlotsCache, getCachedSlots } from '@project/shared';
 import { DayPage } from './DayPage';
 import { SlotListProps } from '../shared/types';
 import { getDateFromIndex, getIndexFromDate } from '../shared/utils';
@@ -18,9 +18,6 @@ import { useDraggedSlotContext } from '@project/shared/store/dragged-slot';
 export const SlotList = ({
   loading = false,
   handleSlotDropped,
-  updateSlotCache,
-  slotsCacheRef,
-  cacheVersion,
 }: SlotListProps) => {
   const screenWidth = Dimensions.get('window').width;
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
@@ -28,6 +25,7 @@ export const SlotList = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const { draggedSlot } = useDraggedSlotContext();
+  const [cache] = useSlotsCache.cache();
 
   const dayIndices = useMemo(
     () => Array.from({ length: CALENDAR_CONSTANTS.TOTAL_DAYS }, (_, i) => i),
@@ -75,7 +73,7 @@ export const SlotList = ({
   const renderDayPage = useCallback(
     ({ item: dayIndex }: { item: number }) => {
       const date = getDateFromIndex(dayIndex);
-      const cachedSlots = slotsCacheRef.current?.[date] ?? undefined;
+      const cachedSlots = getCachedSlots(date);
 
       return (
         <DayPage
@@ -83,7 +81,6 @@ export const SlotList = ({
           screenWidth={screenWidth}
           loading={loading}
           slotListPanRef={slotListPanRef as any}
-          updateSlotCache={updateSlotCache}
           selectedDate={selectedDate}
           draggedSlot={draggedSlot}
           cachedSlotsForDate={cachedSlots}
@@ -95,9 +92,7 @@ export const SlotList = ({
       loading,
       selectedDate,
       draggedSlot,
-      slotsCacheRef,
-      cacheVersion,
-      updateSlotCache,
+      cache,
     ]
   );
 

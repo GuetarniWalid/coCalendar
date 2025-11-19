@@ -3,6 +3,12 @@ import dayjs from 'dayjs';
 import { useAuthStore } from '@project/shared';
 import { SlotItem } from '@project/shared';
 import { useCalendarStore } from '@project/shared';
+import {
+  getCachedSlots,
+  setCachedSlots,
+  isDateFetched,
+  markDateAsFetched,
+} from '@project/shared';
 import { fetchSlotsForDate, fetchSlotsInRange } from '../data/fetch-slots';
 
 export const useDayView = () => {
@@ -10,12 +16,7 @@ export const useDayView = () => {
   const [selectedDate] = useCalendarStore.selectedDate();
   const [slots, setSlots] = useState<SlotItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cacheVersion, setCacheVersion] = useState(0);
 
-  // In-memory cache for slots per date id
-  const slotsCacheRef = useRef<Record<string, SlotItem[]>>({});
-  // Track which dates have been fetched from the database to prevent re-fetching
-  const fetchedDatesRef = useRef<Set<string>>(new Set());
   // Track ongoing prefetch and ranges
   const prefetchPromiseRef = useRef<Promise<void> | null>(null); // in-flight promise
   const prefetchRangeRef = useRef<{ start: string; end: string } | null>(null); // in-flight range
@@ -31,7 +32,7 @@ export const useDayView = () => {
   const fetchSlots = async () => {
     if (!user) return;
     // Serve from cache if available
-    const cached = slotsCacheRef.current[selectedDate];
+    const cached = getCachedSlots(selectedDate);
     if (cached !== undefined) {
       setSlots(cached);
       setLoading(false);
@@ -43,15 +44,15 @@ export const useDayView = () => {
       if (selectedDate >= start && selectedDate <= end) {
         try {
           await prefetchPromiseRef.current;
-          const afterPrefetch = slotsCacheRef.current[selectedDate];
+          const afterPrefetch = getCachedSlots(selectedDate);
           if (afterPrefetch !== undefined) {
             setSlots(afterPrefetch);
             setLoading(false);
             return;
           }
           // Covered by prefetch and no entry added => empty day
-          slotsCacheRef.current[selectedDate] = [];
-          fetchedDatesRef.current.add(selectedDate);
+          setCachedSlots(selectedDate, []);
+          markDateAsFetched(selectedDate);
           setSlots([]);
           setLoading(false);
           return;
@@ -67,10 +68,9 @@ export const useDayView = () => {
         user.id,
         selectedDate
       );
-      slotsCacheRef.current[selectedDate] = formattedSlots;
-      fetchedDatesRef.current.add(selectedDate);
+      setCachedSlots(selectedDate, formattedSlots);
+      markDateAsFetched(selectedDate);
       setSlots(formattedSlots);
-      setCacheVersion(v => v + 1);
     } catch (error) {
       console.error('Error fetching slots:', error);
     } finally {
@@ -113,7 +113,7 @@ export const useDayView = () => {
       let hasUnfetchedDates = false;
       while (cursor.isSame(last, 'day') || cursor.isBefore(last, 'day')) {
         const dateId = cursor.format('YYYY-MM-DD');
-        if (!fetchedDatesRef.current.has(dateId)) {
+        if (!isDateFetched(dateId)) {
           hasUnfetchedDates = true;
           break;
         }
@@ -128,14 +128,11 @@ export const useDayView = () => {
       prefetchRangeRef.current = { start, end };
       const promise = fetchSlotsInRange(supabase, user.id, start, end)
         .then(result => {
-          let cacheUpdated = false;
-
           // Merge into cache, but NEVER overwrite existing entries
           Object.keys(result).forEach(dateId => {
-            if (slotsCacheRef.current[dateId] === undefined && result[dateId]) {
-              slotsCacheRef.current[dateId] = result[dateId];
-              fetchedDatesRef.current.add(dateId);
-              cacheUpdated = true;
+            if (getCachedSlots(dateId) === undefined && result[dateId]) {
+              setCachedSlots(dateId, result[dateId]);
+              markDateAsFetched(dateId);
             }
           });
 
@@ -144,21 +141,15 @@ export const useDayView = () => {
           const last = dayjs(end);
           while (cursor.isSame(last, 'day') || cursor.isBefore(last, 'day')) {
             const dateId = cursor.format('YYYY-MM-DD');
-            if (slotsCacheRef.current[dateId] === undefined) {
-              slotsCacheRef.current[dateId] = [];
-              fetchedDatesRef.current.add(dateId);
-              cacheUpdated = true;
+            if (getCachedSlots(dateId) === undefined) {
+              setCachedSlots(dateId, []);
+              markDateAsFetched(dateId);
             }
             cursor = cursor.add(1, 'day');
           }
 
-          // Increment cache version if we added new data
-          if (cacheUpdated) {
-            setCacheVersion(v => v + 1);
-          }
-
           // If current selection arrived via prefetch, use it immediately
-          const currentDateSlots = slotsCacheRef.current[selectedDate];
+          const currentDateSlots = getCachedSlots(selectedDate);
           if (currentDateSlots !== undefined) {
             setSlots(currentDateSlots);
             setLoading(false);
@@ -177,56 +168,8 @@ export const useDayView = () => {
     }
   };
 
-  // Method to update cache when a slot is moved between days
-  const updateSlotCache = (
-    slotId: string,
-    sourceDate: string,
-    targetDate: string,
-    updatedSlot: SlotItem | null
-  ) => {
-    // Remove slot from source date cache
-    if (slotsCacheRef.current[sourceDate]) {
-      slotsCacheRef.current[sourceDate] = slotsCacheRef.current[
-        sourceDate
-      ].filter(s => s.id !== slotId);
-    }
-
-    // Add updated slot to target date cache if update was successful
-    if (updatedSlot && slotsCacheRef.current[targetDate]) {
-      // Check if slot already exists in target (shouldn't happen but be safe)
-      const existingIndex = slotsCacheRef.current[targetDate].findIndex(
-        s => s.id === updatedSlot.id
-      );
-      if (existingIndex >= 0) {
-        slotsCacheRef.current[targetDate][existingIndex] = updatedSlot;
-      } else {
-        slotsCacheRef.current[targetDate].push(updatedSlot);
-      }
-    }
-
-    setCacheVersion(v => v + 1);
-
-    if (sourceDate === selectedDate || targetDate === selectedDate) {
-      const updatedSlots = slotsCacheRef.current[selectedDate] || [];
-      setSlots(updatedSlots);
-    }
-  };
-
-  // Method to invalidate cache for specific dates (to refetch fresh data from DB)
-  const invalidateCache = (dates: string[]) => {
-    dates.forEach(date => {
-      delete slotsCacheRef.current[date];
-      fetchedDatesRef.current.delete(date);
-    });
-    setCacheVersion(v => v + 1);
-  };
-
   return {
     slots,
     loading,
-    updateSlotCache,
-    invalidateCache,
-    slotsCacheRef,
-    cacheVersion,
   };
 };

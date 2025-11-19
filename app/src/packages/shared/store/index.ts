@@ -17,3 +17,12 @@ export {
   setCurrentScreen,
 } from './navigation';
 export type { ViewType, ScreenType } from './navigation';
+export {
+  useSlotsCache,
+  updateSlotCache,
+  invalidateCache,
+  setCachedSlots,
+  getCachedSlots,
+  markDateAsFetched,
+  isDateFetched,
+} from './slots-cache';

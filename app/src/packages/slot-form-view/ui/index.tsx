@@ -1,38 +1,94 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import {
   View,
   StyleSheet,
-  TouchableWithoutFeedback,
-  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
 } from 'react-native';
+import Animated, {
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+  interpolate,
+  useAnimatedRef,
+  scrollTo,
+  useScrollOffset,
+} from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  spacing,
   setCurrentScreen,
   useSlotFormStore,
   getSlotBackgroundColor,
   colors,
+  FOCUSED_INPUT_OFFSET_FROM_KEYBOARD,
+  useKeyboardLayoutValues,
+  getCachedSlots,
+  useCalendarStore,
 } from '@project/shared';
 import { SlotTitle } from './SlotTitle';
-import { SlotImage } from './SlotImage';
+import { SlotImage, SLOT_IMAGE_SIZE } from './SlotImage';
 import {
   SlotStartTime,
   PaperProvider,
   getTimePickerTheme,
 } from './SlotStartTime';
 import { SlotEndTime } from './SlotEndTime';
-import { SlotTask } from './SlotTask';
+import { SlotTaskList } from './SlotTaskList';
 import { SlotMessage } from './SlotMessage';
+import { NAV_HEIGHT } from '@project/bottom-navigation';
+import { HEADER_HEIGHT } from '@project/day-view';
+
+export const SLOT_FORM_PADDING_TOP = 70;
+export const TOP_ROW_HEIGHT = SLOT_IMAGE_SIZE;
+export const TOP_ROW_MARGIN_BOTTOM = 8;
+export const SLOT_CARD_BORDER_RADIUS = 36;
 
 const SlotFormScreen = () => {
-  const [selectedSlot] = useSlotFormStore.selectedSlot();
+  const [selectedSlot, setSelectedSlot] = useSlotFormStore.selectedSlot();
+  const [selectedDate] = useCalendarStore.selectedDate();
   const backgroundColor = getSlotBackgroundColor(selectedSlot?.color);
+  const { totalBottomNavHeight, maxTranslation } = useKeyboardLayoutValues(
+    NAV_HEIGHT,
+    HEADER_HEIGHT,
+    TOP_ROW_HEIGHT
+  );
+  const keyboard = useAnimatedKeyboard();
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollOffset(scrollViewRef);
+  const messageInputRef = useRef<TextInput>(null);
 
-  // Track when this screen becomes active
+  const cardAnimatedStyle = useAnimatedStyle(() => {
+    const borderRadius = interpolate(
+      keyboard.height.value,
+      [totalBottomNavHeight, totalBottomNavHeight + maxTranslation],
+      [SLOT_CARD_BORDER_RADIUS, 0],
+      'clamp'
+    );
+
+    return {
+      borderTopLeftRadius: borderRadius,
+      borderTopRightRadius: borderRadius,
+    };
+  });
+
+  // Track when this screen becomes active and refresh slot data
   useFocusEffect(
     useCallback(() => {
       setCurrentScreen('SlotForm');
-    }, [])
+
+      // Refresh selectedSlot from cache to ensure we have the latest data
+      // This fixes issues when navigating back via swipe gesture
+      if (selectedSlot?.id && selectedDate) {
+        const cachedSlots = getCachedSlots(selectedDate);
+        const freshSlot = cachedSlots?.find(s => s.id === selectedSlot.id);
+
+        if (freshSlot) {
+          if (freshSlot !== selectedSlot) {
+            setSelectedSlot(freshSlot);
+          }
+        }
+      }
+    }, [selectedSlot?.id, selectedDate])
   );
 
   const pickerTheme = useMemo(
@@ -40,23 +96,49 @@ const SlotFormScreen = () => {
     [selectedSlot?.color]
   );
 
+  const scrollToY = (y: number) => {
+    'worklet';
+    if (y <= 0) return;
+    scrollTo(scrollViewRef, 0, scrollOffset.value + y, true);
+  };
+
   return (
     <PaperProvider theme={pickerTheme}>
       <View style={styles.container} pointerEvents="box-none">
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={[styles.slotCard, { backgroundColor }]}>
-            <View style={styles.content}>
-              <View style={styles.topRow}>
-                <SlotStartTime />
-                <SlotImage />
-                <SlotEndTime />
-              </View>
-              <SlotTitle />
-              <SlotTask />
-              <SlotMessage />
+        <Animated.View
+          style={[styles.slotCard, { backgroundColor }, cardAnimatedStyle]}
+        >
+          <View style={styles.content}>
+            <View style={styles.topRow}>
+              <SlotStartTime />
+              <SlotImage />
+              <SlotEndTime />
             </View>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              keyboardVerticalOffset={FOCUSED_INPUT_OFFSET_FROM_KEYBOARD}
+              style={styles.keyboardAvoid}
+            >
+              <Animated.ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                bounces={true}
+                ref={scrollViewRef}
+              >
+                <SlotTitle />
+                {selectedSlot && (
+                  <SlotTaskList
+                    scrollToY={scrollToY}
+                    messageInputRef={messageInputRef}
+                  />
+                )}
+                <SlotMessage ref={messageInputRef} />
+              </Animated.ScrollView>
+            </KeyboardAvoidingView>
           </View>
-        </TouchableWithoutFeedback>
+        </Animated.View>
       </View>
     </PaperProvider>
   );
@@ -65,19 +147,30 @@ const SlotFormScreen = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background.primary,
-    paddingTop: 70,
+    paddingTop: SLOT_FORM_PADDING_TOP,
     flex: 1,
+  },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollView: {
+    flexGrow: 1,
+    flexShrink: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 220,
   },
   slotCard: {
     position: 'relative',
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
-    paddingHorizontal: spacing.xxxl,
-    overflow: 'visible',
+    borderTopLeftRadius: SLOT_CARD_BORDER_RADIUS,
+    borderTopRightRadius: SLOT_CARD_BORDER_RADIUS,
+    paddingHorizontal: 32,
     flex: 1,
   },
   content: {
-    transform: [{ translateY: -70 }],
+    flex: 1,
+    paddingTop: 0,
   },
   topRow: {
     position: 'relative',
@@ -85,7 +178,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 4,
-    marginBottom: 8,
+    marginTop: -SLOT_FORM_PADDING_TOP,
+    marginBottom: TOP_ROW_MARGIN_BOTTOM,
   },
   placeholdersContainer: {
     marginTop: 16,

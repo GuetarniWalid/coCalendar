@@ -5,3 +5,4 @@ export { VisibleMonthYear } from './ui/VisibleMonthYear';
 export { DayTasksProgress } from './ui/DayTasksProgress';
 export { DateSelector } from './ui/DateSelector';
 export { useDayView } from './shared/hooks';
+export * from './constants/layout';

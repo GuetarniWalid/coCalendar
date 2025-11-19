@@ -313,3 +313,4 @@ BREAKING CHANGE: Store structure has changed, requires migration
 
 ### Reanimated Guidelines
 - when using reanimated, never use runOnJS but scheduleOnRN instead, runOnJS is deprecated
+- when using reanimated, never use runOnUI but scheduleOnUI instead, runOnUI is deprecated

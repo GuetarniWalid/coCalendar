@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDayView } from '../shared/hooks';
-import { useAuthStore, SlotItem, retryWithBackoff, setCurrentScreen } from '@project/shared';
+import { useAuthStore, SlotItem, retryWithBackoff, setCurrentScreen, updateSlotCache } from '@project/shared';
 import { SlotList } from './slot-list';
 import { updateSlotDate } from '../data/update-slot';
 
@@ -11,8 +11,7 @@ export const DayViewScreen = () => {
       setCurrentScreen('Day');
     }, [])
   );
-  const { loading, updateSlotCache, slotsCacheRef, cacheVersion } =
-    useDayView();
+  const { loading } = useDayView();
   const [{ supabase, user }] = useAuthStore();
 
   // Handle slot drop to another day
@@ -53,9 +52,6 @@ export const DayViewScreen = () => {
     <SlotList
       loading={loading}
       handleSlotDropped={handleSlotDropped}
-      updateSlotCache={updateSlotCache}
-      slotsCacheRef={slotsCacheRef}
-      cacheVersion={cacheVersion}
     />
   );
 };

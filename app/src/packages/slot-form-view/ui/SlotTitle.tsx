@@ -1,5 +1,6 @@
-import { FC, useState, useEffect, useRef } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { StyleSheet, TextInput, AppState } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   fontSize,
   colors,
@@ -8,9 +9,7 @@ import {
 } from '@project/shared';
 import { useSlotUpdate } from '../shared/hooks';
 
-interface SlotTitleProps {}
-
-export const SlotTitle: FC<SlotTitleProps> = () => {
+export const SlotTitle = () => {
   const [selectedSlot] = useSlotFormStore.selectedSlot();
   const { updateTitle } = useSlotUpdate();
   const title = selectedSlot?.title || '';
@@ -18,19 +17,44 @@ export const SlotTitle: FC<SlotTitleProps> = () => {
   const [isFocused, setIsFocused] = useState(false);
 
   const inputRef = useRef<TextInput>(null);
+  const saveRef = useRef<() => void>(null);
 
   useEffect(() => {
     setValue(title);
   }, [title]);
 
-  const handleBlur = () => {
-    setIsFocused(false);
+  const saveTitle = () => {
     const trimmed = value.trim();
     if (trimmed && trimmed !== title) {
       updateTitle(trimmed);
-    } else {
+    } else if (!trimmed && title) {
       setValue(title);
     }
+  };
+
+  saveRef.current = saveTitle;
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        saveRef.current?.();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        saveRef.current?.();
+      };
+    }, [])
+  );
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    saveTitle();
   };
 
   return (
@@ -39,6 +63,7 @@ export const SlotTitle: FC<SlotTitleProps> = () => {
       style={styles.title}
       value={value}
       onChangeText={setValue}
+      onFocus={() => setIsFocused(true)}
       onBlur={handleBlur}
       onSubmitEditing={handleBlur}
       spellCheck={isFocused}

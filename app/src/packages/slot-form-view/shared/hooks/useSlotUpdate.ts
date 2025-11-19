@@ -46,8 +46,9 @@ export const useSlotUpdate = () => {
         );
 
         if (updatedSlot) {
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, updatedSlot);
-          setSelectedSlot(updatedSlot);
+          const slotWithCurrentTasks = { ...updatedSlot, tasks: selectedSlot.tasks ?? [] };
+          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentTasks);
+          setSelectedSlot(slotWithCurrentTasks);
         } else {
           console.error('Failed to update start time');
         }
@@ -90,8 +91,9 @@ export const useSlotUpdate = () => {
         );
 
         if (updatedSlot) {
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, updatedSlot);
-          setSelectedSlot(updatedSlot);
+          const slotWithCurrentTasks = { ...updatedSlot, tasks: selectedSlot.tasks ?? [] };
+          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentTasks);
+          setSelectedSlot(slotWithCurrentTasks);
         } else {
           console.error('Failed to update end time');
         }
@@ -120,8 +122,9 @@ export const useSlotUpdate = () => {
         );
 
         if (updatedSlot) {
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, updatedSlot);
-          setSelectedSlot(updatedSlot);
+          const slotWithCurrentTasks = { ...updatedSlot, tasks: selectedSlot.tasks ?? [] };
+          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentTasks);
+          setSelectedSlot(slotWithCurrentTasks);
         } else {
           console.error('Failed to update title');
         }

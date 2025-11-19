@@ -14,14 +14,14 @@ import {
   Dimensions,
   Keyboard,
 } from 'react-native';
-import { fontSize, colors, SlotTask as SlotTaskType, SlotItem, getSlotContrastColor } from '@project/shared';
+import { fontSize, colors, SlotTask as SlotTaskType, SlotItem, getSlotContrastColor, useReliableKeyboard } from '@project/shared';
 import { useTranslation } from '@project/i18n';
 import { Check } from '@project/icons';
 import Animated, {
   useAnimatedReaction,
   useAnimatedRef,
   measure,
-  useAnimatedKeyboard,
+  useSharedValue,
 } from 'react-native-reanimated';
 
 const generateTaskId = () => {
@@ -41,6 +41,7 @@ interface SlotTaskProps {
   isNextTaskEmpty: boolean;
   onTaskCreated: (tempId: string, createdTask: SlotTaskType) => void;
   onTaskUpdated: (taskId: string, updates: Partial<SlotTaskType>) => void;
+  focusOnLayout?: boolean;
 }
 
 export interface SlotTaskRef {
@@ -64,6 +65,7 @@ export const SlotTask = forwardRef<SlotTaskRef, SlotTaskProps>(
       isNextTaskEmpty,
       onTaskCreated,
       onTaskUpdated,
+      focusOnLayout = false,
     },
     ref
   ) => {
@@ -76,7 +78,8 @@ export const SlotTask = forwardRef<SlotTaskRef, SlotTaskProps>(
 
     const [text, setText] = useState(taskText);
     const [isDone, setIsDone] = useState(taskDone);
-    const [isFocused, setIsFocused] = useState(false);
+    const [isFocusedState, setIsFocusedState] = useState(false);
+    const isFocused = useSharedValue(false);
 
     // Sync internal state when task prop changes (e.g., after cache refresh)
     useEffect(() => {
@@ -90,8 +93,9 @@ export const SlotTask = forwardRef<SlotTaskRef, SlotTaskProps>(
 
     const inputRef = useRef<TextInput>(null);
     const containerRef = useAnimatedRef<View>();
-    const keyboard = useAnimatedKeyboard();
+    const keyboard = useReliableKeyboard();
     const isSubmittingRef = useRef(false);
+    const hasScrolledForCurrentFocus = useSharedValue(false);
 
     useEffect(() => {
       const keyboardDidHideListener = Keyboard.addListener(
@@ -113,6 +117,9 @@ export const SlotTask = forwardRef<SlotTaskRef, SlotTaskProps>(
     }));
 
     const handleBlur = () => {
+      isFocused.value = false;
+      setIsFocusedState(false);
+      hasScrolledForCurrentFocus.value = false;
       if (isSubmittingRef.current) {
         isSubmittingRef.current = false;
         return;
@@ -139,12 +146,13 @@ export const SlotTask = forwardRef<SlotTaskRef, SlotTaskProps>(
 
     const handleSubmitEditing = () => {
       isSubmittingRef.current = true;
+      isFocused.value = false;
+      setIsFocusedState(false);
       setTimeout(() => {
         isSubmittingRef.current = false;
-      }, 100);
+      }, 0);
 
       const trimmed = text.trim();
-      setIsFocused(false);
       const taskUpdated = { ...task, text: trimmed };
 
       if (isLastTask && !trimmed) {
@@ -217,23 +225,51 @@ export const SlotTask = forwardRef<SlotTaskRef, SlotTaskProps>(
     };
 
     useAnimatedReaction(
-      () => keyboard.state.value,
-      keyboardState => {
-        if (!isFocused) return;
-        if (keyboardState != 2) return;
+      () => ({ focused: isFocused.value, keyboardState: keyboard.state.value }),
+      (current, previous) => {
+        if (!current.focused) return;
+        if (current.keyboardState !== 'shown') return;
+        if (hasScrolledForCurrentFocus.value) return;
+
+        if (previous && current.focused === previous.focused && current.keyboardState === previous.keyboardState) {
+          return;
+        }
 
         const measurement = measure(containerRef);
         if (!measurement) return;
-        const distanceToScroll =
-          measurement?.pageY - (screenHeight - keyboard.height.value) + 40;
+
+        const taskBottomY = measurement.pageY + measurement.height;
+        const keyboardTopY = screenHeight - keyboard.height.value;
+        const desiredPadding = 100;
+
+        const shouldScroll = taskBottomY > keyboardTopY - desiredPadding;
+        if (!shouldScroll) return;
+
+        const distanceToScroll = taskBottomY - keyboardTopY + desiredPadding;
         scrollToY(distanceToScroll);
+        hasScrolledForCurrentFocus.value = true;
       }
     );
+
+    const handleLayout = () => {
+      if (focusOnLayout) {
+        // Double RAF ensures focus happens after all layout adjustments complete
+        // 1st RAF: waits for next render frame after this component's layout
+        // 2nd RAF: ensures parent ScrollView and sibling components have settled
+        // This prevents measuring stale positions in useAnimatedReaction
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            inputRef.current?.focus();
+          });
+        });
+      }
+    };
 
     return (
       <Animated.View
         ref={containerRef}
         style={styles.container}
+        onLayout={handleLayout}
       >
         <Pressable
           onPress={handleCheckPress}
@@ -268,14 +304,17 @@ export const SlotTask = forwardRef<SlotTaskRef, SlotTaskProps>(
             ]}
             value={text}
             onChangeText={setText}
-            onFocus={() => setIsFocused(true)}
+            onFocus={() => {
+              isFocused.value = true;
+              setIsFocusedState(true);
+            }}
             onBlur={handleBlur}
             onKeyPress={handleKeyPress}
             onSubmitEditing={handleSubmitEditing}
             placeholder={defaultPlaceholder}
             placeholderTextColor={colors.typography.secondary}
-            spellCheck={isFocused}
-            autoCorrect={isFocused}
+            spellCheck={isFocusedState}
+            autoCorrect={isFocusedState}
             multiline
             textAlignVertical="top"
             submitBehavior="submit"

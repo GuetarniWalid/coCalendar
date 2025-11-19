@@ -43,6 +43,7 @@ export const SlotTaskList = forwardRef<SlotTaskListRef, SlotTaskListProps>(({
     const initialTasks = (selectedSlot?.tasks || []).sort((a, b) => a.position - b.position);
     return initialTasks;
   });
+  const [newlyCreatedTaskId, setNewlyCreatedTaskId] = useState<string | null>(null);
   const originalTasksRef = useRef<SlotTaskType[]>(selectedSlot?.tasks || []);
   const taskRefsMap = useRef(new Map<string, SlotTaskRef>());
   const syncTasksRef = useRef<() => Promise<void>>(null);
@@ -194,6 +195,16 @@ export const SlotTaskList = forwardRef<SlotTaskListRef, SlotTaskListProps>(({
     return () => subscription.remove();
   }, []);
 
+  useEffect(() => {
+    if (newlyCreatedTaskId) {
+      const timer = setTimeout(() => {
+        setNewlyCreatedTaskId(null);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [newlyCreatedTaskId]);
+
   const setTaskRef = useCallback((taskId: string, ref: SlotTaskRef | null) => {
     if (ref) {
       taskRefsMap.current.set(taskId, ref);
@@ -244,11 +255,7 @@ export const SlotTaskList = forwardRef<SlotTaskListRef, SlotTaskListProps>(({
         (a, b) => a.position - b.position
       );
       setTasks(allTasks);
-
-      setTimeout(() => {
-        const nextRef = taskRefsMap.current.get(newTask.id);
-        nextRef?.focus();
-      }, 0);
+      setNewlyCreatedTaskId(newTask.id);
     },
     [tasks]
   );
@@ -295,6 +302,7 @@ export const SlotTaskList = forwardRef<SlotTaskListRef, SlotTaskListProps>(({
               isNextTaskEmpty={isNextTaskEmpty}
               onTaskCreated={handleTaskCreated}
               onTaskUpdated={handleTaskUpdated}
+              focusOnLayout={task.id === newlyCreatedTaskId}
             />
           );
         })

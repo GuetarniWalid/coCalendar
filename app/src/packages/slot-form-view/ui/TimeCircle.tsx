@@ -1,7 +1,7 @@
 import { View, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import {
   Text,
-  colors,
+  useThemeStore,
   SlotColorName,
   getSlotBackgroundColor,
 } from '@project/shared';
@@ -13,7 +13,7 @@ interface TimeCircleProps {
   style?: ViewStyle;
 }
 
-const TimeCircleContent = ({ time }: { time: string }) => {
+const TimeCircleContent = ({ time, textColor }: { time: string; textColor: string }) => {
   const hasAmPm = /\s?(AM|PM|am|pm)$/i.test(time);
 
   if (hasAmPm) {
@@ -22,14 +22,14 @@ const TimeCircleContent = ({ time }: { time: string }) => {
       const [, timeValue = '', period = ''] = match;
       return (
         <View style={styles.timeWithPeriodContainer}>
-          <Text style={styles.timeText} fontWeight="bold">{timeValue}</Text>
-          <Text style={styles.periodText} fontWeight="bold">{period.toUpperCase()}</Text>
+          <Text style={[styles.timeText, { color: textColor }]} fontWeight="bold">{timeValue}</Text>
+          <Text style={[styles.periodText, { color: textColor }]} fontWeight="bold">{period.toUpperCase()}</Text>
         </View>
       );
     }
   }
 
-  return <Text style={styles.timeText} fontWeight="bold">{time}</Text>;
+  return <Text style={[styles.timeText, { color: textColor }]} fontWeight="bold">{time}</Text>;
 };
 
 export const TimeCircle = ({
@@ -38,6 +38,7 @@ export const TimeCircle = ({
   onPress,
   style,
 }: TimeCircleProps) => {
+  const [{ colors }] = useThemeStore();
   const backgroundColor = getSlotBackgroundColor(slotColor);
 
   const circleContent = (
@@ -45,13 +46,14 @@ export const TimeCircle = ({
       style={[
         styles.timeCircle,
         {
-          backgroundColor,
+          borderColor: backgroundColor,
+          backgroundColor: colors.background.primary,
         },
         style,
       ]}
     >
       <View style={styles.overlay} />
-      <TimeCircleContent time={time} />
+      <TimeCircleContent time={time} textColor={colors.typography.primary} />
     </View>
   );
 
@@ -70,6 +72,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    borderWidth: 4,
   },
   overlay: {
     position: 'absolute',
@@ -86,10 +89,8 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 16,
-    color: colors.typography.primary,
   },
   periodText: {
     fontSize: 10,
-    color: colors.typography.primary,
   },
 });

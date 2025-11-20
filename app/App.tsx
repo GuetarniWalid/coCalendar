@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Appearance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -27,7 +27,9 @@ import {
   useAuthStore,
   initializeAuthClient,
   registerAuthSetters,
-  colors,
+  useThemeStore,
+  initializeTheme,
+  handleSystemThemeChange,
   useKeyboardLayoutValues,
   useReliableKeyboard,
 } from '@project/shared';
@@ -40,6 +42,7 @@ const Stack = createNativeStackNavigator();
 
 const AppNavigation = () => {
   const [user] = useAuthStore.user();
+  const [{ colors }] = useThemeStore();
   const { totalBottomNavHeight, maxTranslation } = useKeyboardLayoutValues(
     NAV_HEIGHT,
     HEADER_HEIGHT,
@@ -53,6 +56,13 @@ const AppNavigation = () => {
     return {
       transform: [{ translateY: -translation }],
     };
+  });
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background.primary,
+    },
   });
 
   return (
@@ -133,6 +143,13 @@ const AppContent = () => {
   useEffect(() => {
     initializeAuthClient();
     registerAuthSetters(setUser, setLoading);
+    initializeTheme();
+
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      handleSystemThemeChange(colorScheme ?? null);
+    });
+
+    return () => subscription.remove();
   }, []);
 
   if (!fontsLoaded) {
@@ -156,10 +173,3 @@ export default function App() {
     </DraggedSlotProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-  },
-});

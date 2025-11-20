@@ -1,1 +1,15 @@
-<resources/>
+<resources>
+  <color name="colorPrimary">#f88e87</color>
+  <color name="colorOnPrimary">#3C3B3B</color>
+  <color name="colorSurface">#1E1E1E</color>
+  <color name="colorOnSurface">#E6E1E5</color>
+  <color name="colorOnSurfaceVariant">#CAC4D0</color>
+  <color name="colorSurfaceContainerHighest">#2E2E2E</color>
+  <color name="colorSurfaceContainerHigh">#272727</color>
+  <color name="colorPrimaryContainer">#5D3F3C</color>
+  <color name="colorOnPrimaryContainer">#FFDAD5</color>
+  <color name="colorTertiaryContainer">#5D3F3C</color>
+  <color name="colorOnTertiaryContainer">#FFDAD5</color>
+  <color name="colorOutline">#938F99</color>
+  <color name="colorOnBackground">#E6E1E5</color>
+</resources>

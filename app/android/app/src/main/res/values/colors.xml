@@ -1,5 +1,17 @@
 <resources>
   <color name="splashscreen_background">#ffffff</color>
-  <color name="colorPrimary">#023c69</color>
+  <color name="colorPrimary">#943E3B</color>
   <color name="colorPrimaryDark">#ffffff</color>
+  <color name="colorOnPrimary">#FFFFFF</color>
+  <color name="colorSurface">#FFFFFF</color>
+  <color name="colorOnSurface">#3C3B3B</color>
+  <color name="colorOnSurfaceVariant">#3C3B3B</color>
+  <color name="colorSurfaceContainerHighest">#FFF9DE</color>
+  <color name="colorSurfaceContainerHigh">#FFFEFA</color>
+  <color name="colorPrimaryContainer">#D47F69</color>
+  <color name="colorOnPrimaryContainer">#FFFFFF</color>
+  <color name="colorTertiaryContainer">#D47F69</color>
+  <color name="colorOnTertiaryContainer">#FFFFFF</color>
+  <color name="colorOutline">#D47F69</color>
+  <color name="colorOnBackground">#3C3B3B</color>
 </resources>

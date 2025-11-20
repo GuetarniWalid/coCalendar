@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -27,11 +27,7 @@ import {
 } from '@project/shared';
 import { SlotTitle } from './SlotTitle';
 import { SlotImage, SLOT_IMAGE_SIZE } from './SlotImage';
-import {
-  SlotStartTime,
-  PaperProvider,
-  getTimePickerTheme,
-} from './SlotStartTime';
+import { SlotStartTime } from './SlotStartTime';
 import { SlotEndTime } from './SlotEndTime';
 import { SlotTaskList } from './SlotTaskList';
 import { SlotMessage } from './SlotMessage';
@@ -91,11 +87,6 @@ const SlotFormScreen = () => {
     }, [selectedSlot?.id, selectedDate])
   );
 
-  const pickerTheme = useMemo(
-    () => getTimePickerTheme(selectedSlot?.color),
-    [selectedSlot?.color]
-  );
-
   const scrollToY = (y: number) => {
     'worklet';
     if (y <= 0) return;
@@ -103,44 +94,42 @@ const SlotFormScreen = () => {
   };
 
   return (
-    <PaperProvider theme={pickerTheme}>
-      <View style={styles.container} pointerEvents="box-none">
-        <Animated.View
-          style={[styles.slotCard, { backgroundColor }, cardAnimatedStyle]}
-        >
-          <View style={styles.content}>
-            <View style={styles.topRow}>
-              <SlotStartTime />
-              <SlotImage />
-              <SlotEndTime />
-            </View>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              keyboardVerticalOffset={FOCUSED_INPUT_OFFSET_FROM_KEYBOARD}
-              style={styles.keyboardAvoid}
-            >
-              <Animated.ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                bounces={true}
-                ref={scrollViewRef}
-              >
-                <SlotTitle />
-                {selectedSlot && (
-                  <SlotTaskList
-                    scrollToY={scrollToY}
-                    messageInputRef={messageInputRef}
-                  />
-                )}
-                <SlotMessage ref={messageInputRef} />
-              </Animated.ScrollView>
-            </KeyboardAvoidingView>
+    <View style={styles.container} pointerEvents="box-none">
+      <Animated.View
+        style={[styles.slotCard, { backgroundColor }, cardAnimatedStyle]}
+      >
+        <View style={styles.content}>
+          <View style={styles.topRow}>
+            <SlotStartTime />
+            <SlotEndTime />
+            <SlotImage />
           </View>
-        </Animated.View>
-      </View>
-    </PaperProvider>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={FOCUSED_INPUT_OFFSET_FROM_KEYBOARD}
+            style={styles.keyboardAvoid}
+          >
+            <Animated.ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              bounces={true}
+              ref={scrollViewRef}
+            >
+              <SlotTitle />
+              {selectedSlot && (
+                <SlotTaskList
+                  scrollToY={scrollToY}
+                  messageInputRef={messageInputRef}
+                />
+              )}
+              <SlotMessage ref={messageInputRef} />
+            </Animated.ScrollView>
+          </KeyboardAvoidingView>
+        </View>
+      </Animated.View>
+    </View>
   );
 };
 
@@ -159,7 +148,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 220,
   },
   slotCard: {
     position: 'relative',

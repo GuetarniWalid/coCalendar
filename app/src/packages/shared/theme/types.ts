@@ -1,5 +1,6 @@
 // Theme system types
 export type ThemeMode = 'light' | 'dark';
+export type ThemePreference = 'auto' | 'light' | 'dark';
 
 export interface ColorPalette {
   // Primary brand colors

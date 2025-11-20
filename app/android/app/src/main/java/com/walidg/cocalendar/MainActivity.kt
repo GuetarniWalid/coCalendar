@@ -1,4 +1,5 @@
 package com.walidg.cocalendar
+import eu.reactnativetraining.ThemeControlModule
 
 import android.os.Build
 import android.os.Bundle
@@ -17,6 +18,9 @@ class MainActivity : ReactActivity() {
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null)
+// @generated begin @vonovak/react-native-theme-control-theme-recovery - expo prebuild (DO NOT MODIFY) sync-8766ad6f2b10f33d894a51a47e5b6e367eaf6da9
+    ThemeControlModule.Companion.recoverApplicationTheme(applicationContext);
+// @generated end @vonovak/react-native-theme-control-theme-recovery
   }
 
   /**

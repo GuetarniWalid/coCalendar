@@ -1,6 +1,6 @@
-import { useSlotFormStore } from '@project/shared';
-import { getCurrentLocale } from '@project/i18n';
-import { TimePickerModal } from 'react-native-paper-dates';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Platform } from 'react-native';
+import { useSlotFormStore, getSlotContrastColor } from '@project/shared';
 import { TimeCircle } from './TimeCircle';
 import { useTimePicker, useSlotUpdate } from '../shared/hooks';
 
@@ -10,8 +10,7 @@ export const SlotEndTime = () => {
   const {
     timePickerVisible,
     displayTime,
-    initialHours,
-    initialMinutes,
+    timeValue,
     onConfirmTime,
     onDismissTime,
     openPicker,
@@ -22,20 +21,34 @@ export const SlotEndTime = () => {
     onTimeChange: updateEndTime,
   });
 
+  const handleChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      onDismissTime();
+    }
+
+    if (selectedDate) {
+      onConfirmTime(selectedDate);
+    } else if (Platform.OS === 'ios') {
+      onDismissTime();
+    }
+  };
+
   if (!selectedSlot?.endTime) return null;
 
   return (
     <>
       <TimeCircle time={displayTime} slotColor={selectedSlot?.color} onPress={openPicker} />
 
-      <TimePickerModal
-        visible={timePickerVisible}
-        onDismiss={onDismissTime}
-        onConfirm={onConfirmTime}
-        locale={getCurrentLocale()}
-        hours={initialHours}
-        minutes={initialMinutes}
-      />
+      {timePickerVisible && (
+        <DateTimePicker
+          value={timeValue}
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleChange}
+          accentColor={Platform.OS === 'ios' ? getSlotContrastColor(selectedSlot?.color) : undefined}
+          design={Platform.OS === 'android' ? 'material' : undefined}
+        />
+      )}
     </>
   );
 };

@@ -220,4 +220,4 @@ export const getColors = (mode: ThemeMode): ColorPalette => {
 export const colors = lightColors;
 
 // Export types
-export type { ColorPalette, ThemeMode } from './types';
+export type { ColorPalette, ThemeMode, ThemePreference } from './types';

@@ -16,15 +16,24 @@ export const useTimePicker = ({
   onTimeChange,
 }: UseTimePickerProps) => {
   const [timePickerVisible, setTimePickerVisible] = useState(false);
-  const [selectedTime, setSelectedTime] = useState<{
-    hours: number;
-    minutes: number;
-  } | null>(null);
+  const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+
+  const parsedInitialTime = initialTime
+    ? dayjs(initialTime, 'YYYY-MM-DD HH:mm:ss')
+    : dayjs().hour(defaultHour).minute(defaultMinute);
+
+  const initialDate = parsedInitialTime.isValid()
+    ? parsedInitialTime.toDate()
+    : dayjs().hour(defaultHour).minute(defaultMinute).toDate();
+
+  const timeValue = selectedTime ?? initialDate;
 
   const onConfirmTime = useCallback(
-    ({ hours, minutes }: { hours: number; minutes: number }) => {
-      setSelectedTime({ hours, minutes });
+    (date: Date) => {
+      setSelectedTime(date);
       setTimePickerVisible(false);
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
       onTimeChange?.(hours, minutes);
     },
     [onTimeChange]
@@ -42,24 +51,9 @@ export const useTimePicker = ({
 
   const displayTime = selectedTime
     ? formatTime(
-        dayjs()
-          .hour(selectedTime.hours)
-          .minute(selectedTime.minutes)
-          .format('YYYY-MM-DD HH:mm:ss')
+        dayjs(selectedTime).format('YYYY-MM-DD HH:mm:ss')
       )
     : slotTime;
-
-  const parsedInitialTime = initialTime
-    ? dayjs(initialTime, 'YYYY-MM-DD HH:mm:ss')
-    : dayjs().hour(defaultHour).minute(defaultMinute);
-
-  const initialHours = parsedInitialTime.isValid()
-    ? parsedInitialTime.hour()
-    : defaultHour;
-
-  const initialMinutes = parsedInitialTime.isValid()
-    ? parsedInitialTime.minute()
-    : defaultMinute;
 
   const openPicker = useCallback(() => {
     setTimePickerVisible(true);
@@ -68,8 +62,7 @@ export const useTimePicker = ({
   return {
     timePickerVisible,
     displayTime,
-    initialHours: selectedTime?.hours ?? initialHours,
-    initialMinutes: selectedTime?.minutes ?? initialMinutes,
+    timeValue,
     onConfirmTime,
     onDismissTime,
     openPicker,

@@ -7,7 +7,14 @@ export {
   registerAuthSetters,
   initializeAuthClient,
 } from './auth';
-export { useThemeStore, setThemeMode, toggleThemeMode } from './theme';
+export {
+  useThemeStore,
+  setThemeMode,
+  toggleThemeMode,
+  initializeTheme,
+  setTheme,
+  handleSystemThemeChange,
+} from './theme';
 export { useSlotFormStore } from './slot-form';
 export { useCalendarStore } from './calendar';
 export {

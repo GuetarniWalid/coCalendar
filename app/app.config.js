@@ -4,7 +4,7 @@ module.exports = {
     slug: 'cocalendar',
     version: '1.0.0',
     orientation: 'portrait',
-    userInterfaceStyle: 'light',
+    userInterfaceStyle: 'automatic',
     splash: {
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
@@ -26,6 +26,12 @@ module.exports = {
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseKey: process.env.EXPO_PUBLIC_SUPABASE_KEY,
     },
-    plugins: ['expo-font', 'expo-notifications'],
+    plugins: [
+      'expo-font',
+      'expo-notifications',
+      './android-material-theme.plugin.js',
+      '@react-native-community/datetimepicker',
+      '@vonovak/react-native-theme-control',
+    ],
   },
 };

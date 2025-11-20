@@ -6,7 +6,7 @@ export { borderRadius } from './borderRadius';
 export { commonStyles } from './theme';
 
 // Re-export types
-export type { ColorPalette, ThemeMode, Theme } from './types';
+export type { ColorPalette, ThemeMode, ThemePreference, Theme } from './types';
 export type { SpacingToken } from './spacing';
 export type {
   FontFamilyToken,

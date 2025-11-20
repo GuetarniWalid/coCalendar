@@ -7,7 +7,7 @@ import {
   retryWithBackoff,
   updateSlotCache,
 } from '@project/shared';
-import { updateSlotTime, updateSlotTitle } from '../../../day-view/data/update-slot';
+import { updateSlotTime, updateSlotTitle, updateSlotDescription } from '../../../day-view/data/update-slot';
 
 export const useSlotUpdate = () => {
   const [selectedSlot, setSelectedSlot] = useSlotFormStore.selectedSlot();
@@ -147,5 +147,40 @@ export const useSlotUpdate = () => {
     [supabase, user, selectedSlot, selectedDate, setSelectedSlot]
   );
 
-  return { updateStartTime, updateEndTime, updateTitle };
+  const updateDescription = useCallback(
+    async (newDescription: string) => {
+      if (!supabase || !user || !selectedSlot) return;
+
+      try {
+        const updatedSlot = await retryWithBackoff(
+          () =>
+            updateSlotDescription(
+              supabase,
+              user.id,
+              selectedSlot.id,
+              newDescription
+            ),
+          3,
+          1000
+        );
+
+        if (updatedSlot) {
+          const slotWithCurrentData = {
+            ...updatedSlot,
+            tasks: selectedSlot.tasks ?? [],
+            participants: selectedSlot.participants ?? []
+          };
+          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
+          setSelectedSlot(slotWithCurrentData);
+        } else {
+          console.error('Failed to update description');
+        }
+      } catch (error) {
+        console.error('Error updating description:', error);
+      }
+    },
+    [supabase, user, selectedSlot, selectedDate, setSelectedSlot]
+  );
+
+  return { updateStartTime, updateEndTime, updateTitle, updateDescription };
 };

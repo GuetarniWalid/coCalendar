@@ -6,6 +6,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedKeyboard,
   useAnimatedStyle,
@@ -109,6 +110,11 @@ const SlotFormScreen = () => {
             keyboardVerticalOffset={FOCUSED_INPUT_OFFSET_FROM_KEYBOARD}
             style={styles.keyboardAvoid}
           >
+            <LinearGradient
+              colors={[backgroundColor, 'transparent']}
+              locations={[0.2, 1]}
+              style={styles.gradientOverlay}
+            />
             <Animated.ScrollView
               style={styles.scrollView}
               contentContainerStyle={styles.scrollContent}
@@ -142,9 +148,18 @@ const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
   },
+  gradientOverlay: {
+    position: 'absolute',
+    top: SLOT_IMAGE_SIZE/2,
+    left: 0,
+    right: 0,
+    height: 14,
+    zIndex: 1000,
+  },
   scrollView: {
     flexGrow: 1,
     flexShrink: 1,
+    marginTop: SLOT_IMAGE_SIZE/2,
   },
   scrollContent: {
     flexGrow: 1,
@@ -161,13 +176,17 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   topRow: {
-    position: 'relative',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 4,
     marginTop: -SLOT_FORM_PADDING_TOP,
     marginBottom: TOP_ROW_MARGIN_BOTTOM,
+    zIndex: 1000,
   },
   placeholdersContainer: {
     marginTop: 16,

@@ -12,4 +12,5 @@
   <color name="colorOnTertiaryContainer">#FFDAD5</color>
   <color name="colorOutline">#938F99</color>
   <color name="colorOnBackground">#E6E1E5</color>
+  <color name="colorControlActivated">#FFFFFF</color>
 </resources>

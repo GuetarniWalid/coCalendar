@@ -5,6 +5,8 @@
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="android:statusBarColor">#ffffff</item>
     <item name="materialTimePickerTheme">@style/ThemeOverlay.App.TimePicker</item>
+    <item name="colorControlActivated">@color/colorControlActivated</item>
+    <item name="android:textCursorDrawable">@drawable/custom_cursor</item>
   </style>
   <style name="Theme.App.SplashScreen" parent="AppTheme">
     <item name="android:windowBackground">@drawable/ic_launcher_background</item>

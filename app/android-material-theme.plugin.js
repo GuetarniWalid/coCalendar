@@ -2,12 +2,15 @@ const {
   withAndroidStyles,
   withAndroidColors,
   withAndroidColorsNight,
+  withDangerousMod,
   AndroidConfig,
 } = require('@expo/config-plugins');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = function androidMaterialTheme(config) {
   // Step 1: Define light mode colors
-  config = withAndroidColors(config, async (config) => {
+  config = withAndroidColors(config, async config => {
     const lightColors = {
       colorPrimary: '#943E3B',
       colorOnPrimary: '#FFFFFF',
@@ -22,6 +25,7 @@ module.exports = function androidMaterialTheme(config) {
       colorOnTertiaryContainer: '#FFFFFF',
       colorOutline: '#D47F69',
       colorOnBackground: '#3C3B3B',
+      colorControlActivated: '#040404',
     };
 
     Object.entries(lightColors).forEach(([name, value]) => {
@@ -35,7 +39,7 @@ module.exports = function androidMaterialTheme(config) {
   });
 
   // Step 2: Define dark mode colors
-  config = withAndroidColorsNight(config, async (config) => {
+  config = withAndroidColorsNight(config, async config => {
     const darkColors = {
       colorPrimary: '#f88e87',
       colorOnPrimary: '#3C3B3B',
@@ -50,6 +54,7 @@ module.exports = function androidMaterialTheme(config) {
       colorOnTertiaryContainer: '#FFDAD5',
       colorOutline: '#938F99',
       colorOnBackground: '#E6E1E5',
+      colorControlActivated: '#FFFFFF',
     };
 
     Object.entries(darkColors).forEach(([name, value]) => {
@@ -63,7 +68,7 @@ module.exports = function androidMaterialTheme(config) {
   });
 
   // Step 3: Update styles to use color references
-  config = withAndroidStyles(config, async (config) => {
+  config = withAndroidStyles(config, async config => {
     const styles = config.modResults.resources.style;
 
     if (!styles) {
@@ -72,7 +77,7 @@ module.exports = function androidMaterialTheme(config) {
     }
 
     // Update AppTheme to Material 3
-    config.modResults.resources.style = styles.map((style) => {
+    config.modResults.resources.style = styles.map(style => {
       if (style['$'] && style['$'].name === 'AppTheme') {
         return {
           ...style,
@@ -85,6 +90,14 @@ module.exports = function androidMaterialTheme(config) {
             {
               $: { name: 'materialTimePickerTheme' },
               _: '@style/ThemeOverlay.App.TimePicker',
+            },
+            {
+              $: { name: 'colorControlActivated' },
+              _: '@color/colorControlActivated',
+            },
+            {
+              $: { name: 'android:textCursorDrawable' },
+              _: '@drawable/custom_cursor',
             },
           ],
         };
@@ -156,6 +169,42 @@ module.exports = function androidMaterialTheme(config) {
 
     return config;
   });
+
+  // Step 4: Add custom thin cursor drawable
+  config = withDangerousMod(config, [
+    'android',
+    async config => {
+      const projectRoot = config.modRequest.projectRoot;
+      const platformProjectRoot = config.modRequest.platformProjectRoot;
+
+      // Path to drawable directory
+      const drawableDir = path.join(
+        platformProjectRoot,
+        'app/src/main/res/drawable'
+      );
+
+      // Create drawable directory if it doesn't exist
+      if (!fs.existsSync(drawableDir)) {
+        fs.mkdirSync(drawableDir, { recursive: true });
+      }
+
+      // Custom thin cursor drawable (1dp width)
+      const cursorDrawable = `<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <size android:width="1dp" />
+    <solid android:color="@color/colorControlActivated" />
+</shape>`;
+
+      // Write cursor drawable file
+      fs.writeFileSync(
+        path.join(drawableDir, 'custom_cursor.xml'),
+        cursorDrawable
+      );
+
+      return config;
+    },
+  ]);
 
   return config;
 };

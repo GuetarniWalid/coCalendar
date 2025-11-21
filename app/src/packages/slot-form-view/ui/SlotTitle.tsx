@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, TextInput, AppState } from 'react-native';
+import { StyleSheet, TextInput, AppState, Keyboard } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   fontSize,
@@ -43,6 +43,16 @@ export const SlotTitle = () => {
 
     return () => subscription.remove();
   }, []);
+
+  useEffect(() => {
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      if (isFocused) {
+        inputRef.current?.blur();
+      }
+    });
+
+    return () => keyboardDidHideListener.remove();
+  }, [isFocused]);
 
   useFocusEffect(
     useCallback(() => {

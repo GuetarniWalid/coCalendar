@@ -1,6 +1,6 @@
-
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
+import { useNavigation } from '@react-navigation/native';
 import { useSlotFormStore, getAvatarPublicUrl } from '@project/shared';
 
 export const SLOT_IMAGE_SIZE = 140;
@@ -13,20 +13,26 @@ const DEFAULT_IMAGE = {
 };
 
 export const SlotImage = () => {
+  const navigation = useNavigation();
   const [selectedSlot] = useSlotFormStore.selectedSlot();
   const imageUri = getAvatarPublicUrl(selectedSlot?.image || DEFAULT_IMAGE);
 
+  const handlePress = () => {
+    navigation.navigate('AvatarPicker' as never);
+  };
+
   return (
-    <Image
-      source={imageUri}
-      style={styles.image}
-      contentFit="contain"
-      cachePolicy="memory-disk"
-      transition={0}
-      pointerEvents="none"
-      priority="normal"
-      allowDownscaling={false}
-    />
+    <Pressable onPress={handlePress}>
+      <Image
+        source={imageUri}
+        style={styles.image}
+        contentFit="contain"
+        cachePolicy="memory-disk"
+        transition={0}
+        priority="normal"
+        allowDownscaling={false}
+      />
+    </Pressable>
   );
 };
 

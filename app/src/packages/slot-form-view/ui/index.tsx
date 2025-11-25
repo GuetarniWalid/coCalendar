@@ -32,6 +32,7 @@ import { SlotStartTime } from './SlotStartTime';
 import { SlotEndTime } from './SlotEndTime';
 import { SlotTaskList } from './SlotTaskList';
 import { SlotMessage } from './SlotMessage';
+import { SlotFormHeader } from './SlotFormHeader';
 import { NAV_HEIGHT } from '@project/bottom-navigation';
 import { HEADER_HEIGHT } from '@project/day-view';
 
@@ -96,6 +97,7 @@ const SlotFormScreen = () => {
 
   return (
     <View style={styles.container} pointerEvents="box-none">
+      <SlotFormHeader />
       <Animated.View
         style={[styles.slotCard, { backgroundColor }, cardAnimatedStyle]}
       >
@@ -142,7 +144,6 @@ const SlotFormScreen = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background.primary,
-    paddingTop: SLOT_FORM_PADDING_TOP,
     flex: 1,
   },
   keyboardAvoid: {
@@ -168,6 +169,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderTopLeftRadius: SLOT_CARD_BORDER_RADIUS,
     borderTopRightRadius: SLOT_CARD_BORDER_RADIUS,
+    marginTop: SLOT_FORM_PADDING_TOP,
     paddingHorizontal: 32,
     flex: 1,
   },

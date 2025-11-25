@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,21 +10,25 @@ import {
 } from 'react-native';
 import dayjs from 'dayjs';
 import { DayItem, Text } from '@project/shared';
-import {
-  colors,
-  spacing,
-  fontSize,
-  useCalendarStore,
-} from '@project/shared';
+import { colors, spacing, fontSize, useCalendarStore } from '@project/shared';
 import {
   DATE_SELECTOR_NAME_FONT_SIZE,
   DATE_SELECTOR_NAME_MARGIN_BOTTOM,
   DATE_SELECTOR_PADDING_TOP,
   DATE_SELECTOR_PADDING_BOTTOM,
-} from '../constants/layout';
+} from '../constants';
+
 const screenWidth = Dimensions.get('window').width;
 
-export const DateSelector: FC = () => {
+interface DateSelectorProps {
+  selectedBackgroundColor: string;
+  selectedTextColor: string;
+}
+
+export const DateSelector = ({
+  selectedBackgroundColor,
+  selectedTextColor,
+}: DateSelectorProps) => {
   const [selectedDate, setSelectedDate] = useCalendarStore.selectedDate();
   const [, setChangeAskedBy] = useCalendarStore.changeAskedBy();
   const flatListRef = useRef<FlatList>(null);
@@ -44,18 +48,24 @@ export const DateSelector: FC = () => {
     (d: DayItem) => (
       <Pressable
         key={d.date}
-        style={[styles.dayCell, d.isSelected && styles.dayCellHighlight]}
+        style={[
+          styles.dayCell,
+          d.isSelected && { backgroundColor: selectedBackgroundColor },
+        ]}
         onPress={() => handleDatePress(d.date)}
       >
         <Text
-          style={[styles.dateName, d.isSelected && styles.highlightDateName]}
+          style={[
+            styles.dateName,
+            d.isSelected && { color: selectedTextColor },
+          ]}
         >
           {d.day}
         </Text>
         <Text
           style={[
             styles.dateNumber,
-            d.isSelected && styles.highlightDateNumber,
+            d.isSelected && { color: selectedTextColor },
           ]}
           fontWeight="700"
         >
@@ -67,7 +77,7 @@ export const DateSelector: FC = () => {
               styles.todayDot,
               {
                 backgroundColor: d.isSelected
-                  ? colors.action.typography.primary
+                  ? selectedTextColor
                   : colors.typography.secondary,
               },
             ]}
@@ -84,6 +94,7 @@ export const DateSelector: FC = () => {
     const daysFromMonday = (dayOfWeek + 6) % 7;
     return d.subtract(daysFromMonday, 'day').format('YYYY-MM-DD');
   }, [selectedDate]);
+
   const daysList = useMemo(() => {
     const start = dayjs(startOfWeek);
     return Array.from({ length: 7 }).map((_, i) => {
@@ -284,9 +295,6 @@ const styles = StyleSheet.create({
     paddingBottom: DATE_SELECTOR_PADDING_BOTTOM,
     position: 'relative',
   },
-  dayCellHighlight: {
-    backgroundColor: colors.action.background.primary,
-  },
   dateName: {
     fontSize: DATE_SELECTOR_NAME_FONT_SIZE,
     color: colors.typography.secondary,
@@ -295,12 +303,6 @@ const styles = StyleSheet.create({
   dateNumber: {
     fontSize: fontSize['xl'],
     color: colors.typography.secondary,
-  },
-  highlightDateName: {
-    color: colors.action.typography.primary,
-  },
-  highlightDateNumber: {
-    color: colors.action.typography.primary,
   },
   todayDot: {
     position: 'absolute',

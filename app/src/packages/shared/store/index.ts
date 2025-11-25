@@ -32,4 +32,8 @@ export {
   getCachedSlots,
   markDateAsFetched,
   isDateFetched,
-} from './slots-cache';
+  setLoading,
+  getLoading,
+  ensureSlotsLoaded,
+  prefetchSlidingWindow,
+} from './slots-store';

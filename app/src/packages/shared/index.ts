@@ -1,6 +1,7 @@
 // Shared package - re-export everything from theme and store
 export * from './theme';
 export * from './store';
+export * from './data/fetch-slots';
 export * from './types/calendar';
 export * from './constants/calendar';
 export * from './constants/layout';
@@ -12,3 +13,4 @@ export * from './ui/Text';
 export * from './utils/retry';
 export * from './hooks/useKeyboardLayoutValues';
 export * from './hooks/useReliableKeyboard';
+export * from './hooks/useSlotsForDate';

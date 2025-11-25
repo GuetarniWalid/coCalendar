@@ -1,0 +1,13 @@
+import { fontSize } from '@project/shared/theme/typography';
+
+export const DATE_SELECTOR_NAME_FONT_SIZE = 12;
+export const DATE_SELECTOR_NAME_MARGIN_BOTTOM = 2;
+export const DATE_SELECTOR_PADDING_TOP = 20;
+export const DATE_SELECTOR_PADDING_BOTTOM = 22;
+
+export const DATE_SELECTOR_CELL_HEIGHT =
+  DATE_SELECTOR_PADDING_TOP +
+  DATE_SELECTOR_NAME_FONT_SIZE +
+  DATE_SELECTOR_NAME_MARGIN_BOTTOM +
+  fontSize.xl +
+  DATE_SELECTOR_PADDING_BOTTOM;

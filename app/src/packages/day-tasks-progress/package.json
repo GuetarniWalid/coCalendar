@@ -1,0 +1,13 @@
+{
+  "name": "@project/day-tasks-progress",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@project/shared": "*",
+    "rive-react-native": "*",
+    "dayjs": "*"
+  }
+}

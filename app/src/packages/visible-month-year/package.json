@@ -1,0 +1,12 @@
+{
+  "name": "@project/visible-month-year",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@project/shared": "*",
+    "@project/i18n": "*"
+  }
+}

@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@project/shared": "*",
+    "@project/visible-month-year": "*",
+    "@project/day-tasks-progress": "*",
+    "@project/date-selector": "*",
     "expo-image": "*"
   }
 }

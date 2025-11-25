@@ -9,6 +9,8 @@ import {
 } from '@project/shared';
 import dayjs from 'dayjs';
 
+export const DAY_TASKS_PROGRESS_SIZE = 65;
+
 interface DayTasksProgressProps {
   slots: SlotItem[];
   loading: boolean;
@@ -25,13 +27,11 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, loading }) 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [selectedDate] = useCalendarStore.selectedDate();
 
-  // Calculate progress based on real-time data
   const percent = useMemo(() => {
     if (loading) {
       return 0;
     }
 
-    // If slots are loaded but empty array, return -1 for "no work" state
     if (slots.length === 0) {
       return -1;
     }
@@ -40,17 +40,14 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, loading }) 
     return progressData.percentage;
   }, [slots, selectedDate, refreshTrigger, loading]);
 
-  // Set up real-time tracking for slots that haven't ended yet
   useEffect(() => {
     const now = new Date();
     const currentDate = dayjs().format('YYYY-MM-DD');
 
-    // Only track if viewing today's slots and slots are loaded
     if (selectedDate !== currentDate || !slots || slots.length === 0) {
       return;
     }
 
-    // Find the next slot to end
     const upcomingSlots = slots.filter(slot => {
       if (isSlotCompleted(slot, now) || !slot.endTime) return false;
       const endTime = new Date(slot.endTime);
@@ -61,7 +58,6 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, loading }) 
       return;
     }
 
-    // Find the earliest ending slot
     const nextSlotToEnd = upcomingSlots.reduce((earliest, slot) => {
       const slotEndTime = new Date(slot.endTime!);
       const earliestEndTime = new Date(earliest.endTime!);
@@ -106,7 +102,7 @@ export const DayTasksProgress: FC<DayTasksProgressProps> = ({ slots, loading }) 
 
 const styles = StyleSheet.create({
   riveAnimation: {
-    width: 65,
-    height: 65,
+    width: DAY_TASKS_PROGRESS_SIZE,
+    height: DAY_TASKS_PROGRESS_SIZE,
   },
 });

@@ -4,7 +4,11 @@
   "main": "./ui/index.tsx",
   "types": "./ui/index.tsx",
   "dependencies": {
-    "@project/shared": "*"
+    "@project/shared": "*",
+    "@project/day-view": "*",
+    "@project/visible-month-year": "*",
+    "@project/day-tasks-progress": "*",
+    "@project/date-selector": "*"
   },
   "exports": {
     ".": "./ui/index.tsx"

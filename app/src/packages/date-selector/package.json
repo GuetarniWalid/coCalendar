@@ -1,0 +1,12 @@
+{
+  "name": "@project/date-selector",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@project/shared": "*",
+    "dayjs": "*"
+  }
+}

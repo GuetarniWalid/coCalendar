@@ -8,6 +8,7 @@ export type ScreenType =
   | 'SlotForm'
   | 'Statistics'
   | 'Tasks'
+  | 'AvatarPicker'
   | 'Auth';
 
 const initialState = {

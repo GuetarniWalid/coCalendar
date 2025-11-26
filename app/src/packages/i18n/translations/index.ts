@@ -36,6 +36,11 @@ export interface Translations {
   minutesPlural: string; // "minutes" / "min"
   secondsSingular: string; // "seconde"
   secondsPlural: string; // "secondes"
+  hoursSingular: string; // "hour"
+  hoursPlural: string; // "hours"
+  hourAbbreviation: string; // "h"
+  minuteAbbreviation: string; // "min"
+  durationLabel: string; // "Duration"
 
   // Remaining time card
   remainingTimeText: string; // "Take a break"
@@ -87,9 +92,14 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Progress time remaining
     remainingPrefix: 'Still',
     minutesSingular: 'minute',
-    minutesPlural: 'min',
+    minutesPlural: 'minutes',
     secondsSingular: 'second',
     secondsPlural: 'seconds',
+    hoursSingular: 'hour',
+    hoursPlural: 'hours',
+    hourAbbreviation: 'h',
+    minuteAbbreviation: 'min',
+    durationLabel: 'Duration',
 
     // Remaining time card
     remainingTimeText: 'Take a break',
@@ -139,9 +149,14 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Progress time remaining
     remainingPrefix: 'Encore',
     minutesSingular: 'minute',
-    minutesPlural: 'min',
+    minutesPlural: 'minutes',
     secondsSingular: 'seconde',
     secondsPlural: 'secondes',
+    hoursSingular: 'heure',
+    hoursPlural: 'heures',
+    hourAbbreviation: 'h',
+    minuteAbbreviation: 'min',
+    durationLabel: 'Durée',
 
     // Remaining time card
     remainingTimeText: 'Prenez une pause',
@@ -191,9 +206,14 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Progress time remaining
     remainingPrefix: 'Quedan',
     minutesSingular: 'minuto',
-    minutesPlural: 'min',
+    minutesPlural: 'minutos',
     secondsSingular: 'segundo',
     secondsPlural: 'segundos',
+    hoursSingular: 'hora',
+    hoursPlural: 'horas',
+    hourAbbreviation: 'h',
+    minuteAbbreviation: 'min',
+    durationLabel: 'Duración',
 
     // Remaining time card
     remainingTimeText: 'Tómese un descanso',
@@ -244,9 +264,14 @@ export const translations: Record<SupportedLocale, Translations> = {
     // Progress time remaining
     remainingPrefix: 'Noch',
     minutesSingular: 'Minute',
-    minutesPlural: 'Min',
+    minutesPlural: 'Minuten',
     secondsSingular: 'Sekunde',
     secondsPlural: 'Sekunden',
+    hoursSingular: 'Stunde',
+    hoursPlural: 'Stunden',
+    hourAbbreviation: 'h',
+    minuteAbbreviation: 'min',
+    durationLabel: 'Dauer',
 
     // Remaining time card
     remainingTimeText: 'Machen Sie eine Pause',

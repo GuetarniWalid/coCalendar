@@ -1,6 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 import { useSlotFormStore, getSlotContrastColor } from '@project/shared';
+import { formatDuration } from '@project/i18n';
 import { TimeCircle } from './TimeCircle';
 import { useTimePicker, useSlotUpdate } from '../shared/hooks';
 
@@ -35,9 +36,12 @@ export const SlotEndTime = () => {
 
   if (!selectedSlot?.endTime) return null;
 
+  // Calculate duration between start and end times
+  const duration = formatDuration(selectedSlot?.startTime, selectedSlot?.endTime);
+
   return (
     <>
-      <TimeCircle time={displayTime} slotColor={selectedSlot?.color} onPress={openPicker} />
+      <TimeCircle time={duration || displayTime} slotColor={selectedSlot?.color} onPress={openPicker} />
 
       {timePickerVisible && (
         <DateTimePicker

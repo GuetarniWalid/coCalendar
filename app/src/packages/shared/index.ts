@@ -10,6 +10,7 @@ export * from './utils/avatars';
 export * from './utils/colors';
 export * from './ui/AvatarImage';
 export * from './ui/Text';
+export * from './ui/UnmountOnBlur';
 export * from './utils/retry';
 export * from './hooks/useKeyboardLayoutValues';
 export * from './hooks/useReliableKeyboard';

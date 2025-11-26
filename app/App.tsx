@@ -42,6 +42,7 @@ import {
   handleSystemThemeChange,
   useKeyboardLayoutValues,
   useReliableKeyboard,
+  UnmountOnBlur,
 } from '@project/shared';
 import { HEADER_HEIGHT } from '@project/day-view';
 import { DraggedSlotProvider } from '@project/shared/store/dragged-slot';
@@ -66,7 +67,14 @@ const MainAppScreen = memo(() => {
       />
       <Tab.Screen name="Calendar" component={CalendarScreen as any} />
       <Tab.Screen name="Profile" component={ProfileScreen as any} />
-      <Tab.Screen name="SlotForm" component={SlotFormScreen as any} />
+      <Tab.Screen
+        name="SlotForm"
+        children={(props: any) => (
+          <UnmountOnBlur>
+            <SlotFormScreen {...props} />
+          </UnmountOnBlur>
+        )}
+      />
       <Tab.Screen name="Statistics" component={StatisticsScreen as any} />
       <Tab.Screen name="Tasks" component={TasksScreen as any} />
     </Tab.Navigator>

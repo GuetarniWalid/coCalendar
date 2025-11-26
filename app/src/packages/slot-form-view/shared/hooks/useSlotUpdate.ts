@@ -7,7 +7,7 @@ import {
   retryWithBackoff,
   updateSlotCache,
 } from '@project/shared';
-import { updateSlotTime, updateSlotTitle, updateSlotDescription } from '../../../day-view/data/update-slot';
+import { updateSlotTime, updateSlotTitle, updateSlotDescription, updateSlotDate as updateSlotDateDB } from '../../../day-view/data/update-slot';
 
 export const useSlotUpdate = () => {
   const [selectedSlot, setSelectedSlot] = useSlotFormStore.selectedSlot();
@@ -182,5 +182,88 @@ export const useSlotUpdate = () => {
     [supabase, user, selectedSlot, selectedDate, setSelectedSlot]
   );
 
-  return { updateStartTime, updateEndTime, updateTitle, updateDescription };
+  const updateSlotDate = useCallback(
+    async (targetDate: string) => {
+      if (!supabase || !user || !selectedSlot) return;
+
+      // Extract the current date from the slot's startTime
+      const currentDate = selectedSlot.startTime
+        ? dayjs(selectedSlot.startTime).format('YYYY-MM-DD')
+        : selectedDate;
+
+      // Skip if the target date is the same as current date
+      if (currentDate === targetDate) return;
+
+      // Optimistically update the local state first
+      const updatedSlot = { ...selectedSlot };
+
+      // Update the date portions of startTime and endTime
+      if (selectedSlot.withoutTime) {
+        // For untimed slots, set to start of the new day
+        updatedSlot.startTime = dayjs(targetDate).startOf('day').toISOString();
+        updatedSlot.endTime = null;
+      } else {
+        // For timed slots, preserve the time portions
+        if (selectedSlot.startTime) {
+          const startTime = dayjs(selectedSlot.startTime);
+          updatedSlot.startTime = dayjs(targetDate)
+            .hour(startTime.hour())
+            .minute(startTime.minute())
+            .second(startTime.second())
+            .millisecond(0)
+            .toISOString();
+        }
+
+        if (selectedSlot.endTime) {
+          const endTime = dayjs(selectedSlot.endTime);
+          updatedSlot.endTime = dayjs(targetDate)
+            .hour(endTime.hour())
+            .minute(endTime.minute())
+            .second(endTime.second())
+            .millisecond(0)
+            .toISOString();
+        }
+      }
+
+      // Optimistically update the local state
+      setSelectedSlot(updatedSlot);
+
+      try {
+        const serverUpdatedSlot = await retryWithBackoff(
+          () =>
+            updateSlotDateDB(
+              supabase,
+              user.id,
+              selectedSlot.id,
+              targetDate
+            ),
+          3,
+          1000
+        );
+
+        if (serverUpdatedSlot) {
+          const slotWithCurrentData = {
+            ...serverUpdatedSlot,
+            tasks: selectedSlot.tasks ?? [],
+            participants: selectedSlot.participants ?? []
+          };
+
+          // Update the cache, moving the slot from the old date to the new date
+          updateSlotCache(selectedSlot.id, currentDate, targetDate, slotWithCurrentData);
+          setSelectedSlot(slotWithCurrentData);
+        } else {
+          // Revert optimistic update on failure
+          console.error('Failed to update slot date');
+          setSelectedSlot(selectedSlot);
+        }
+      } catch (error) {
+        console.error('Error updating slot date:', error);
+        // Revert optimistic update on error
+        setSelectedSlot(selectedSlot);
+      }
+    },
+    [supabase, user, selectedSlot, selectedDate, setSelectedSlot]
+  );
+
+  return { updateStartTime, updateEndTime, updateTitle, updateDescription, updateSlotDate };
 };

@@ -8,6 +8,7 @@ import {
   updateSlotCache,
 } from '@project/shared';
 import { updateSlotTime, updateSlotTitle, updateSlotDescription, updateSlotDate as updateSlotDateDB } from '../../../day-view/data/update-slot';
+import { isWholeDay } from '../utils/isWholeDay';
 
 export const useSlotUpdate = () => {
   const [selectedSlot, setSelectedSlot] = useSlotFormStore.selectedSlot();
@@ -17,6 +18,9 @@ export const useSlotUpdate = () => {
   const updateStartTime = useCallback(
     async (hours: number, minutes: number) => {
       if (!supabase || !user || !selectedSlot) return;
+
+      // Check if the slot was whole day before the update
+      const wasWholeDay = isWholeDay(selectedSlot.startTime, selectedSlot.endTime);
 
       const currentStartTime = selectedSlot.startTime
         ? dayjs(selectedSlot.startTime)
@@ -29,7 +33,8 @@ export const useSlotUpdate = () => {
         .millisecond(0)
         .toISOString();
 
-      const currentEndTime = selectedSlot.endTime;
+      // If it was a whole day slot and user selected a specific time, set endTime to null
+      const currentEndTime = wasWholeDay ? null : selectedSlot.endTime;
 
       try {
         const updatedSlot = await retryWithBackoff(

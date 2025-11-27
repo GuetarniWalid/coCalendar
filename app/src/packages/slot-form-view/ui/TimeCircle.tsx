@@ -11,6 +11,7 @@ interface TimeCircleProps {
   slotColor?: SlotColorName | undefined;
   onPress?: () => void;
   style?: ViewStyle;
+  isText?: boolean;
 }
 
 const TimeCircleContent = ({ time, textColor }: { time: string; textColor: string }) => {
@@ -37,6 +38,7 @@ export const TimeCircle = ({
   slotColor,
   onPress,
   style,
+  isText = false,
 }: TimeCircleProps) => {
   const [{ colors }] = useThemeStore();
   const backgroundColor = getSlotBackgroundColor(slotColor);
@@ -44,7 +46,7 @@ export const TimeCircle = ({
   const circleContent = (
     <View
       style={[
-        styles.timeCircle,
+        isText ? styles.textCircle : styles.timeCircle,
         {
           borderColor: backgroundColor,
           backgroundColor: colors.background.primary,
@@ -68,6 +70,15 @@ const styles = StyleSheet.create({
   timeCircle: {
     width: 90,
     height: 90,
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 4,
+  },
+  textCircle: {
+    height: 90,
+    paddingHorizontal: 20,
     borderRadius: 999,
     justifyContent: 'center',
     alignItems: 'center',

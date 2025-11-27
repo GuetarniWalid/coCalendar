@@ -18,15 +18,7 @@ export const useTimePicker = ({
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [selectedTime, setSelectedTime] = useState<Date | null>(null);
 
-  const parsedInitialTime = initialTime
-    ? dayjs(initialTime, 'YYYY-MM-DD HH:mm:ss')
-    : dayjs().hour(defaultHour).minute(defaultMinute);
-
-  const initialDate = parsedInitialTime.isValid()
-    ? parsedInitialTime.toDate()
-    : dayjs().hour(defaultHour).minute(defaultMinute).toDate();
-
-  const timeValue = selectedTime ?? initialDate;
+  const timeValue = selectedTime ?? (initialTime ? new Date(initialTime) : null);
 
   const onConfirmTime = useCallback(
     (date: Date) => {

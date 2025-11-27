@@ -90,9 +90,19 @@ export const BottomNavigation = ({ state, navigation }: BottomTabBarProps) => {
         const screenName = screenMap[index];
         if (screenName) {
           if (currentRoute === screenName) return; // already focused
-          // Clear selected slot when navigating to SlotForm via bottom nav
+          // Create a default slot object for new slots
           if (screenName === 'SlotForm') {
-            setSelectedSlot(null);
+            setSelectedSlot({
+              id: '', // Will be generated when saved
+              title: '',
+              startTime: null, // No time set yet
+              endTime: null, // No time set yet
+              withoutTime: true, // New slots have no time by default
+              type: 'private', // New slots have no participants
+              completionStatus: 'auto',
+              tasks: [],
+              participants: [],
+            });
           }
           navigation.navigate(screenName);
         }

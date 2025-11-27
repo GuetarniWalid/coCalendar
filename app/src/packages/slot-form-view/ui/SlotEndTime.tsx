@@ -36,13 +36,15 @@ export const SlotEndTime = () => {
     }
   };
 
-  // Check if this is a new slot (no selectedSlot) or if it's whole day
-  const isNewSlot = !selectedSlot;
-  const isWholeDaySlot = isNewSlot ||
-    isWholeDay(selectedSlot?.startTime || null, selectedSlot?.endTime || null);
+  // Hide component for:
+  // 1. Slots with withoutTime = true (no specific time set)
+  // 2. Slots that span the whole day (00:00 to 23:59)
+  const shouldHide = selectedSlot?.withoutTime === true ||
+    (selectedSlot?.startTime && selectedSlot?.endTime ?
+      isWholeDay(selectedSlot.startTime, selectedSlot.endTime) : false);
 
-  // Hide component if it's a new slot (defaults to whole day) or if slot is whole day
-  if (isWholeDaySlot) return null;
+  // Hide component if slot has no time or is whole day
+  if (shouldHide) return null;
 
   // Show clock icon if endTime is null (but not for new/whole day slots)
   if (!selectedSlot?.endTime) {

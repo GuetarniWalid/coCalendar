@@ -7,7 +7,7 @@ import {
   retryWithBackoff,
   updateSlotCache,
 } from '@project/shared';
-import { updateSlotTime, updateSlotTitle, updateSlotDescription, updateSlotDate as updateSlotDateDB } from '../../../day-view/data/update-slot';
+import { createSlot, updateSlotTime, updateSlotTitle, updateSlotDescription, updateSlotDate as updateSlotDateDB } from '../../../day-view/data/update-slot';
 import { isWholeDay } from '../utils/isWholeDay';
 
 export const useSlotUpdate = () => {
@@ -18,6 +18,9 @@ export const useSlotUpdate = () => {
   const updateStartTime = useCallback(
     async (hours: number, minutes: number) => {
       if (!supabase || !user || !selectedSlot) return;
+
+      // Check if this is a new slot (empty ID)
+      const isNewSlot = !selectedSlot.id || selectedSlot.id === '';
 
       // Check if the slot was whole day before the update
       const wasWholeDay = isWholeDay(selectedSlot.startTime, selectedSlot.endTime);
@@ -37,29 +40,51 @@ export const useSlotUpdate = () => {
       const currentEndTime = wasWholeDay ? null : selectedSlot.endTime;
 
       try {
-        const updatedSlot = await retryWithBackoff(
-          () =>
-            updateSlotTime(
-              supabase,
-              user.id,
-              selectedSlot.id,
-              newStartTime,
-              currentEndTime
-            ),
-          3,
-          1000
-        );
+        let updatedSlot;
+
+        if (isNewSlot) {
+          // Create a new slot
+          updatedSlot = await retryWithBackoff(
+            () =>
+              createSlot(
+                supabase,
+                user.id,
+                newStartTime,
+                currentEndTime,
+                false // withoutTime is false when setting a specific time
+              ),
+            3,
+            1000
+          );
+        } else {
+          // Update existing slot
+          updatedSlot = await retryWithBackoff(
+            () =>
+              updateSlotTime(
+                supabase,
+                user.id,
+                selectedSlot.id,
+                newStartTime,
+                currentEndTime
+              ),
+            3,
+            1000
+          );
+        }
 
         if (updatedSlot) {
           const slotWithCurrentData = {
             ...updatedSlot,
             tasks: selectedSlot.tasks ?? [],
-            participants: selectedSlot.participants ?? []
+            participants: selectedSlot.participants ?? [],
+            // Ensure withoutTime is false when a specific time is set
+            withoutTime: false
           };
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
+          // Use the ID from the created/updated slot for cache update
+          updateSlotCache(updatedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
           setSelectedSlot(slotWithCurrentData);
         } else {
-          console.error('Failed to update start time');
+          console.error(isNewSlot ? 'Failed to create slot' : 'Failed to update start time');
         }
       } catch (error) {
         console.error('Error updating start time:', error);
@@ -71,6 +96,9 @@ export const useSlotUpdate = () => {
   const updateEndTime = useCallback(
     async (hours: number, minutes: number) => {
       if (!supabase || !user || !selectedSlot) return;
+
+      // Check if this is a new slot (empty ID)
+      const isNewSlot = !selectedSlot.id || selectedSlot.id === '';
 
       const currentEndTime = selectedSlot.endTime
         ? dayjs(selectedSlot.endTime)
@@ -86,29 +114,51 @@ export const useSlotUpdate = () => {
       const currentStartTime = selectedSlot.startTime;
 
       try {
-        const updatedSlot = await retryWithBackoff(
-          () =>
-            updateSlotTime(
-              supabase,
-              user.id,
-              selectedSlot.id,
-              currentStartTime,
-              newEndTime
-            ),
-          3,
-          1000
-        );
+        let updatedSlot;
+
+        if (isNewSlot) {
+          // Create a new slot
+          updatedSlot = await retryWithBackoff(
+            () =>
+              createSlot(
+                supabase,
+                user.id,
+                currentStartTime,
+                newEndTime,
+                false // withoutTime is false when setting a specific time
+              ),
+            3,
+            1000
+          );
+        } else {
+          // Update existing slot
+          updatedSlot = await retryWithBackoff(
+            () =>
+              updateSlotTime(
+                supabase,
+                user.id,
+                selectedSlot.id,
+                currentStartTime,
+                newEndTime
+              ),
+            3,
+            1000
+          );
+        }
 
         if (updatedSlot) {
           const slotWithCurrentData = {
             ...updatedSlot,
             tasks: selectedSlot.tasks ?? [],
-            participants: selectedSlot.participants ?? []
+            participants: selectedSlot.participants ?? [],
+            // Ensure withoutTime is false when a specific time is set
+            withoutTime: false
           };
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
+          // Use the ID from the created/updated slot for cache update
+          updateSlotCache(updatedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
           setSelectedSlot(slotWithCurrentData);
         } else {
-          console.error('Failed to update end time');
+          console.error(isNewSlot ? 'Failed to create slot' : 'Failed to update end time');
         }
       } catch (error) {
         console.error('Error updating end time:', error);
@@ -121,18 +171,41 @@ export const useSlotUpdate = () => {
     async (newTitle: string) => {
       if (!supabase || !user || !selectedSlot) return;
 
+      // Check if this is a new slot (empty ID)
+      const isNewSlot = !selectedSlot.id || selectedSlot.id === '';
+
       try {
-        const updatedSlot = await retryWithBackoff(
-          () =>
-            updateSlotTitle(
-              supabase,
-              user.id,
-              selectedSlot.id,
-              newTitle
-            ),
-          3,
-          1000
-        );
+        let updatedSlot;
+
+        if (isNewSlot) {
+          // Create a new slot with title
+          updatedSlot = await retryWithBackoff(
+            () =>
+              createSlot(
+                supabase,
+                user.id,
+                selectedSlot.startTime,
+                selectedSlot.endTime,
+                selectedSlot.withoutTime ?? true,
+                newTitle
+              ),
+            3,
+            1000
+          );
+        } else {
+          // Update existing slot
+          updatedSlot = await retryWithBackoff(
+            () =>
+              updateSlotTitle(
+                supabase,
+                user.id,
+                selectedSlot.id,
+                newTitle
+              ),
+            3,
+            1000
+          );
+        }
 
         if (updatedSlot) {
           const slotWithCurrentData = {
@@ -140,10 +213,11 @@ export const useSlotUpdate = () => {
             tasks: selectedSlot.tasks ?? [],
             participants: selectedSlot.participants ?? []
           };
-          updateSlotCache(selectedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
+          // Use the ID from the created/updated slot for cache update
+          updateSlotCache(updatedSlot.id, selectedDate, selectedDate, slotWithCurrentData);
           setSelectedSlot(slotWithCurrentData);
         } else {
-          console.error('Failed to update title');
+          console.error(isNewSlot ? 'Failed to create slot' : 'Failed to update title');
         }
       } catch (error) {
         console.error('Error updating title:', error);

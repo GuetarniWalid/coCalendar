@@ -12,17 +12,14 @@ export const SlotStartTime = () => {
   const translations = useTranslation();
   const { updateStartTime } = useSlotUpdate();
 
-  // Check if this is a new slot (no selectedSlot)
-  const isNewSlot = !selectedSlot;
   const wholeDayTimes = createWholeDayTimes();
 
-  // Only show "Today" if the slot truly spans the whole day (00:00 to 23:59)
-  // Not when we have a specific startTime with null endTime
-  const isWholeDaySlot = isNewSlot ?
-    true : // New slots default to whole day
-    (selectedSlot?.endTime ?
-      isWholeDay(selectedSlot.startTime, selectedSlot.endTime) :
-      false); // If endTime is null, show actual start time, not "Today"
+  // Show "Today" for:
+  // 1. Slots with withoutTime = true (no specific time set)
+  // 2. Slots that span the whole day (00:00 to 23:59)
+  const showToday = selectedSlot?.withoutTime === true ||
+    (selectedSlot?.startTime && selectedSlot?.endTime ?
+      isWholeDay(selectedSlot.startTime, selectedSlot.endTime) : false);
 
   const {
     timePickerVisible,
@@ -32,7 +29,8 @@ export const SlotStartTime = () => {
     onDismissTime,
     openPicker,
   } = useTimePicker({
-    initialTime: isNewSlot ? wholeDayTimes.startTime : selectedSlot?.startTime,
+    // Use wholeDayTimes.startTime as fallback when slot has no time
+    initialTime: selectedSlot?.startTime || wholeDayTimes.startTime,
     defaultHour: 0, // Default to midnight for whole day
     defaultMinute: 0,
     onTimeChange: updateStartTime,
@@ -53,10 +51,10 @@ export const SlotStartTime = () => {
   return (
     <>
       <TimeCircle
-        time={isWholeDaySlot ? translations.timeToday : displayTime}
+        time={showToday ? translations.timeToday : displayTime}
         slotColor={selectedSlot?.color}
         onPress={openPicker}
-        isText={isWholeDaySlot}
+        isText={showToday}
       />
       {timePickerVisible && timeValue && (
         <DateTimePicker

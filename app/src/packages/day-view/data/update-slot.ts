@@ -3,6 +3,68 @@ import dayjs from 'dayjs';
 import { SlotItem, SlotCompletionStatus } from '@project/shared';
 
 /**
+ * Creates a new slot in Supabase
+ * @param supabase - Supabase client instance
+ * @param ownerId - Owner ID
+ * @param startTime - Start time (ISO string) or null
+ * @param endTime - End time (ISO string) or null
+ * @param withoutTime - Whether the slot has no specific time
+ * @param title - Optional title for the slot
+ * @returns Created slot data or null if failed
+ */
+export const createSlot = async (
+  supabase: SupabaseClient,
+  ownerId: string,
+  startTime: string | null,
+  endTime: string | null,
+  withoutTime: boolean = false,
+  title: string = ''
+): Promise<SlotItem | null> => {
+  try {
+    const { data: createdSlot, error: createError } = await supabase
+      .from('slots')
+      .insert({
+        owner_id: ownerId,
+        title,
+        start_at: startTime,
+        end_at: endTime,
+        without_time: withoutTime,
+        completion_status: 'auto',
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Error creating slot:', createError);
+      return null;
+    }
+
+    return {
+      id: createdSlot.id,
+      title: createdSlot.title,
+      startTime: createdSlot.start_at,
+      endTime: createdSlot.end_at,
+      withoutTime: createdSlot.without_time,
+      type: 'private', // New slots have no participants, so they're private
+      description: createdSlot.description,
+      color: createdSlot.color,
+      completionStatus: createdSlot.completion_status ?? 'auto',
+      image: createdSlot.image,
+      tasks: [],
+      voice_path: createdSlot.voice_path,
+      voice_duration: createdSlot.voice_duration,
+      voice_mime: createdSlot.voice_mime,
+      voice_size_bytes: createdSlot.voice_size_bytes,
+      voice_created_at: createdSlot.voice_created_at,
+      participants: [],
+    };
+  } catch (error) {
+    console.error('Error in createSlot:', error);
+    return null;
+  }
+};
+
+/**
  * Updates a slot's date in Supabase, adjusting the time fields appropriately
  * @param supabase - Supabase client instance
  * @param ownerId - Owner ID
@@ -93,19 +155,18 @@ export const updateSlotDate = async (
       startTime: updatedSlot.start_at,
       endTime: updatedSlot.end_at,
       withoutTime: updatedSlot.without_time,
-      type: updatedSlot.type,
-      visibility: updatedSlot.visibility,
+      type: 'private', // Type is derived from participants
       description: updatedSlot.description,
       color: updatedSlot.color,
       completionStatus: updatedSlot.completion_status ?? 'auto',
       image: updatedSlot.image,
-      tasks: updatedSlot.tasks,
+      tasks: updatedSlot.tasks || [],
       voice_path: updatedSlot.voice_path,
       voice_duration: updatedSlot.voice_duration,
       voice_mime: updatedSlot.voice_mime,
       voice_size_bytes: updatedSlot.voice_size_bytes,
       voice_created_at: updatedSlot.voice_created_at,
-      participants: updatedSlot.participants,
+      participants: updatedSlot.participants || [],
     };
   } catch (error) {
     console.error('Error in updateSlotDate:', error);
@@ -147,19 +208,18 @@ export const updateSlotCompletion = async (
       startTime: updatedSlot.start_at,
       endTime: updatedSlot.end_at,
       withoutTime: updatedSlot.without_time,
-      type: updatedSlot.type,
-      visibility: updatedSlot.visibility,
+      type: 'private', // Type is derived from participants
       description: updatedSlot.description,
       color: updatedSlot.color,
       completionStatus: updatedSlot.completion_status ?? 'auto',
       image: updatedSlot.image,
-      tasks: updatedSlot.tasks,
+      tasks: updatedSlot.tasks || [],
       voice_path: updatedSlot.voice_path,
       voice_duration: updatedSlot.voice_duration,
       voice_mime: updatedSlot.voice_mime,
       voice_size_bytes: updatedSlot.voice_size_bytes,
       voice_created_at: updatedSlot.voice_created_at,
-      participants: updatedSlot.participants,
+      participants: updatedSlot.participants || [],
     };
   } catch (error) {
     console.error('Error in updateSlotCompletion:', error);
@@ -189,6 +249,8 @@ export const updateSlotTime = async (
       .update({
         start_at: newStartTime,
         end_at: newEndTime,
+        // When a specific time is set, the slot is no longer "without time"
+        without_time: false,
       })
       .eq('id', slotId)
       .eq('owner_id', ownerId)
@@ -206,19 +268,18 @@ export const updateSlotTime = async (
       startTime: updatedSlot.start_at,
       endTime: updatedSlot.end_at,
       withoutTime: updatedSlot.without_time,
-      type: updatedSlot.type,
-      visibility: updatedSlot.visibility,
+      type: 'private', // Type is derived from participants
       description: updatedSlot.description,
       color: updatedSlot.color,
       completionStatus: updatedSlot.completion_status ?? 'auto',
       image: updatedSlot.image,
-      tasks: updatedSlot.tasks,
+      tasks: updatedSlot.tasks || [],
       voice_path: updatedSlot.voice_path,
       voice_duration: updatedSlot.voice_duration,
       voice_mime: updatedSlot.voice_mime,
       voice_size_bytes: updatedSlot.voice_size_bytes,
       voice_created_at: updatedSlot.voice_created_at,
-      participants: updatedSlot.participants,
+      participants: updatedSlot.participants || [],
     };
   } catch (error) {
     console.error('Error in updateSlotTime:', error);
@@ -260,19 +321,18 @@ export const updateSlotTitle = async (
       startTime: updatedSlot.start_at,
       endTime: updatedSlot.end_at,
       withoutTime: updatedSlot.without_time,
-      type: updatedSlot.type,
-      visibility: updatedSlot.visibility,
+      type: 'private', // Type is derived from participants
       description: updatedSlot.description,
       color: updatedSlot.color,
       completionStatus: updatedSlot.completion_status ?? 'auto',
       image: updatedSlot.image,
-      tasks: updatedSlot.tasks,
+      tasks: updatedSlot.tasks || [],
       voice_path: updatedSlot.voice_path,
       voice_duration: updatedSlot.voice_duration,
       voice_mime: updatedSlot.voice_mime,
       voice_size_bytes: updatedSlot.voice_size_bytes,
       voice_created_at: updatedSlot.voice_created_at,
-      participants: updatedSlot.participants,
+      participants: updatedSlot.participants || [],
     };
   } catch (error) {
     console.error('Error in updateSlotTitle:', error);
@@ -314,19 +374,18 @@ export const updateSlotDescription = async (
       startTime: updatedSlot.start_at,
       endTime: updatedSlot.end_at,
       withoutTime: updatedSlot.without_time,
-      type: updatedSlot.type,
-      visibility: updatedSlot.visibility,
+      type: 'private', // Type is derived from participants
       description: updatedSlot.description,
       color: updatedSlot.color,
       completionStatus: updatedSlot.completion_status ?? 'auto',
       image: updatedSlot.image,
-      tasks: updatedSlot.tasks,
+      tasks: updatedSlot.tasks || [],
       voice_path: updatedSlot.voice_path,
       voice_duration: updatedSlot.voice_duration,
       voice_mime: updatedSlot.voice_mime,
       voice_size_bytes: updatedSlot.voice_size_bytes,
       voice_created_at: updatedSlot.voice_created_at,
-      participants: updatedSlot.participants,
+      participants: updatedSlot.participants || [],
     };
   } catch (error) {
     console.error('Error in updateSlotDescription:', error);

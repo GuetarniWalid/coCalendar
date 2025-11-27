@@ -3,7 +3,12 @@ import { View, StyleSheet } from 'react-native';
 import { VisibleMonthYear } from '@project/visible-month-year';
 import { DAY_TASKS_PROGRESS_SIZE } from '@project/day-tasks-progress';
 import { DateSelector } from '@project/date-selector';
-import { colors, useSlotFormStore, useCalendarStore } from '@project/shared';
+import {
+  colors,
+  useSlotFormStore,
+  useCalendarStore,
+  getSlotBackgroundColor,
+} from '@project/shared';
 import { HEADER_ROW_PADDING_BOTTOM } from '@project/day-view';
 import { useSlotUpdate } from '../shared/hooks/useSlotUpdate';
 import dayjs from 'dayjs';
@@ -18,7 +23,11 @@ export const SlotFormHeader = () => {
   // Listen for date changes from the DateSelector
   useEffect(() => {
     // Only process if the change was initiated by the DateSelector and we have a selected slot
-    if (changeAskedBy === 'dateSelector' && selectedSlot && selectedDate !== previousDateRef.current) {
+    if (
+      changeAskedBy === 'dateSelector' &&
+      selectedSlot &&
+      selectedDate !== previousDateRef.current
+    ) {
       // Extract the current date from the slot's startTime
       const currentSlotDate = selectedSlot.startTime
         ? dayjs(selectedSlot.startTime).format('YYYY-MM-DD')
@@ -33,12 +42,19 @@ export const SlotFormHeader = () => {
     }
   }, [selectedDate, changeAskedBy, selectedSlot, updateSlotDate]);
 
+  const selectedBackgroundColor = selectedSlot?.color
+    ? getSlotBackgroundColor(selectedSlot.color)
+    : colors.background.slot.default!.default;
+
   return (
     <>
       <View style={styles.headerRow}>
         <VisibleMonthYear />
       </View>
-      <DateSelector selectedBackgroundColor={selectedSlot?.color ?? colors.background.slot.default!.default} selectedTextColor={selectedSlot?.color ?? colors.typography.primary} />
+      <DateSelector
+        selectedBackgroundColor={selectedBackgroundColor}
+        selectedTextColor={colors.typography.primary}
+      />
     </>
   );
 };
